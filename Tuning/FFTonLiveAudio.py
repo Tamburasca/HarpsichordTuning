@@ -5,7 +5,7 @@ A tuning device for string instruments, such as (1) harpsichords and (2) pianos.
 
 Collects a mono audio signal from a input stream of length self.record_seconds and a sample rate RATE. The audio signal
 runs through a subsequent FFT with a Hanning apodization. On the frequency domain we perform a Gauss smoothing
-(currently disabled) and a 4th order Butterworth high-pass filter (cutoff frequency F_FILT and order F_ORDER).
+(currently ensabled) and a 4th order Butterworth high-pass filter (cutoff frequency F_FILT and order F_ORDER).
 Hereafter, we run a peak finding of which only the NMAX highest peaks are considered. Of those NMAX peaks we try to find
 its partials (overtones). The peak with the lowest frequency and at least 5 partials is selected and compared with a
 tuning table (feel free to enhance for yourself). The deviation in units of cent is shown in the frequency plot,
@@ -17,6 +17,8 @@ f_n = f_1 * n * sqrt(1 + B*n**2), where n = 1, 2, 3, ... and B is the inharmonic
 see also
 HARVEY FLETCHER, THE JOURNAL OF THE ACOUSTICAL SOCIETY OF AMERICA VOLUME 36, NUMBER 1 JANUARY 1964
 HAYE HINRICHSEN, REVISTA BRASILEIRA DE ENSINA FISICA, VOLUME 34, NUMBER 2, 2301 (2012)
+
+Due to the low resolution, particularly in the bass area, the determination of B is difficult.
 
 The hotkeys ctrl-y and ctrl-x exits and stops the program, ESC to resume. ctrl-j and ctrl-k shorten and lengthen the
 recording interval, wherease ctrl-n and ctrl-m diminish and increase the max displayed frequency.
@@ -354,15 +356,15 @@ class Tuner:
         # PDS
         # y = 2. * RATE * np.abs(y_raw) ** 2 / samples
         # convolve with a Gaussian of width SIGMA
-        # filt = signal.gaussian(M=51,
-        #                       std=SIGMA)
-        # spectrum = signal.convolve(in1=y,
-        #                           in2=filt,
-        #                           mode='same')
+        filt = signal.gaussian(M=31,
+                               std=SIGMA)
+        spectrum = signal.convolve(in1=y,
+                                   in2=filt,
+                                   mode='same')
         # high pass Butterworth filter
         b, a = signal.butter(F_ORDER, F_FILT, 'high', analog=True)
         _, h = signal.freqs(b, a, worN=t1)
-        y_final = np.abs(h) * y
+        y_final = np.abs(h) * spectrum
 
         _stop = timeit.default_timer()
         if _debug:
