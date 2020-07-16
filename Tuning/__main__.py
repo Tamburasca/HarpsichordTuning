@@ -1,3 +1,3 @@
-from Tuning.FFTonLiveAudioTest7 import main
+from Tuning.FFTonLiveAudio import main
 
 main()
