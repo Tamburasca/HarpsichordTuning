@@ -37,9 +37,9 @@ __author__ = "Dr. Ralf Antonius Timmermann"
 __copyright__ = "Copyright (C) Dr. Ralf Antonius Timmermann"
 __credits__ = ""
 __license__ = "GPLv3"
-__version__ = "0.1"
+__version__ = "0.2"
 __maintainer__ = "Dr. Ralf A. Timmermann"
-__email__ = "ralf.timmermann@gmx.com"
+__email__ = "rtimmermann@astro.uni-bonn.de"
 __status__ = "Development"
 
 import pyaudio
@@ -50,7 +50,8 @@ from matplotlib.collections import EventCollection
 import timeit
 import time
 import keyboard
-
+from .multiProcess_opt import threaded_opt
+from .tuningTable import tuningtable
 
 # do not modify below
 FORMAT = pyaudio.paInt16
@@ -62,54 +63,6 @@ SIGMA = 2
 #
 _debug = False
 
-tuningtable = {
-    'Werkmeister I(III)': {
-        'C': 0,
-        'C#': 90,
-        'D': 192,
-        'D#': 294,
-        'E': 390,
-        'F': 498,
-        'F#': 588,
-        'G': 696,
-        'G#': 792,
-        'A': 888,
-        'B♭': 996,
-        'B': 1092
-        },
-    '1/4 Comma Meantone': {
-        'C': 0,
-        'C#': 76.05,
-        'D': 193.16,
-        # enable/disable to your tuning preference
-        # 'D#': 269.21,
-        'E♭': 310.26,
-        'E': 386.31,
-        'F': 503.42,
-        'F#': 579.47,
-        'G': 696.58,
-        # 'A♭': 813.69,
-        'G#': 772.63,
-        'A': 889.74,
-        'B♭': 1006.84,
-        'B': 1082.89
-        },
-    'Equal Temperament': {
-        'C': 0,
-        'C#': 100,
-        'D': 200,
-        'D#': 300,
-        'E': 400,
-        'F': 500,
-        'F#': 600,
-        'G': 700,
-        'G#': 800,
-        'A': 900,
-        'B': 1000,
-        'H': 1100
-        }
-}
-
 
 class Tuner:
 
@@ -120,11 +73,10 @@ class Tuner:
         :param tuning: string
             tuning temperament
         """
-        # lengths of audio signal chunks
-        self.record_seconds = 2.
-        self.fmax = 2000.
+        self.record_seconds = 2.  # lengths of audio signal chunks, can be adjusted
+        self.fmax = 2000.  # maximum frequency display in 2nd subplot, can be adjusted
         self.a1 = a1
-        self.tuning = tuning
+        self.tuning = tuning  # see tuningTable.py
         self.rc = None
 
         self.callback_output = []
@@ -159,7 +111,6 @@ class Tuner:
         string
             return code
         """
-        # upper frequency limit for plots
         _firstplot = True
         plt.ion()  # Stop matplotlib windows from blocking
 
@@ -171,9 +122,10 @@ class Tuner:
             _start = timeit.default_timer()
 
             time.sleep(self.record_seconds)
+            self.stream.stop_stream()  # stop the input stream for the time being
             # Convert the list of numpy-arrays into a 1D array (column-wise)
             amp = np.hstack(self.callback_output)
-            # clear stream
+            # clear input stream
             self.callback_output = []
 
             _stop = timeit.default_timer()
@@ -201,17 +153,19 @@ class Tuner:
             peakPos, peakHeight = self.peak(spectrum=yfft)
             peakList = t1[peakPos]
             # find the key
-            f_measured = self.harmonics(ind=peakList,
-                                        height=peakHeight)
+            if peakList is not None:
+                f_measured = self.harmonics(amp=yfft,
+                                            freq=t1,
+                                            ind=peakList)
             # if key found print it and its offset colored red or green
-            if f_measured:
-                tone, displaced = self.find(f_measured=f_measured)
+            if f_measured[0]:
+                tone, displaced = self.find(f_measured=f_measured[0])
                 if tone:
                     displayed_text = "{2:s} (a1={3:3.0f}Hz) {0:s} offset={1:.0f} cent"\
                         .format(tone, displaced, self.tuning, self.a1)
                     color = 'green' if displaced >= 0 else 'red'
             else:
-                displayed_text = ""
+                displayed_text = " "
                 color = 'none'
 
             # instantiate first plot and copy background
@@ -254,10 +208,12 @@ class Tuner:
 
             for c in ax1.collections:
                 c.remove()
-            xevents = EventCollection(positions=peakList,
-                                      color='tab:orange',
-                                      linelength=0.02*np.max(yfft))
-            ax1.add_collection(xevents)
+            yevents = EventCollection(positions=f_measured,
+                                      color='tab:red',
+                                      linelength=0.05*np.max(yfft),
+                                      linewidth=2.)
+            ax1.add_collection(yevents)
+
             # Rescale the axis so that the data can be seen in the plot
             # if you know the bounds of your data you could just set this once
             # so that the axis don't keep changing
@@ -279,11 +235,13 @@ class Tuner:
                 # fill in the axes rectangle
                 fig.canvas.blit(ax.bbox)
                 fig.canvas.blit(ax1.bbox)
+            self.stream.start_stream()  # restart the audio streaming again, expect some delay to the status change
             fig.canvas.flush_events()
 
             _stop = timeit.default_timer()
             if _debug:
                 print("time utilized for matplotlib [s]: " + str(_stop - _start))
+        print("started streaming")
 
         return self.rc
 
@@ -299,7 +257,7 @@ class Tuner:
             list of frequencies
         """
         # max number of highest peaks
-        NMAX = 25
+        NMAX = 1
         list1 = []
         list2 = []
         _start = timeit.default_timer()
@@ -309,12 +267,9 @@ class Tuner:
         # spectrum[peaks] == prominences with zero baseline
         peaks, _ = signal.find_peaks(x=spectrum,
                                      distance=8.,
-                                     # sensitivity minus background
-                                     prominence=np.max(spectrum)/100,
-                                     # max peak width -> needs adjustment!!!
-                                     width=(0, 20))
+                                     prominence=np.max(spectrum)/50,  # sensitivity minus background
+                                     width=(0, 20))  # max peak width -> needs adjustment!!!
         nPeaks = len(peaks)
-        print("Peaks found:", nPeaks)
         # consider NMAX highest, sort key = amplitude descending
         if nPeaks != 0:
             list1, list2 = (list(t) for t in zip(*sorted(zip(spectrum[peaks], peaks), reverse=True)))
@@ -325,13 +280,15 @@ class Tuner:
 
         _stop = timeit.default_timer()
         if _debug:
+            print("Peaks found:", nPeaks)
             print("Time for peak finding [s]:", _stop - _start)
 
         return list2, list1
 
     def fft(self, amp, samples=None):
         """
-        performs FFT on a Hanning apodized time series and a Gauss smoothing afterwards
+        performs FFT on a Hanning apodized time series and a Gauss smoothing afterwards. High pass filter performed as
+        well.
 
         :param amp: list float
             time series
@@ -400,89 +357,34 @@ class Tuner:
 
         return None, None
 
-    def inharmonicity(self, f1, fn, k):
+    def harmonics(self, amp, freq, ind):
         """
-        calculates the inharmonicity coefficient and fundamental frequency from its partials
-
-        :param f1: float
-            base frequency 1st partial
-        :param fn: float
-            frequency of partial
-        :param k: int
-            number of partial
+        :param amp: ndarray
+            amplitudes of FFT transformed spectrum
+        :param freq: ndarray
+            freqencies of FFT transformed spectrum (same dimension of amp
+        :param ind: ndarray
+            peak positions found in FFT spectrum (NMAX highest, sorted by ascending frequencies
         :return:
-        float or None
-            inharmonicity coefficient
-        float on None
-            fundamental frequency (calculatory)
+        ndarray
+            positions of first 8 partials as found in fit
         """
-        # returns b and f_fundamental
-        BMAX = 0.001
-        partial_r = (fn / (k * f1)) ** 2
-        if (k ** 2 - partial_r) > 0:
-            b = (partial_r - 1.) / (k ** 2 - partial_r)
-            # -rethink -BMAX to allow for the low resolution !!!!
-            if -BMAX <= b <= BMAX:
-                f_fundamental = f1 / np.sqrt(1. + b)
-
-                return b, f_fundamental
-
-        return None, None
-
-    def harmonics(self, ind, height=None):
-        """
-
-        :param ind: list float
-            list of peaks (sort key: frequency)
-        :param height: list float (optional)
-            list of peak heights (sort key: frequency)
-        :return:
-        float
-            base frequency of lowest peak found with at least 5 partials
-        """
-        NPARTIALS = 5
-        NN = 8
         _start = timeit.default_timer()
 
-        # f_1 > f_fundamental
-        for i in range(0, len(ind)-1):
-            # f_n partial
-            b_sum = 0.
-            f_fundamental_sum = 0
-            height_max = height[i]
-            _counter_f1 = 1
-            for j in range(1, len(ind)):
-                # seek partials up to number 8
-                for k in range(2, NN):  # k is partial of fundamental frequency
-                    # b is the inharmonicity coefficient b < 0.005 for a harpsichord
-                    b, f_fundamental = self.inharmonicity(ind[i], ind[j], k)
-                    if b is not None:
-                        print("partial: {0:d} lower: {1:8.2f}Hz upper: {2:8.2f}Hz counter: {3:d}"
-                              " b: {4: 0.6f} fundamental: {5:8.2f}Hz"
-                              .format(k, ind[i], ind[j], _counter_f1, b, f_fundamental))
-                        b_sum += b
-                        f_fundamental_sum += f_fundamental
-                        _counter_f1 += 1
-                        height_max = max(height_max, height[j])
-            # avarage values for f0 and b to calculate first partial f1
-            if _counter_f1 >= NPARTIALS:
-                b_sum /= (_counter_f1-1)
-                f_fundamental_sum /= (_counter_f1-1)
-                f1 = f_fundamental_sum * np.sqrt(1. + b_sum)
-                print("f1: {0:4.2f} Hz, no partials: {1}, inharm.coeff: {2:.5f}, fundamental freq.: {3:4.2f}"
-                      .format(f1, _counter_f1-1, b_sum, f_fundamental_sum))
+        opt = threaded_opt(ind, amp, freq)
+        opt.run()
+        # print("The best result is:", opt.best_fun, opt.best_x)
 
-                _stop = timeit.default_timer()
-                if _debug:
-                    print("Time for partials finding [s]:", _stop - _start)
-
-                return f1
+        # prepare for displaying vertical bars, and key finding etc.
+        f_n = []
+        for n in range(1, 9):
+            f_n = np.append(f_n, opt.best_x[0] * n * np.sqrt(1. + opt.best_x[1] * n**2))
 
         _stop = timeit.default_timer()
         if _debug:
-            print("Time for partials finding [s]:", _stop - _start)
+            print("time utilized for minimizer [s]: " + str(_stop - _start))
 
-        return None
+        return f_n
 
     def on_press(self, key):
         """
@@ -533,5 +435,5 @@ def main():
     keyboard.add_hotkey('ctrl+m', a.on_press, args='m')
 
     while a.animate == 'x':
-        # restart
+        # restart after ESC
         plt.close('all')
