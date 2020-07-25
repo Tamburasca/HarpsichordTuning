@@ -158,15 +158,14 @@ class Tuner:
                                             freq=t1,
                                             ind=peakList)
             # if key found print it and its offset colored red or green
+            displayed_text = ""
+            color = 'none'
             if f_measured[0]:
                 tone, displaced = self.find(f_measured=f_measured[0])
                 if tone:
                     displayed_text = "{2:s} (a1={3:3.0f}Hz) {0:s} offset={1:.0f} cent"\
                         .format(tone, displaced, self.tuning, self.a1)
                     color = 'green' if displaced >= 0 else 'red'
-            else:
-                displayed_text = " "
-                color = 'none'
 
             # instantiate first plot and copy background
             if _firstplot:
