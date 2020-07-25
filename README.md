@@ -7,7 +7,7 @@ subsequently Gauss smoothing and Butterworth high-pass filtering is applied. The
 with a theoretical overtone spectrum for strings. The result of the cross-correlation is maximized. Inharmonicity of 
 strings is considered here through following equation
 
-f<sub>n</sub> = n * f<sub>1</sub> * sqrt(1 + B * n<sup>2</sup>)
+f<sub>n</sub> = n * f<sub>0</sub> * sqrt(1 + B * n<sup>2</sup>)
 
 where n = 1, 2, 3, ... and B is the inharmonicity coefficient.
  
