@@ -59,7 +59,7 @@ FORMAT = pyaudio.paInt16
 CHANNELS = 1
 # rate 48 kHz derived from driver -> hardware & sound
 RATE = 44100
-SIGMA = 2
+SIGMA = 1
 #
 _debug = False
 
@@ -313,7 +313,7 @@ class Tuner:
         # PDS
         # y = 2. * RATE * np.abs(y_raw) ** 2 / samples
         # convolve with a Gaussian of width SIGMA
-        filt = signal.gaussian(M=31,
+        filt = signal.gaussian(M=21,
                                std=SIGMA)
         spectrum = signal.convolve(in1=y,
                                    in2=filt,
@@ -372,7 +372,7 @@ class Tuner:
 
         opt = threaded_opt(ind, amp, freq)
         opt.run()
-        # print("The best result is:", opt.best_fun, opt.best_x)
+        print("The best result is [f0 , B] = ", opt.best_x)
 
         # prepare for displaying vertical bars, and key finding etc.
         f_n = []
