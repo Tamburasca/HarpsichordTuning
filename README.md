@@ -1,6 +1,7 @@
 # Harpsichord Tuning
 
-A tuning tool for string instruments, such as harpsichords and pianos. First experiments published here. 
+A tuning tool for string instruments, such as harpsichords and pianos. First experiments published here. We need to test 
+with pianos, they have less partials than harpsichords. 
 
 Collects a mono audio signal from an input stream. The audio signal runs through a FFT with a Hanning apodization,
 subsequently Gauss smoothing and Butterworth high-pass filtering is applied. The resulting spectrum is cross-correlated
@@ -23,8 +24,8 @@ HAYE HINRICHSEN, REVISTA BRASILEIRA DE ENSINA FISICA, VOLUME 34, NUMBER 2, 2301 
 
 Due to the low resolution of about 0.5 Hz/channel, the determination of inharmonicity coefficient 
 seems somewhat difficult.
-In order to achieve higher resolution the sampling interval needs to be enlarged, e.g. by pressing ctrl-k. However, that hampers the usability of this tool. Owing to the higher partials measured 
-(up to 10) with this code, a determination of the inharmonicity coefficient appears feasible, though.
+In order to achieve higher resolution the sampling interval needs to be enlarged, e.g. by pressing ctrl-k. However, that 
+hampers the usability of this tool. Owing to the higher partials measured with this code, a determination of the inharmonicity coefficient appears feasible, though.
 
 The hotkeys ctrl-y and ctrl-x exits and stops the program, respectively, ESC to resume. ctrl-j and ctrl-k shorten
 and lengthen the recording interval within small ranges, whereas ctrl-n and ctrl-m diminish and increase the maximum 

@@ -45,6 +45,8 @@ __status__ = "Development"
 import pyaudio
 import numpy as np
 from scipy import signal
+# from scipy import sparse
+# from scipy.sparse.linalg import spsolve
 import matplotlib.pyplot as plt
 from matplotlib.collections import EventCollection
 import timeit
@@ -146,29 +148,31 @@ class Tuner:
             resolution = RATE / samples
             print('Resolution (Hz/channel): ', resolution)
 
-            # calculate FFT
             t1, yfft = self.fft(amp=amp,
-                                samples=samples)
-            # peakfinding
-            peakPos, peakHeight = self.peak(spectrum=yfft)
+                                samples=samples)  # calculate FFT
+
+            # baseline = self.baseline_als_optimized(y=yfft)  # baseline subtraction
+            # yfft = yfft - baseline
+
+            peakPos, peakHeight = self.peak(spectrum=yfft)  # peakfinding
             peakList = t1[peakPos]
-            # find the key
+
             if peakList is not None:
                 f_measured = self.harmonics(amp=yfft,
                                             freq=t1,
-                                            ind=peakList)
-            # if key found print it and its offset colored red or green
+                                            ind=peakList,
+                                            height=peakHeight)  # find the key
+
             displayed_text = ""
             color = 'none'
-            if f_measured[0]:
+            if f_measured.size != 0:  # if key is found print it and its offset colored red or green
                 tone, displaced = self.find(f_measured=f_measured[0])
                 if tone:
                     displayed_text = "{2:s} (a1={3:3.0f}Hz) {0:s} offset={1:.0f} cent"\
                         .format(tone, displaced, self.tuning, self.a1)
                     color = 'green' if displaced >= 0 else 'red'
 
-            # instantiate first plot and copy background
-            if _firstplot:
+            if _firstplot:  # instantiate first plot and copy background
                 # Setup figure, axis, lines, text and initiate plot once and copy background
                 fig = plt.gcf()
                 ax = fig.add_subplot(211)
@@ -176,6 +180,7 @@ class Tuner:
                 fig.set_size_inches(12, 8)
                 ln, = ax.plot(t, amp)
                 ln1, = ax1.plot(t1, yfft)
+                # ln2, = ax1.plot(t1, baseline)
                 text = ax1.text(self.fmax, np.max(yfft), "",
                                 # color='',
                                 verticalalignment='top',
@@ -192,6 +197,8 @@ class Tuner:
             # upper subplot
             ln.set_xdata(t)
             ln.set_ydata(amp)
+            # ln2.set_xdata(t1)
+            # ln2.set_ydata(baseline)
             ax.set_xlim([0., np.max(t)])
             # lower subplot
             ln1.set_xdata(t1)
@@ -274,8 +281,8 @@ class Tuner:
             list1, list2 = (list(t) for t in zip(*sorted(zip(spectrum[peaks], peaks), reverse=True)))
             del list2[NMAX:]
             del list1[NMAX:]
-            # re-sort sort key = frequency ascending
-            list2, list1 = (list(t) for t in zip(*sorted(zip(list2, list1))))
+        # re-sort again with sort key = frequency ascending
+        #    list2, list1 = (list(t) for t in zip(*sorted(zip(list2, list1))))
 
         _stop = timeit.default_timer()
         if _debug:
@@ -356,34 +363,53 @@ class Tuner:
 
         return None, None
 
-    def harmonics(self, amp, freq, ind):
+    def harmonics(self, amp, freq, ind, height):
         """
         :param amp: ndarray
             amplitudes of FFT transformed spectrum
         :param freq: ndarray
             freqencies of FFT transformed spectrum (same dimension of amp
         :param ind: ndarray
-            peak positions found in FFT spectrum (NMAX highest, sorted by ascending frequencies
+            peak positions found in FFT spectrum (NMAX highest)
+        :param height: ndarray
+            peak height found in FFT spectrum (NMAX highest)
         :return:
         ndarray
             positions of first 8 partials as found in fit
         """
         _start = timeit.default_timer()
 
-        opt = threaded_opt(ind, amp, freq)
+        opt = threaded_opt(amp, freq, ind, height)
         opt.run()
         print("The best result is [f0 , B] = ", opt.best_x)
 
         # prepare for displaying vertical bars, and key finding etc.
-        f_n = []
-        for n in range(1, 9):
-            f_n = np.append(f_n, opt.best_x[0] * n * np.sqrt(1. + opt.best_x[1] * n**2))
+        f_n = np.array([])
+        if opt.best_x is not None:
+            for n in range(1, 9):
+                f_n = np.append(f_n, opt.best_x[0] * n * np.sqrt(1. + opt.best_x[1] * n**2))
 
         _stop = timeit.default_timer()
         if _debug:
             print("time utilized for minimizer [s]: " + str(_stop - _start))
 
         return f_n
+
+    """
+    # in case it is needed 
+    def baseline_als_optimized(self, y, lam=1.e4, p=0.002, niter=10):
+        L = len(y)
+        D = sparse.diags([1, -2, 1], [0, -1, -2], shape=(L, L - 2))
+        D = lam * D.dot(D.transpose())  # Precompute this term since it does not depend on `w`
+        w = np.ones(L)
+        W = sparse.spdiags(w, 0, L, L)
+        for i in range(niter):
+            W.setdiag(w)  # Do not create a new matrix, just update diagonal values
+            Z = W + D
+            z = spsolve(Z, w * y)
+            w = p * (y > z) + (1 - p) * (y < z)
+        return z
+    """
 
     def on_press(self, key):
         """
@@ -406,22 +432,25 @@ class Tuner:
             print("Recording Time: {0:1.1f}s".format(self.record_seconds))
         elif key == 'j':
             self.record_seconds -= 0.1
-            if self.record_seconds < 0:
-                self.record_seconds = 0
+            if self.record_seconds < 0.1:
+                self.record_seconds = 0.1
             print("Recording Time: {0:1.1f}s".format(self.record_seconds))
         elif key == 'n':
             self.fmax -= 100
             if self.fmax < 500:
                 self.fmax = 500
+            print("Max frequency displayed: {0:1.0f}Hz".format(self.fmax))
         elif key == 'm':
             self.fmax += 100
             if self.fmax > 10000:
                 self.fmax = 10000
+            print("Max frequency displayed: {0:1.0f}Hz".format(self.fmax))
 
         return None
 
 
 def main():
+
     for tune in tuningtable.keys():
         print("Tuning ({1:d}) {0:s}".format(tune, list(tuningtable).index(tune)))
     a = Tuner(tuning=list(tuningtable.keys())[int(input("Tuning Number?: "))],

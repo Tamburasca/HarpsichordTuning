@@ -13,16 +13,18 @@ class threaded_opt:
     """
 
     # initializations
-    def __init__(self, ind, amp, freq):
+    def __init__(self, amp, freq, ind, height):
 
         self.queue = Queue()
         self.function = self.chi_square
-        self.amp = amp
+        self.amplitude = amp
         self.freq = freq
         self.a = ind
+        # this is still a lousy solution, need to revise
         if len(ind) != 0:
-            for i in range(2, 9):
+            for i in range(2, 7):
                 self.a = np.append(self.a, ind[0] / i)
+            print(self.a)
         self.num_threads = len(self.a)
         self.best_fun = None
         self.best_x = None
@@ -57,24 +59,23 @@ class threaded_opt:
     def target_function(self, thread_ID):
 
         result = minimize(self.function,
-                         [self.a[thread_ID], 0.],
-                         bounds=self.bnds(self.a[thread_ID]),
-                         method="Powell" # "nelder-mead"
+                          [self.a[thread_ID], 0.],
+                          bounds=self.bnds(self.a[thread_ID]),
+                          method="Powell"  # "nelder-mead"
                          )
         self.queue.put((result.fun, result.x))
 
     # do the cross-correlation and maximize it (negate result for optimizer)
     def chi_square(self, x):
         r = 0
-        i = 0
-        for n in range(1, 10):
+        _i = 0
+        for n in range(1, 8):
             tmp = 1. + x[1] * n ** 2
             tmp = 0 if tmp < 0 else tmp
             f_n = x[0] * n * np.sqrt(tmp)
-            for i, value in enumerate(self.freq[i:], start=i):  # start, where we left last call for cpu time reasons
+            for _i, value in enumerate(self.freq[_i:], start=_i):  # resume, where we just left for cpu time reasons
                 if value > f_n:  # mask theoretical frequencies with inharmonicity
-                    r += np.sum(self.amp[i-2:i+2])
+                    r += np.sum(self.amplitude[_i-2:_i+2])
                     break
-            # print(x, n, self.amp[i-1] + self.amp[i])
 
         return -r
