@@ -41,6 +41,13 @@ __version__ = "0.2"
 __maintainer__ = "Dr. Ralf A. Timmermann"
 __email__ = "rtimmermann@astro.uni-bonn.de"
 __status__ = "Development"
+__doc__ = \
+"FFTonLiveAudio Copyright (C) 2020 Dr. Ralf Antonius Timmermann\n\
+This program comes with ABSOLUTELY NO WARRANTY.\n\
+This is free software, and you are welcome to redistribute it\n\
+under certain conditions.\n"
+
+print (__doc__)
 
 import pyaudio
 import numpy as np
