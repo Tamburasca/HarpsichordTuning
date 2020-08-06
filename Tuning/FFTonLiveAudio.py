@@ -1,36 +1,38 @@
 #!/usr/bin/env python
 
 """
-A tuning device for string instruments, such as (1) harpsichords and (2) pianos.
+FFTonLiveAudio Copyright (C) 2020 Dr. Ralf Antonius Timmermann
 
-Collects a mono audio signal from an input stream of length self.record_seconds and sample rate RATE. The audio
-signal runs through a FFT with a Hanning apodization. On the frequency domain we subsequently perform a Gauss smoothing
-with width SIGMA and a F_ORDER order Butterworth high-pass filter (cutoff frequency at F_FILT).
-Thereafter, we run a peak finding of which only the NMAX highest peaks are considered. Of those peaks we try to find
-their partials (overtones). The peak with the lowest frequency and at least 5 partials is selected and compared with a
-tuning table (feel free to enhance for yourself). The deviation in units of cent is shown in the frequency plot,
+A graphical tuning device for string instruments, such as (1) harpsichords
+and (2) pianos. Still testing!
+
+Collects an audio signal from an input stream, that runs through a FFT with
+a Hanning apodization. Subsequently, in the frequency domain we apply Gauss
+smoothing and a Butterworth high-pass filter, which is followed by a peak
+finding. Of those peaks we try to find the partials (overtones). The
+fundamental is compared with a tuning table (feel free to enhance for
+yourself). The deviation in units of cent is shown in the frequency plot,
 too low (in red), too high (in green).
 
-Inharmonicity of strings is considered here
-f_n = n * f_1 * sqrt(1 + B * n**2), where n = 1, 2, 3, ... and B is the inharmonicity coefficient (max displacement
-b < 0.005 for a harpsichord)
+Inharmonicity of strings is considered by the equation
+f_n = n * f_1 * sqrt(1 + B * n**2), where n = 1, 2, 3, ... and
+B is the inharmonicity coefficient.
+
 see also
-HARVEY FLETCHER, THE JOURNAL OF THE ACOUSTICAL SOCIETY OF AMERICA VOLUME 36, NUMBER 1 JANUARY 1964
-HAYE HINRICHSEN, REVISTA BRASILEIRA DE ENSINA FISICA, VOLUME 34, NUMBER 2, 2301 (2012)
+1) HARVEY FLETCHER, THE JOURNAL OF THE ACOUSTICAL SOCIETY OF AMERICA VOLUME 36,
+NUMBER 1 JANUARY 1964
+2) HAYE HINRICHSEN, REVISTA BRASILEIRA DE ENSINA FISICA, VOLUME 34, NUMBER 2,
+2301 (2012)
+3) Joonas Tuovinen, Signal Processing in a Semi-AutomaticPiano Tuning System
+(MA of Science), Aalto University, School of Electrical Engineering
 
-Due to the low resolution of about .5 Hz/channel, the determination of B is difficult, particularly in the bass area. In
-In order to achieve higher resolution the sampling interval would have to be to large.
+The hotkeys ctrl-y and ctrl-x exits and stops the program, respectively,
+ESC to resume. Ctrl-j and ctrl-k shorten and lengthen the recording interval,
+whereas ctrl-n and ctrl-m diminish and increase the max frequency displayed.
 
-The hotkeys ctrl-y and ctrl-x exits and stops the program, respectively, ESC to resume. ctrl-j and ctrl-k shorten
-and lengthen the recording interval, whereas ctrl-n and ctrl-m diminish and increase the max frequency displayed.
-
-Runs with
-python      >=3.6
-keyboard    >=0.13.5
-PyAudio     >=0.2.11
-numpy       >=1.18.1
-scipy       >=1.4.1
-matplotlib  >=3.2.1
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute it under
+certain conditions.
 """
 
 __author__ = "Dr. Ralf Antonius Timmermann"
@@ -41,13 +43,8 @@ __version__ = "0.2"
 __maintainer__ = "Dr. Ralf A. Timmermann"
 __email__ = "rtimmermann@astro.uni-bonn.de"
 __status__ = "Development"
-__doc__ = \
-"FFTonLiveAudio Copyright (C) 2020 Dr. Ralf Antonius Timmermann\n\
-This program comes with ABSOLUTELY NO WARRANTY.\n\
-This is free software, and you are welcome to redistribute it\n\
-under certain conditions.\n"
 
-print (__doc__)
+print(__doc__)
 
 import pyaudio
 import numpy as np
@@ -187,7 +184,6 @@ class Tuner:
                 fig.set_size_inches(12, 8)
                 ln, = ax.plot(t, amp)
                 ln1, = ax1.plot(t1, yfft)
-                # ln2, = ax1.plot(t1, baseline)
                 text = ax1.text(self.fmax, np.max(yfft), "",
                                 # color='',
                                 verticalalignment='top',
@@ -204,8 +200,6 @@ class Tuner:
             # upper subplot
             ln.set_xdata(t)
             ln.set_ydata(amp)
-            # ln2.set_xdata(t1)
-            # ln2.set_ydata(baseline)
             ax.set_xlim([0., np.max(t)])
             # lower subplot
             ln1.set_xdata(t1)
@@ -270,7 +264,7 @@ class Tuner:
             list of frequencies
         """
         # max number of highest peaks
-        NMAX = 1
+        NMAX = 5
         list1 = []
         list2 = []
         _start = timeit.default_timer()
@@ -289,7 +283,7 @@ class Tuner:
             del list2[NMAX:]
             del list1[NMAX:]
         # re-sort again with sort key = frequency ascending
-        #    list2, list1 = (list(t) for t in zip(*sorted(zip(list2, list1))))
+            list2, list1 = (list(t) for t in zip(*sorted(zip(list2, list1))))
 
         _stop = timeit.default_timer()
         if _debug:
@@ -370,7 +364,7 @@ class Tuner:
 
         return None, None
 
-    def harmonics(self, amp, freq, ind, height):
+    def harmonics(self, amp, freq, ind, height=None):
         """
         :param amp: ndarray
             amplitudes of FFT transformed spectrum
@@ -384,16 +378,45 @@ class Tuner:
         ndarray
             positions of first 8 partials as found in fit
         """
+        Npartial = 11
+        initial = []
+
         _start = timeit.default_timer()
 
-        opt = threaded_opt(amp, freq, ind, height)
-        opt.run()
+        if len(ind) > 1:
+            # Median - Adjustive Trajectories (MAT)
+            # Loop through all the peak positions and evaluate f_0 and b for each combination
+            for i_ind in ind[:-1]:
+                for j_ind in ind[1:]:
+                    try:
+                        # Loop through the partials up to Npartial
+                        for m in range(1, Npartial-1):
+                            for k in range(m+1, Npartial):
+                                tmp = (j_ind * m / k) ** 2
+                                b = (tmp - i_ind ** 2) / ((k * i_ind) ** 2 - tmp * m ** 2)
+                                # b is also defined in boundaries in multiProcess.py
+                                if 0 <= b < 0.002:
+                                    f_fundamental = i_ind / (m * np.sqrt(1. + b * m ** 2))
+                                    #print("partial: {0:d} {1:d} lower: {2:7.2f} upper: {3:7.2f} "
+                                    #      "b: {4:0.6f} fundamental: {5:7.2f}".
+                                    #      format(m, k, i_ind, j_ind, b, f_fundamental))
+                                    # pump it all to the minimizer and let him decide, what's best
+                                    initial.append(tuple((f_fundamental, b)))
+                                    raise StopIteration  # break two loops here
+                    except StopIteration:
+                        pass
+        elif len(ind) == 1:
+            initial.append(tuple((ind[0], 0.)))
+
+        # for the time being it's only one element to optimze with
+        opt = threaded_opt(amp, freq, initial)
+        opt.run
         print("The best result is [f0 , B] = ", opt.best_x)
 
         # prepare for displaying vertical bars, and key finding etc.
         f_n = np.array([])
         if opt.best_x is not None:
-            for n in range(1, 9):
+            for n in range(1, 11):
                 f_n = np.append(f_n, opt.best_x[0] * n * np.sqrt(1. + opt.best_x[1] * n**2))
 
         _stop = timeit.default_timer()
@@ -401,22 +424,6 @@ class Tuner:
             print("time utilized for minimizer [s]: " + str(_stop - _start))
 
         return f_n
-
-    """
-    # in case it is needed 
-    def baseline_als_optimized(self, y, lam=1.e4, p=0.002, niter=10):
-        L = len(y)
-        D = sparse.diags([1, -2, 1], [0, -1, -2], shape=(L, L - 2))
-        D = lam * D.dot(D.transpose())  # Precompute this term since it does not depend on `w`
-        w = np.ones(L)
-        W = sparse.spdiags(w, 0, L, L)
-        for i in range(niter):
-            W.setdiag(w)  # Do not create a new matrix, just update diagonal values
-            Z = W + D
-            z = spsolve(Z, w * y)
-            w = p * (y > z) + (1 - p) * (y < z)
-        return z
-    """
 
     def on_press(self, key):
         """

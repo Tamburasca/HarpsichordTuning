@@ -1,37 +1,33 @@
 from multiprocessing import Process, Queue
 from scipy.optimize import minimize
 import numpy as np
+from operator import itemgetter
 
 
 class threaded_opt:
     """
     driver for multiprocessing:
-    called from harmonics to maximize cross correlation. In this case the two 1-dimensional sequences have been reduced
-    to those elements not zero to speed up the code.
+    called from harmonics to maximize cross correlation. In this case the two
+    1-dimensional sequences have been reduced to those elements not zero to
+    speed up the code.
     Each minimization call is preformed by a discrete process (multiprocessing)
     We are still playing around with the optimization method, that sucks somehow
     """
 
     # initializations
-    def __init__(self, amp, freq, ind, height):
+    def __init__(self, amp, freq, initial):
 
         self.queue = Queue()
-        self.function = self.chi_square
-        self.amplitude = amp
+        self.amp = amp
         self.freq = freq
-        self.a = ind
-        # this is still a lousy solution, need to revise
-        if len(ind) != 0:
-            for i in range(2, 7):
-                self.a = np.append(self.a, ind[0] / i)
-            print(self.a)
-        self.num_threads = len(self.a)
+        self.a = list(map(itemgetter(0), initial))
+        self.b = list(map(itemgetter(1), initial))
+        self.num_threads = len(initial)
         self.best_fun = None
         self.best_x = None
 
-        self.bnds = lambda x: ((0.95 * x, 1.05 * x), (0, 0.001))  # not needed with some optimizers
-
     # Run the optimization. Make the threads here.
+    @property
     def run(self):
 
         processes = []
@@ -41,27 +37,31 @@ class threaded_opt:
             processes.append(p)
             p.start()
 
-        self.best_fun = 1.e36
         for p in processes:
+            p.join(timeout=1)
+
+        self.best_fun = 1.e36
+        for _ in processes:
             chi, x = self.queue.get()
-            # print(chi, x)
             if chi < self.best_fun:
                 self.best_x = x
                 self.best_fun = chi
         self.queue.close()
-        self.queue.join_thread()
-        for p in processes:
-            p.join()
 
         return None
 
     # Each thread goes through this.
     def target_function(self, thread_ID):
 
-        result = minimize(self.function,
-                          [self.a[thread_ID], 0.],
-                          bounds=self.bnds(self.a[thread_ID]),
-                          method="Powell"  # "nelder-mead"
+        # set the boundaries for f_0 within 2% and b < 0.002
+        def bnds(x):
+            return ((0.98 * x, 1.02 * x), (0, 0.002))
+
+        result = minimize(self.chi_square,
+                          [self.a[thread_ID], self.b[thread_ID]],
+                          bounds=bnds(self.a[thread_ID]),
+                          method="Powell",  # "nelder-mead"
+                          options={'xtol': 1.e-7}  # still need to fiddle with xtol
                          )
         self.queue.put((result.fun, result.x))
 
@@ -69,13 +69,13 @@ class threaded_opt:
     def chi_square(self, x):
         r = 0
         _i = 0
-        for n in range(1, 8):
+        for n in range(1, 11):
             tmp = 1. + x[1] * n ** 2
             tmp = 0 if tmp < 0 else tmp
             f_n = x[0] * n * np.sqrt(tmp)
             for _i, value in enumerate(self.freq[_i:], start=_i):  # resume, where we just left for cpu time reasons
                 if value > f_n:  # mask theoretical frequencies with inharmonicity
-                    r += np.sum(self.amplitude[_i-2:_i+2])
+                    r += np.sum(self.amp[_i-2:_i+2])
                     break
 
         return -r
