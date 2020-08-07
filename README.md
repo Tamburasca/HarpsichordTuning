@@ -8,11 +8,10 @@ Hanning apodization. Subsequently, in the frequency domain, Gauss smoothing and 
  applied. The resulting spectrum is cross-correlated with a theoretical overtone spectrum for strings. The result of
  the cross-correlation is maximized. Inharmonicity of strings is considered here through equation
 
-<img src="https://latex.codecogs.com/svg.latex?\Large&space;f_n = n * f_0 * \sqrt{1 + B * n^2}"/>
+<em>f<sub>n</sub> = n * f<sub>0</sub> * sqrt(1 + B * n<sup>2</sup>)</em>
 
-\
-where n = 1, 2, 3, ... B is the inharmonicity coefficient and f<sub>0</sub> the fundamental frequency, respectively. 
-
+where n = 1, 2, 3, ... B and f<sub>0</sub> is the inharmonicity coefficient and fundamental frequency, repsectively.
+ 
 The first partial f<sub>1</sub> is compared with a tuning table, currently comprising solely Werkmeister III, 
 1/4 Comma Meantone, and Equal Temperament (feel free to edit/enhance for yourself). The deviation in units of cent is 
 shown in the frequency plot, too low (in red), too high (in green).
