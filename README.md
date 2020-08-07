@@ -23,7 +23,7 @@ NUMBER 1 JANUARY 1964
 2) HAYE HINRICHSEN, REVISTA BRASILEIRA DE ENSINA FISICA, VOLUME 34, NUMBER 2,
 2301 (2012)
 3) Joonas Tuovinen, Signal Processing in a Semi-AutomaticPiano Tuning System
-(MA of Science), Aalto University, School of Electrical Engineering
+(MA of Science), Aalto University, School of Electrical Engineering (2019)
 
 
 Due to the low resolution of about 0.5 Hz/channel, the determination of inharmonicity coefficient seems somewhat 
