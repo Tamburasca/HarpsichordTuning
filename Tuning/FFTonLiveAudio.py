@@ -49,8 +49,6 @@ print(__doc__)
 import pyaudio
 import numpy as np
 from scipy import signal
-# from scipy import sparse
-# from scipy.sparse.linalg import spsolve
 import matplotlib.pyplot as plt
 from matplotlib.collections import EventCollection
 import timeit
@@ -141,8 +139,8 @@ class Tuner:
             # hotkey interrupts
             if self.rc == 'x':
                 keyboard.wait('esc')
+                # re-enter again
                 self.rc = None
-                return 'x'
             elif self.rc == 'y':
                 return 'y'
 
@@ -154,9 +152,6 @@ class Tuner:
 
             t1, yfft = self.fft(amp=amp,
                                 samples=samples)  # calculate FFT
-
-            # baseline = self.baseline_als_optimized(y=yfft)  # baseline subtraction
-            # yfft = yfft - baseline
 
             peakPos, peakHeight = self.peak(spectrum=yfft)  # peakfinding
             peakList = t1[peakPos]
@@ -435,7 +430,6 @@ class Tuner:
         """
         if key == 'x':
             print("continue with ESC")
-            self.stream.stop_stream()
             self.rc = 'x'
         elif key == 'y':
             print("quitting...")
@@ -468,7 +462,7 @@ def main():
     for tune in tuningtable.keys():
         print("Tuning ({1:d}) {0:s}".format(tune, list(tuningtable).index(tune)))
     a = Tuner(tuning=list(tuningtable.keys())[int(input("Tuning Number?: "))],
-              a1=float(input("base frequency a1 in Hz?: ")))
+              a1=float(input("base frequency for a1 in Hz?: ")))
     keyboard.add_hotkey('ctrl+x', a.on_press, args='x')
     keyboard.add_hotkey('ctrl+y', a.on_press, args='y')
     keyboard.add_hotkey('ctrl+j', a.on_press, args='j')
@@ -476,6 +470,7 @@ def main():
     keyboard.add_hotkey('ctrl+n', a.on_press, args='n')
     keyboard.add_hotkey('ctrl+m', a.on_press, args='m')
 
-    while a.animate == 'x':
-        # restart after ESC
-        plt.close('all')
+    a.animate
+    plt.close('all')
+
+    return 0
