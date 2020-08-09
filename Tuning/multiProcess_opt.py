@@ -2,6 +2,7 @@ from multiprocessing import Process, Queue
 from scipy.optimize import minimize
 import numpy as np
 from operator import itemgetter
+from .parameters import _debug, INHARM
 
 
 class threaded_opt:
@@ -47,15 +48,23 @@ class threaded_opt:
                 self.best_x = x
                 self.best_fun = chi
         self.queue.close()
+        self.queue.join_thread()
+
+        # clean up processes that did not join within timeout period
+        while processes:
+            p = processes.pop()
+            if p.is_alive():
+                p.terminate()
+                print("Process did not join!  Cleaning up ...")
 
         return None
 
     # Each thread goes through this.
     def target_function(self, thread_ID):
 
-        # set the boundaries for f_0 within 2% and b < 0.002
+        # set the boundaries for f_0 within 2% and b < INHARM
         def bnds(x):
-            return ((0.98 * x, 1.02 * x), (0, 0.002))
+            return ((0.98 * x, 1.02 * x), (0, INHARM))
 
         result = minimize(self.chi_square,
                           [self.a[thread_ID], self.b[thread_ID]],

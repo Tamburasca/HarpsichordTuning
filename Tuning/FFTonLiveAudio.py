@@ -16,7 +16,8 @@ too low (in red), too high (in green).
 
 Inharmonicity of strings is considered by the equation
 f_n = n * f_1 * sqrt(1 + B * n**2), where n = 1, 2, 3, ... and
-B is the inharmonicity coefficient.
+B is the inharmonicity coefficient. The maximum inharmonicity accepted is
+defined in parameters.py Change accordingly for harpsichords and pianos.
 
 see also
 1) HARVEY FLETCHER, THE JOURNAL OF THE ACOUSTICAL SOCIETY OF AMERICA VOLUME 36,
@@ -56,6 +57,8 @@ import time
 import keyboard
 from .multiProcess_opt import threaded_opt
 from .tuningTable import tuningtable
+from .parameters import _debug, INHARM
+
 
 # do not modify below
 FORMAT = pyaudio.paInt16
@@ -64,8 +67,6 @@ CHANNELS = 1
 # rate 48 kHz derived from driver -> hardware & sound
 RATE = 44100
 SIGMA = 1
-#
-_debug = False
 
 
 class Tuner:
@@ -120,13 +121,16 @@ class Tuner:
 
         # start Recording
         self.stream.start_stream()
+
         while self.stream.is_active():
 
-            print('Starting Audio Stream...')
+            print('Started Audio Stream ...')
             _start = timeit.default_timer()
 
             time.sleep(self.record_seconds)
             self.stream.stop_stream()  # stop the input stream for the time being
+            print('Stopped Audio Stream ... Analyzing')
+
             # Convert the list of numpy-arrays into a 1D array (column-wise)
             amp = np.hstack(self.callback_output)
             # clear input stream
@@ -139,7 +143,6 @@ class Tuner:
             # hotkey interrupts
             if self.rc == 'x':
                 keyboard.wait('esc')
-                # re-enter again
                 self.rc = None
             elif self.rc == 'y':
                 return 'y'
@@ -161,6 +164,8 @@ class Tuner:
                                             freq=t1,
                                             ind=peakList,
                                             height=peakHeight)  # find the key
+            else:
+                f_measured = []
 
             displayed_text = ""
             color = 'none'
@@ -170,6 +175,8 @@ class Tuner:
                     displayed_text = "{2:s} (a1={3:3.0f}Hz) {0:s} offset={1:.0f} cent"\
                         .format(tone, displaced, self.tuning, self.a1)
                     color = 'green' if displaced >= 0 else 'red'
+
+            _start = timeit.default_timer()
 
             if _firstplot:  # instantiate first plot and copy background
                 # Setup figure, axis, lines, text and initiate plot once and copy background
@@ -192,21 +199,20 @@ class Tuner:
                 ax1.set_ylabel('Intensity/arb. units')
                 axbackground = fig.canvas.copy_from_bbox(ax.bbox)
                 ax1background = fig.canvas.copy_from_bbox(ax1.bbox)
-            # upper subplot
-            ln.set_xdata(t)
-            ln.set_ydata(amp)
-            ax.set_xlim([0., np.max(t)])
-            # lower subplot
-            ln1.set_xdata(t1)
-            ln1.set_ydata(yfft)
-            ax1.set_xlim([0., self.fmax])
-            # set text attributes of lower subplot
+            else:
+                # upper subplot
+                ln.set_xdata(t)
+                ln.set_ydata(amp)
+                ax.set_xlim([0., np.max(t)])
+                # lower subplot
+                ln1.set_xdata(t1)
+                ln1.set_ydata(yfft)
+                ax1.set_xlim([0., self.fmax])
+                # set text attributes of lower subplot
             text.set_text(displayed_text)
             text.set_color(color)
             text.set_x(self.fmax)
             text.set_y(np.max(yfft))
-
-            _start = timeit.default_timer()
 
             for c in ax1.collections:
                 c.remove()
@@ -237,13 +243,15 @@ class Tuner:
                 # fill in the axes rectangle
                 fig.canvas.blit(ax.bbox)
                 fig.canvas.blit(ax1.bbox)
-            self.stream.start_stream()  # restart the audio streaming again, expect some delay to the status change
+
+            # resume the audio streaming, expect some retardation for the status change
+            self.stream.start_stream()
+
             fig.canvas.flush_events()
 
             _stop = timeit.default_timer()
             if _debug:
                 print("time utilized for matplotlib [s]: " + str(_stop - _start))
-        print("started streaming")
 
         return self.rc
 
@@ -268,8 +276,8 @@ class Tuner:
         # prominences = signal.peak_prominences(x=spectrum, peaks=peaks)[0]
         # spectrum[peaks] == prominences with zero baseline
         peaks, _ = signal.find_peaks(x=spectrum,
-                                     distance=8.,
-                                     prominence=np.max(spectrum)/50,  # sensitivity minus background
+                                     distance=16.,
+                                     prominence=np.max(spectrum)/50.,  # sensitivity minus background
                                      width=(0, 20))  # max peak width -> needs adjustment!!!
         nPeaks = len(peaks)
         # consider NMAX highest, sort key = amplitude descending
@@ -378,6 +386,8 @@ class Tuner:
 
         _start = timeit.default_timer()
 
+        if _debug:
+            print(ind)
         if len(ind) > 1:
             # Median - Adjustive Trajectories (MAT)
             # Loop through all the peak positions and evaluate f_0 and b for each combination
@@ -389,21 +399,22 @@ class Tuner:
                             for k in range(m+1, Npartial):
                                 tmp = (j_ind * m / k) ** 2
                                 b = (tmp - i_ind ** 2) / ((k * i_ind) ** 2 - tmp * m ** 2)
-                                # b is also defined in boundaries in multiProcess.py
-                                if 0 <= b < 0.002:
+                                # INHARM is also used in boundaries in multiProcess.py
+                                if 0 <= b < INHARM:
                                     f_fundamental = i_ind / (m * np.sqrt(1. + b * m ** 2))
-                                    #print("partial: {0:d} {1:d} lower: {2:7.2f} upper: {3:7.2f} "
-                                    #      "b: {4:0.6f} fundamental: {5:7.2f}".
-                                    #      format(m, k, i_ind, j_ind, b, f_fundamental))
+                                    if _debug:
+                                        print("partial: {0:d} {1:d} lower: {2:7.2f} upper: {3:7.2f} "
+                                              "b: {4:0.6f} fundamental: {5:7.2f}".
+                                              format(m, k, i_ind, j_ind, b, f_fundamental))
                                     # pump it all to the minimizer and let him decide, what's best
                                     initial.append(tuple((f_fundamental, b)))
                                     raise StopIteration  # break two loops here
                     except StopIteration:
                         pass
+        # it's only one element to optimize with
         elif len(ind) == 1:
             initial.append(tuple((ind[0], 0.)))
 
-        # for the time being it's only one element to optimze with
         opt = threaded_opt(amp, freq, initial)
         opt.run
         print("The best result is [f0 , B] = ", opt.best_x)
