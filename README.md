@@ -27,10 +27,10 @@ shown in the frequency plot, too low (in red), too high (in green).
 ![image info](./pictures/screenshot.png)
 
 The upper plot represents the audio signal in the time domain, whereas the lower
-represents the frequency domain. The red vertical bars show the partials as 
+represents the frequency domain. The red vertical bars show the partials for 
+<em>n<sub>max</sub> = 10</em> as 
 derived from the base frequency and inharmonicity coefficient after maximizing 
-cross correlation for 
-<em>n<sub>max</sub> = 10</em>. The text in the upper right corner shows the 
+cross correlation. The text in the upper right corner shows the 
 deviation for a specific tuning.
 
 See also:
@@ -48,6 +48,6 @@ interval within small ranges, whereas ctrl-n and
  ctrl-m diminish and increase the maximum 
 frequency displayed in the lower frequency plot.
 
-On UNIX OS please consider to run the package with sudo rights: 
+On UNIX OS please consider running the package with sudo rights: 
 <em>sudo python3 -m Tuning</em>, owing to
  the requirement of the keyboard module.
