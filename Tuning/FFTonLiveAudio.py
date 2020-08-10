@@ -40,7 +40,7 @@ __author__ = "Dr. Ralf Antonius Timmermann"
 __copyright__ = "Copyright (C) Dr. Ralf Antonius Timmermann"
 __credits__ = ""
 __license__ = "GPLv3"
-__version__ = "0.2"
+__version__ = "0.3"
 __maintainer__ = "Dr. Ralf A. Timmermann"
 __email__ = "rtimmermann@astro.uni-bonn.de"
 __status__ = "Development"
@@ -63,10 +63,10 @@ from .parameters import _debug, INHARM
 # do not modify below
 FORMAT = pyaudio.paInt16
 # mono, not stereo
-CHANNELS = 1
+CHANNELS: int = 1
 # rate 48 kHz derived from driver -> hardware & sound
-RATE = 44100
-SIGMA = 1
+RATE: int = 44100
+SIGMA: float = 1.
 
 
 class Tuner:
@@ -124,17 +124,17 @@ class Tuner:
 
         while self.stream.is_active():
 
-            print('Started Audio Stream ...')
             _start = timeit.default_timer()
+            print('Started Audio Stream ...')
 
             time.sleep(self.record_seconds)
             self.stream.stop_stream()  # stop the input stream for the time being
-            print('Stopped Audio Stream ... Analyzing')
 
             # Convert the list of numpy-arrays into a 1D array (column-wise)
             amp = np.hstack(self.callback_output)
             # clear input stream
             self.callback_output = []
+            print('Stopped Audio Stream ... Analyzing')
 
             _stop = timeit.default_timer()
             if _debug:

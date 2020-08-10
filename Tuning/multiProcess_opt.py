@@ -18,7 +18,6 @@ class threaded_opt:
     # initializations
     def __init__(self, amp, freq, initial):
 
-        self.queue = Queue()
         self.amp = amp
         self.freq = freq
         self.a = list(map(itemgetter(0), initial))
@@ -31,7 +30,9 @@ class threaded_opt:
     @property
     def run(self):
 
+        self.queue = Queue()
         processes = []
+
         for x in range(self.num_threads):  # Make the threads and start them off
             p = Process(target=self.target_function,
                         args=(x,))
@@ -74,7 +75,7 @@ class threaded_opt:
                          )
         self.queue.put((result.fun, result.x))
 
-    # do the cross-correlation and maximize it (negate result for optimizer)
+    # maximize the cross-correlation (negate result for minimizer)
     def chi_square(self, x):
         r = 0
         _i = 0
