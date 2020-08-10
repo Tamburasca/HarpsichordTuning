@@ -18,7 +18,7 @@ fundamental frequency, respectively. The maximum inharmonicity coefficient
 needs to be adjusted, depending on the instrument to be tuned, B < 0.001 and 
  < 0.01 for harpsichords and pianos, respectively. 
  
-The first partial f<sub>1</sub> is compared with a tuning table, 
+The first partial f<sub>1</sub> is compared to a tuning table, 
 currently comprising solely Werkmeister III, 
 1/4 Comma Meantone, and Equal Temperament 
 (feel free to edit/enhance for yourself). The deviation in units of cent is 
@@ -39,7 +39,7 @@ See also:
 NUMBER 1 JANUARY 1964
 2) HAYE HINRICHSEN, REVISTA BRASILEIRA DE ENSINA FISICA, VOLUME 34, NUMBER 2,
 2301 (2012)
-3) Joonas Tuovinen, Signal Processing in a Semi-AutomaticPiano Tuning System
+3) Joonas Tuovinen, Signal Processing in a Semi-Automatic Piano Tuning System
 (MA of Science), Aalto University, School of Electrical Engineering (2019)
 
 The hotkeys ctrl-y and ctrl-x exits and stops the program, respectively, 
@@ -48,6 +48,6 @@ interval within small ranges, whereas ctrl-n and
  ctrl-m diminish and increase the maximum 
 frequency displayed in the lower frequency plot.
 
-On UNIX OS please consider running the package with sudo rights: 
+On UNIX OS please consider runnin the package with sudo rights: 
 <em>sudo python3 -m Tuning</em>, owing to
  the requirement of the keyboard module.
