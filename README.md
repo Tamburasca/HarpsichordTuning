@@ -24,6 +24,15 @@ currently comprising solely Werkmeister III,
 (feel free to edit/enhance for yourself). The deviation in units of cent is 
 shown in the frequency plot, too low (in red), too high (in green).
 
+![image info](./pictures/screenshot.png)
+
+The upper plot represents the audio signal in the time domain, whereas the lower
+represents the frequency domain. The red vertical bars show the partials as 
+derived from the base frequency and inharmonicity coefficient after maximizing 
+cross correlation for 
+<em>n<sub>max</sub> = 10</em>. The text in the upper right corner shows the 
+deviation for a specific tuning.
+
 See also:
 
 1) HARVEY FLETCHER, THE JOURNAL OF THE ACOUSTICAL SOCIETY OF AMERICA VOLUME 36,
