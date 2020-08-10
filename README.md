@@ -48,6 +48,6 @@ interval within small ranges, whereas ctrl-n and
  ctrl-m diminish and increase the maximum 
 frequency displayed in the lower frequency plot.
 
-On UNIX OS please consider runnin the package with sudo rights: 
+On UNIX OS please consider running the package with sudo rights: 
 <em>sudo python3 -m Tuning</em>, owing to
  the requirement of the keyboard module.
