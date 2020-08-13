@@ -39,8 +39,8 @@ See also:
 NUMBER 1 JANUARY 1964
 2) HAYE HINRICHSEN, REVISTA BRASILEIRA DE ENSINA FISICA, VOLUME 34, NUMBER 2,
 2301 (2012)
-3) Joonas Tuovinen, Signal Processing in a Semi-Automatic Piano Tuning System
-(MA of Science), Aalto University, School of Electrical Engineering (2019)
+3) JOONAS TUOVINEN, SIGNAL PROCESSING IN A SEMI-AUTOMATIC PIANO TUNING SYSTEM
+(MA OF SCIENCE), AALTO UNIVERSITY, SCHOOL OF ELECTRICAL ENGINEERING (2019)
 
 The hotkeys ctrl-y and ctrl-x exits and stops the program, respectively, 
 ESC to resume. ctrl-j and ctrl-k shorten and lengthen the recording 
