@@ -320,14 +320,10 @@ class Tuner:
         # gaussian = windows.gaussian(samples, std=0.1 * samples)
         y_raw = np.fft.rfft(hanning * amp)
         t1 = np.fft.rfftfreq(samples, 1. / RATE)
-        y = np.abs(y_raw)
-        # PDS
-        # y = 2. * RATE * np.abs(y_raw) ** 2 / samples
+        # if PDS then y = 2. * RATE * np.abs(y_raw) ** 2 / samples
         # convolve with a Gaussian of width SIGMA
-        filt = signal.gaussian(M=21,
-                               std=SIGMA)
-        spectrum = signal.convolve(in1=y,
-                                   in2=filt,
+        spectrum = signal.convolve(in1=np.abs(y_raw),
+                                   in2=signal.gaussian(M=21, std=SIGMA),
                                    mode='same')
         # high pass Butterworth filter
         b, a = signal.butter(F_ORDER, F_FILT, 'high', analog=True)
