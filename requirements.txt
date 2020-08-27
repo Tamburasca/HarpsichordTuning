@@ -1,4 +1,4 @@
-keyboard     >=0.13.5
+pynput       >=1.6.8
 PyAudio      >=0.2.11
 numpy        >=1.18.1
 scipy        >=1.4.1

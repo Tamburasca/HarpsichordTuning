@@ -16,7 +16,7 @@ is maximized. Inharmonicity of strings is considered here through equation
 where n = 1, 2, 3, ... B and f<sub>0</sub> is the inharmonicity coefficient and 
 fundamental frequency, respectively. The maximum inharmonicity coefficient
 needs to be adjusted, depending on the instrument to be tuned, B < 0.001 and 
- < 0.01 for harpsichords and pianos, respectively. 
+ < 0.05 for harpsichords and pianos, respectively. 
  
 The first partial f<sub>1</sub> is compared to a tuning table, 
 currently comprising solely Werkmeister III, 
@@ -28,7 +28,7 @@ shown in the frequency plot, too low (in red), too high (in green).
 
 The upper plot represents the audio signal in the time domain, whereas the lower
 represents the frequency domain. The red vertical bars show the partials for 
-<em>n<sub>max</sub> = 10</em> as 
+<em>n<sub>max</sub> &#8804; 10</em> as 
 derived from the base frequency and inharmonicity coefficient after maximizing 
 cross correlation. The text in the upper right corner shows the 
 deviation for a specific tuning.
@@ -48,6 +48,7 @@ interval within small ranges, whereas ctrl-n and
  ctrl-m diminish and increase the maximum 
 frequency displayed in the lower frequency plot.
 
-On UNIX OS please consider running the package with sudo rights: 
-<em>sudo python3 -m Tuning</em>, owing to
- the requirement of the keyboard module.
+On certain Linux distributions, a package named python-tk (or similar) needs 
+to be installed, when running in virtual environments.
+
+Run the program with: <em>python3 -m Tuning</em>

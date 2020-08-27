@@ -40,7 +40,7 @@ __author__ = "Dr. Ralf Antonius Timmermann"
 __copyright__ = "Copyright (C) Dr. Ralf Antonius Timmermann"
 __credits__ = ""
 __license__ = "GPLv3"
-__version__ = "0.4"
+__version__ = "0.3"
 __maintainer__ = "Dr. Ralf A. Timmermann"
 __email__ = "rtimmermann@astro.uni-bonn.de"
 __status__ = "Development"
@@ -54,10 +54,10 @@ import matplotlib.pyplot as plt
 from matplotlib.collections import EventCollection
 import timeit
 import time
-from pynput import keyboard
-from .multiProcess_opt import threaded_opt
-from .tuningTable import tuningtable
-from .parameters import _debug, INHARM
+import keyboard
+from Tuning.multiProcess_opt import threaded_opt
+from Tuning.tuningTable import tuningtable
+from Tuning.parameters import _debug, INHARM
 
 
 # do not modify below
@@ -106,41 +106,6 @@ class Tuner:
 
         return None, pyaudio.paContinue
 
-    def on_activate_x(self):
-        print("continue with ESC")
-        self.rc = 'x'
-
-    def on_activate_y(self):
-        if self.stream.is_active():
-            self.stream.stop_stream()
-        print("quitting...")
-        self.rc = 'y'
-
-    def on_activate_k(self):
-        self.record_seconds += 0.1
-        print("Recording Time: {0:1.1f}s".format(self.record_seconds))
-
-    def on_activate_j(self):
-        self.record_seconds -= 0.1
-        if self.record_seconds < 0.1:
-            self.record_seconds = 0.1
-        print("Recording Time: {0:1.1f}s".format(self.record_seconds))
-
-    def on_activate_n(self):
-        self.fmax -= 100
-        if self.fmax < 500:
-            self.fmax = 500
-        print("Max frequency displayed: {0:1.0f}Hz".format(self.fmax))
-
-    def on_activate_m(self):
-        self.fmax += 100
-        if self.fmax > 10000:
-            self.fmax = 10000
-        print("Max frequency displayed: {0:1.0f}Hz".format(self.fmax))
-
-    def on_activate_esc(self):
-        self.rc = 'esc'
-
     @property
     def animate(self):
         """
@@ -175,13 +140,12 @@ class Tuner:
             if _debug:
                 print("time utilized for Audio [s]: " + str(_stop - _start))
 
-            # interrupt on hotkey 'ctrl-x' and resume on 'esc'
+            # hotkey interrupts
             if self.rc == 'x':
-                while self.rc != 'esc':
-                    time.sleep(.01)
+                keyboard.wait('esc')
                 self.rc = None
             elif self.rc == 'y':
-                return self.rc
+                return 'y'
 
             samples = len(amp)
             print('Number of samples', samples)
@@ -239,12 +203,12 @@ class Tuner:
                 # upper subplot
                 ln.set_xdata(t)
                 ln.set_ydata(amp)
+                ax.set_xlim([0., np.max(t)])
                 # lower subplot
                 ln1.set_xdata(t1)
                 ln1.set_ydata(yfft)
-            ax.set_xlim([0., np.max(t)])
-            ax1.set_xlim([0., self.fmax])
-            # set text attributes of lower subplot
+                ax1.set_xlim([0., self.fmax])
+                # set text attributes of lower subplot
             text.set_text(displayed_text)
             text.set_color(color)
             text.set_x(self.fmax)
@@ -266,8 +230,7 @@ class Tuner:
             ax1.relim()
             ax1.autoscale_view()
             if _firstplot:
-                plt.pause(0.001)
-#                fig.canvas.draw()
+                fig.canvas.draw()
                 _firstplot = False
             else:
                 # restore background
@@ -464,24 +427,55 @@ class Tuner:
 
         return f_n
 
+    def on_press(self, key):
+        """
+        interrupts on a key and set self.rc accordingly
+        :param key: string
+            interrupt key
+        :return:
+            None
+        """
+        if key == 'x':
+            print("continue with ESC")
+            self.rc = 'x'
+        elif key == 'y':
+            print("quitting...")
+            self.stream.stop_stream()
+            self.rc = 'y'
+        elif key == 'k':
+            self.record_seconds += 0.1
+            print("Recording Time: {0:1.1f}s".format(self.record_seconds))
+        elif key == 'j':
+            self.record_seconds -= 0.1
+            if self.record_seconds < 0.1:
+                self.record_seconds = 0.1
+            print("Recording Time: {0:1.1f}s".format(self.record_seconds))
+        elif key == 'n':
+            self.fmax -= 100
+            if self.fmax < 500:
+                self.fmax = 500
+            print("Max frequency displayed: {0:1.0f}Hz".format(self.fmax))
+        elif key == 'm':
+            self.fmax += 100
+            if self.fmax > 10000:
+                self.fmax = 10000
+            print("Max frequency displayed: {0:1.0f}Hz".format(self.fmax))
+
+        return None
+
 
 def main():
 
     for tune in tuningtable.keys():
         print("Tuning ({1:d}) {0:s}".format(tune, list(tuningtable).index(tune)))
-
     a = Tuner(tuning=list(tuningtable.keys())[int(input("Tuning Number?: "))],
               a1=float(input("base frequency for a1 in Hz?: ")))
-
-    h = keyboard.GlobalHotKeys({
-        '<ctrl>+x': a.on_activate_x,
-        '<ctrl>+y': a.on_activate_y,
-        '<ctrl>+j': a.on_activate_j,
-        '<ctrl>+k': a.on_activate_k,
-        '<ctrl>+m': a.on_activate_m,
-        '<ctrl>+n': a.on_activate_n,
-        '<esc>': a.on_activate_esc})
-    h.start()
+    keyboard.add_hotkey('ctrl+x', a.on_press, args='x')
+    keyboard.add_hotkey('ctrl+y', a.on_press, args='y')
+    keyboard.add_hotkey('ctrl+j', a.on_press, args='j')
+    keyboard.add_hotkey('ctrl+k', a.on_press, args='k')
+    keyboard.add_hotkey('ctrl+n', a.on_press, args='n')
+    keyboard.add_hotkey('ctrl+m', a.on_press, args='m')
 
     a.animate
     plt.close('all')
