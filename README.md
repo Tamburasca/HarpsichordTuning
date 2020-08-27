@@ -51,4 +51,8 @@ frequency displayed in the lower frequency plot.
 On certain Linux distributions, a package named python-tk (or similar) needs 
 to be installed, when running in virtual environments.
 
+Also note that the module pynput utilized here 
+may encounter 
+[plattform limitations](https://pynput.readthedocs.io/en/latest/limitations.html#)
+
 Run the program with: <em>python3 -m Tuning</em>
