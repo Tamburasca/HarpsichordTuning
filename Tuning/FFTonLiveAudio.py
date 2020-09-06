@@ -36,17 +36,6 @@ This is free software, and you are welcome to redistribute it under
 certain conditions.
 """
 
-__author__ = "Dr. Ralf Antonius Timmermann"
-__copyright__ = "Copyright (C) Dr. Ralf Antonius Timmermann"
-__credits__ = ""
-__license__ = "GPLv3"
-__version__ = "0.4"
-__maintainer__ = "Dr. Ralf A. Timmermann"
-__email__ = "rtimmermann@astro.uni-bonn.de"
-__status__ = "Development"
-
-print(__doc__)
-
 import pyaudio
 import numpy as np
 from scipy import signal
@@ -55,10 +44,22 @@ from matplotlib.collections import EventCollection
 import timeit
 import time
 from pynput import keyboard
+import logging
+import warnings
 from .multiProcess_opt import threaded_opt
 from .tuningTable import tuningtable
 from .parameters import _debug, INHARM
 
+__author__ = "Dr. Ralf Antonius Timmermann"
+__copyright__ = "Copyright (C) Dr. Ralf Antonius Timmermann"
+__credits__ = ""
+__license__ = "GPLv3"
+__version__ = "0.5"
+__maintainer__ = "Dr. Ralf A. Timmermann"
+__email__ = "rtimmermann@astro.uni-bonn.de"
+__status__ = "Development"
+
+print(__doc__)
 
 # do not modify below
 FORMAT = pyaudio.paInt16
@@ -67,6 +68,8 @@ CHANNELS: int = 1
 # rate 48 kHz derived from driver -> hardware & sound
 RATE: int = 44100
 SIGMA: float = 1.
+
+warnings.filterwarnings('error', message="", category=Warning)
 
 
 class Tuner:
@@ -160,7 +163,7 @@ class Tuner:
         while self.stream.is_active():
 
             _start = timeit.default_timer()
-            print('Started Audio Stream ...')
+            logging.info('Started Audio Stream ...')
 
             time.sleep(self.record_seconds)
             self.stream.stop_stream()  # stop the input stream for the time being
@@ -169,11 +172,10 @@ class Tuner:
             amp = np.hstack(self.callback_output)
             # clear input stream
             self.callback_output = []
-            print('Stopped Audio Stream ... Analyzing')
+            logging.info('Stopped Audio Stream ... Analyzing')
 
             _stop = timeit.default_timer()
-            if _debug:
-                print("time utilized for Audio [s]: " + str(_stop - _start))
+            logging.debug("time utilized for Audio [s]: " + str(_stop - _start))
 
             # interrupt on hotkey 'ctrl-x' and resume on 'esc'
             if self.rc == 'x':
@@ -184,10 +186,10 @@ class Tuner:
                 return self.rc
 
             samples = len(amp)
-            print('Number of samples', samples)
+            logging.info('Number of samples: ' + str(samples))
             t = np.arange(samples) / RATE
             resolution = RATE / samples
-            print('Resolution (Hz/channel): ', resolution)
+            logging.info('Resolution (Hz/channel): ' + str(resolution))
 
             t1, yfft = self.fft(amp=amp,
                                 samples=samples)  # calculate FFT
@@ -287,12 +289,12 @@ class Tuner:
             fig.canvas.flush_events()
 
             _stop = timeit.default_timer()
-            if _debug:
-                print("time utilized for matplotlib [s]: " + str(_stop - _start))
+            logging.debug("time utilized for matplotlib [s]: " + str(_stop - _start))
 
         return self.rc
 
-    def peak(self, spectrum):
+    @staticmethod
+    def peak(spectrum):
         """
         find peaks in frequency spectrum
         :param spectrum: list
@@ -326,13 +328,13 @@ class Tuner:
             list2, list1 = (list(t) for t in zip(*sorted(zip(list2, list1))))
 
         _stop = timeit.default_timer()
-        if _debug:
-            print("Peaks found:", nPeaks)
-            print("Time for peak finding [s]:", _stop - _start)
+        logging.debug("Peaks found: " + str(nPeaks))
+        logging.debug("Time for peak finding [s]: " + str(_stop - _start))
 
         return list2, list1
 
-    def fft(self, amp, samples=None):
+    @staticmethod
+    def fft(amp, samples=None):
         """
         performs FFT on a Hanning apodized time series and a Gauss smoothing afterwards. High pass filter performed as
         well.
@@ -368,8 +370,7 @@ class Tuner:
         y_final = np.abs(h) * spectrum
 
         _stop = timeit.default_timer()
-        if _debug:
-            print("time utilized for FFT [s]: " + str(_stop - _start))
+        logging.debug("time utilized for FFT [s]: " + str(_stop - _start))
 
         return t1, y_final
 
@@ -386,21 +387,25 @@ class Tuner:
             offset from true key in cent or None if error
         """
         _start = timeit.default_timer()
+
         for i in range(-3, 6):
             offset = np.log2(f_measured / self.a1) * 1200 - i * 1200
             for key, value in tuningtable[self.tuning].items():
                 displaced = offset + tuningtable[self.tuning].get('A') - value
                 if -60 < displaced < 60:
                     _stop = timeit.default_timer()
-                    if _debug:
-                        print(i, key, value, displaced + tuningtable[self.tuning].get('A') - value)
-                        print("time utilized for Find [s]: " + str(_stop - _start))
+                    logging.debug(str(i) + " " +
+                                  str(key) + " " +
+                                  str(value) + " " +
+                                  str(displaced + tuningtable[self.tuning].get('A') - value))
+                    logging.debug("time utilized for find [s]: " + str(_stop - _start))
 
                     return key, displaced
 
         return None, None
 
-    def harmonics(self, amp, freq, ind, height=None):
+    @staticmethod
+    def harmonics(amp, freq, ind, height=None):
         """
         :param amp: ndarray
             amplitudes of FFT transformed spectrum
@@ -416,11 +421,9 @@ class Tuner:
         """
         Npartial = 11
         initial = []
-
         _start = timeit.default_timer()
 
-        if _debug:
-            print(ind)
+        logging.debug("ind: " + str(ind))
         if len(ind) > 1:
             # Median - Adjustive Trajectories (MAT)
             # Loop through all the peak positions and evaluate f_0 and b for each combination
@@ -431,14 +434,18 @@ class Tuner:
                         for m in range(1, Npartial-1):
                             for k in range(m+1, Npartial):
                                 tmp = (j_ind * m / k) ** 2
-                                b = (tmp - i_ind ** 2) / ((k * i_ind) ** 2 - tmp * m ** 2)
+                                try:
+                                    b = (tmp - i_ind ** 2) / ((k * i_ind) ** 2 - tmp * m ** 2)
+                                except Warning:
+                                    logging.warning("devideByZero: discarded value in harmonics finding")
+                                    # skip this one
+                                    continue
                                 # INHARM is also used in boundaries in multiProcess.py
                                 if 0 <= b < INHARM:
                                     f_fundamental = i_ind / (m * np.sqrt(1. + b * m ** 2))
-                                    if _debug:
-                                        print("partial: {0:d} {1:d} lower: {2:7.2f} upper: {3:7.2f} "
-                                              "b: {4:0.6f} fundamental: {5:7.2f}".
-                                              format(m, k, i_ind, j_ind, b, f_fundamental))
+                                    logging.debug("partial: {0:d} {1:d} lower: {2:7.2f} upper: {3:7.2f} "
+                                                  "b: {4:0.6f} fundamental: {5:7.2f}".
+                                                  format(m, k, i_ind, j_ind, b, f_fundamental))
                                     # pump it all to the minimizer and let him decide, what's best
                                     initial.append(tuple((f_fundamental, b)))
                                     raise StopIteration  # break two loops here
@@ -450,7 +457,7 @@ class Tuner:
 
         opt = threaded_opt(amp, freq, initial)
         opt.run
-        print("The best result is [f0 , B] = ", opt.best_x)
+        logging.info("Best result [f0, B]=" + str(opt.best_x))
 
         # prepare for displaying vertical bars, and key finding etc.
         f_n = np.array([])
@@ -459,13 +466,19 @@ class Tuner:
                 f_n = np.append(f_n, opt.best_x[0] * n * np.sqrt(1. + opt.best_x[1] * n**2))
 
         _stop = timeit.default_timer()
-        if _debug:
-            print("time utilized for minimizer [s]: " + str(_stop - _start))
+        logging.debug("time utilized for minimizer [s]: " + str(_stop - _start))
 
         return f_n
 
 
 def main():
+
+    format = "%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s"
+    logging.basicConfig(format=format,
+                        level=logging.INFO,
+                        datefmt="%H:%M:%S")
+    if _debug:
+        logging.getLogger().setLevel(logging.DEBUG)
 
     for tune in tuningtable.keys():
         print("Tuning ({1:d}) {0:s}".format(tune, list(tuningtable).index(tune)))

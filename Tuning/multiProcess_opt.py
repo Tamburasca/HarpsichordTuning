@@ -2,7 +2,16 @@ from multiprocessing import Process, Queue
 from scipy.optimize import minimize
 import numpy as np
 from operator import itemgetter
+import logging
 from .parameters import _debug, INHARM
+
+
+format = "%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s"
+logging.basicConfig(format=format,
+                    level=logging.INFO,
+                    datefmt="%H:%M:%S")
+if _debug:
+    logging.getLogger().setLevel(logging.DEBUG)
 
 
 class threaded_opt:
@@ -30,12 +39,12 @@ class threaded_opt:
     @property
     def run(self):
 
-        self.queue = Queue()
+        queue = Queue()
         processes = []
 
         for x in range(self.num_threads):  # Make the threads and start them off
             p = Process(target=self.target_function,
-                        args=(x,))
+                        args=(queue, x,))
             processes.append(p)
             p.start()
 
@@ -44,24 +53,24 @@ class threaded_opt:
 
         self.best_fun = 1.e36
         for _ in processes:
-            chi, x = self.queue.get()
+            chi, x = queue.get()
             if chi < self.best_fun:
                 self.best_x = x
                 self.best_fun = chi
-        self.queue.close()
-        self.queue.join_thread()
+        queue.close()
+        queue.join_thread()
 
         # clean up processes that did not join within timeout period
         while processes:
             p = processes.pop()
             if p.is_alive():
                 p.terminate()
-                print("Process did not join!  Cleaning up ...")
+                logging.warning("Multiprocessing: Process did not join, cleaning up ...")
 
         return None
 
     # Each thread goes through this.
-    def target_function(self, thread_ID):
+    def target_function(self, queue, thread_ID):
 
         # set the boundaries for f_0 within 2% and b < INHARM
         def bnds(x):
@@ -73,7 +82,7 @@ class threaded_opt:
                           method="Powell",  # "nelder-mead"
                           options={'xtol': 1.e-7}  # still need to fiddle with xtol
                          )
-        self.queue.put((result.fun, result.x))
+        queue.put((result.fun, result.x))
 
     # maximize the cross-correlation (negate result for minimizer)
     def chi_square(self, x):
