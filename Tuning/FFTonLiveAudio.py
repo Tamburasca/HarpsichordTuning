@@ -39,6 +39,8 @@ certain conditions.
 import pyaudio
 import numpy as np
 from scipy import signal
+from scipy import sparse
+from scipy.sparse.linalg import spsolve
 import matplotlib.pyplot as plt
 from matplotlib.collections import EventCollection
 import timeit
@@ -46,7 +48,7 @@ import time
 from pynput import keyboard
 import logging
 import warnings
-from .multiProcess_opt import threaded_opt
+from .multiProcess_opt import ThreadedOpt
 from .tuningTable import tuningtable
 from .parameters import _debug, INHARM
 
@@ -68,8 +70,6 @@ CHANNELS: int = 1
 # rate 48 kHz derived from driver -> hardware & sound
 RATE: int = 44100
 SIGMA: float = 1.
-
-warnings.filterwarnings('error', message="", category=Warning)
 
 
 class Tuner:
@@ -144,6 +144,36 @@ class Tuner:
     def on_activate_esc(self):
         self.rc = 'esc'
 
+    """
+https://stackoverflow.com/questions/29156532/python-baseline-correction-library    
+    """
+    @staticmethod
+    def baseline_als_optimized(y, lam, p, niter=10):
+
+        _start = timeit.default_timer()
+
+        L = len(y)
+        D = sparse.diags([1, -2, 1], [0, -1, -2], shape=(L, L - 2))
+        D = lam * D.dot(D.transpose())  # Precompute this term since it does not depend on `w`
+        w = np.ones(L)
+        W = sparse.spdiags(w, 0, L, L)
+        for i in range(niter):
+            W.setdiag(w)  # Do not create a new matrix, just update diagonal values
+            Z = W + D
+            z = spsolve(Z, w * y)
+            w = p * (y > z) + (1 - p) * (y < z)
+            # following early exit clause yields another 50 msec in speed
+            if i > 0:
+                if np.all(np.abs(z - z_last)) < 1.e-1:
+                    break
+            z_last = z
+
+        _stop = timeit.default_timer()
+        logging.debug("baseline: " + str(i) + " iterations")
+        logging.debug("time utilized for baseline [s]: " + str(_stop - _start))
+
+        return z
+
     @property
     def animate(self):
         """
@@ -194,6 +224,11 @@ class Tuner:
             t1, yfft = self.fft(amp=amp,
                                 samples=samples)  # calculate FFT
 
+            # baseline = self.baseline_als_optimized(yfft, lam=1.e2, p=0.002)
+            baseline = self.baseline_als_optimized(yfft, lam=3.e5, p=0.1)
+            yfft = yfft - baseline
+            yfft[yfft < 0.] = 0.
+
             peakPos, peakHeight = self.peak(spectrum=yfft)  # peakfinding
             peakList = t1[peakPos]
 
@@ -203,7 +238,7 @@ class Tuner:
                                             ind=peakList,
                                             height=peakHeight)  # find the key
             else:
-                f_measured = []
+                f_measured = np.array([])
 
             displayed_text = ""
             color = 'none'
@@ -349,7 +384,7 @@ class Tuner:
         list float
             intensities
         """
-        F_FILT = 25  # high pass cutoff frequency @-3db
+        F_FILT = 27.5  # high pass cutoff frequency @-3db
         F_ORDER = 4  # high pass Butterworth filter of order F_ORDER
         _start = timeit.default_timer()
 
@@ -386,19 +421,15 @@ class Tuner:
         float, None
             offset from true key in cent or None if error
         """
-        _start = timeit.default_timer()
-
         for i in range(-3, 6):
             offset = np.log2(f_measured / self.a1) * 1200 - i * 1200
             for key, value in tuningtable[self.tuning].items():
                 displaced = offset + tuningtable[self.tuning].get('A') - value
                 if -60 < displaced < 60:
-                    _stop = timeit.default_timer()
                     logging.debug(str(i) + " " +
                                   str(key) + " " +
                                   str(value) + " " +
                                   str(displaced + tuningtable[self.tuning].get('A') - value))
-                    logging.debug("time utilized for find [s]: " + str(_stop - _start))
 
                     return key, displaced
 
@@ -419,14 +450,20 @@ class Tuner:
         ndarray
             positions of first 8 partials as found in fit
         """
+        warnings.filterwarnings('error', message='', category=Warning)
+
         Npartial = 11
         initial = []
+        logging.debug("ind: " + str(ind))
+        logging.debug("height: " + str(height))
+
         _start = timeit.default_timer()
 
-        logging.debug("ind: " + str(ind))
         if len(ind) > 1:
-            # Median - Adjustive Trajectories (MAT)
-            # Loop through all the peak positions and evaluate f_0 and b for each combination
+            """
+            Median - Adjustive Trajectories (MAT)
+            Loop through all the peak positions and evaluate f_0 and b for each combination
+            """
             for i_ind in ind[:-1]:
                 for j_ind in ind[1:]:
                     try:
@@ -455,7 +492,9 @@ class Tuner:
         elif len(ind) == 1:
             initial.append(tuple((ind[0], 0.)))
 
-        opt = threaded_opt(amp, freq, initial)
+        warnings.resetwarnings()
+
+        opt = ThreadedOpt(amp, freq, initial, height)
         opt.run
         logging.info("Best result [f0, B]=" + str(opt.best_x))
 

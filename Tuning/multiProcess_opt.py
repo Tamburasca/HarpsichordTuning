@@ -14,7 +14,7 @@ if _debug:
     logging.getLogger().setLevel(logging.DEBUG)
 
 
-class threaded_opt:
+class ThreadedOpt:
     """
     driver for multiprocessing:
     called from harmonics to maximize cross correlation. In this case the two
@@ -25,7 +25,7 @@ class threaded_opt:
     """
 
     # initializations
-    def __init__(self, amp, freq, initial):
+    def __init__(self, amp, freq, initial, height=None):
 
         self.amp = amp
         self.freq = freq
@@ -41,6 +41,7 @@ class threaded_opt:
 
         queue = Queue()
         processes = []
+        logging.debug("Number of processes: " + str(self.num_threads))
 
         for x in range(self.num_threads):  # Make the threads and start them off
             p = Process(target=self.target_function,
@@ -54,6 +55,7 @@ class threaded_opt:
         self.best_fun = 1.e36
         for _ in processes:
             chi, x = queue.get()
+            logging.debug("chi, x: " + str(chi) + ',' + str(x))
             if chi < self.best_fun:
                 self.best_x = x
                 self.best_fun = chi
@@ -70,18 +72,18 @@ class threaded_opt:
         return None
 
     # Each thread goes through this.
-    def target_function(self, queue, thread_ID):
+    def target_function(self, queue, thread_id):
 
         # set the boundaries for f_0 within 2% and b < INHARM
         def bnds(x):
-            return ((0.98 * x, 1.02 * x), (0, INHARM))
+            return (0.98 * x, 1.02 * x), (0, INHARM)
 
         result = minimize(self.chi_square,
-                          [self.a[thread_ID], self.b[thread_ID]],
-                          bounds=bnds(self.a[thread_ID]),
+                          [self.a[thread_id], self.b[thread_id]],
+                          bounds=bnds(self.a[thread_id]),
                           method="Powell",  # "nelder-mead"
                           options={'xtol': 1.e-7}  # still need to fiddle with xtol
-                         )
+                          )
         queue.put((result.fun, result.x))
 
     # maximize the cross-correlation (negate result for minimizer)
