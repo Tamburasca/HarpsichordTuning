@@ -1,3 +1,3 @@
 INHARM = 0.001
 
-_debug: bool = False
+_debug: bool = True

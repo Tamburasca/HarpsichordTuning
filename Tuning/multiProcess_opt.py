@@ -50,7 +50,7 @@ class ThreadedOpt:
             p.start()
 
         for p in processes:
-            p.join(timeout=1)
+            p.join(timeout=1)  # resume after timeout
 
         self.best_fun = 1.e36
         for _ in processes:
@@ -74,20 +74,39 @@ class ThreadedOpt:
     # Each thread goes through this.
     def target_function(self, queue, thread_id):
 
-        # set the boundaries for f_0 within 2% and b < INHARM
-        def bnds(x):
-            return (0.98 * x, 1.02 * x), (0, INHARM)
+        # set the boundaries for f_0 within .5% and b < INHARM
+        def bnds(f0):
+            return (0.995 * f0, 1.005 * f0), (0, INHARM)
 
+        # since some methods do not accept boundaries, we convert them to constraints, harhar
+        def cons(f0):
+            bounds = np.asarray(bnds(f0))
+            constraint = []
+            for index in range(len(bounds)):
+                lower, upper = bounds[index]
+                # lower first, second upper constraint
+                constraint.append({'type': 'ineq', 'fun': lambda x, lb=lower, i=index: x[i] - lb})
+                constraint.append({'type': 'ineq', 'fun': lambda x, ub=upper, i=index: ub - x[i]})
+            return constraint
+
+        """
+        see also here to follow issues in more detail
+        https://scipy-lectures.org/advanced/mathematical_optimization/
+        http://people.duke.edu/~ccc14/sta-663-2016/13_Optimization.html
+        https://stackoverflow.com/questions/12781622/does-scipys-minimize-function-with-method-cobyla-accept-bounds
+        """
         result = minimize(self.chi_square,
                           [self.a[thread_id], self.b[thread_id]],
-                          bounds=bnds(self.a[thread_id]),
-                          method="Powell",  # "nelder-mead"
-                          options={'xtol': 1.e-7}  # still need to fiddle with xtol
+                          #bounds=bnds(self.a[thread_id]),
+                          method="COBYLA",
+                          constraints=cons(self.a[thread_id])
+                          #options = {'eps': 1}
                           )
         queue.put((result.fun, result.x))
 
     # maximize the cross-correlation (negate result for minimizer)
     def chi_square(self, x):
+
         r = 0
         _i = 0
         for n in range(1, 11):
