@@ -84,13 +84,13 @@ class ThreadedOpt:
             constraint = []
             for index in range(len(bounds)):
                 lower, upper = bounds[index]
-                # lower first, second upper constraint
+                # lower constraint first, upper second
                 constraint.append({'type': 'ineq', 'fun': lambda x, lb=lower, i=index: x[i] - lb})
                 constraint.append({'type': 'ineq', 'fun': lambda x, ub=upper, i=index: ub - x[i]})
             return constraint
 
         """
-        see also here to follow issues in more detail
+        see also here to follow minimization issues in more detail
         https://scipy-lectures.org/advanced/mathematical_optimization/
         http://people.duke.edu/~ccc14/sta-663-2016/13_Optimization.html
         https://stackoverflow.com/questions/12781622/does-scipys-minimize-function-with-method-cobyla-accept-bounds

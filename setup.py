@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="Tuning",
-    version="0.5",
+    version="0.6",
     author="Ralf Antonius Timmermann",
     author_email="rtimmermann@astro.uni-bonn.de",
     description="Harpsichord Tuning",

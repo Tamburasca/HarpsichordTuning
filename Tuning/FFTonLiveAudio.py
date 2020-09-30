@@ -19,13 +19,13 @@ f_n = n * f_1 * sqrt(1 + B * n**2), where n = 1, 2, 3, ... and
 B is the inharmonicity coefficient. The maximum inharmonicity accepted is
 defined in parameters.py Change accordingly for harpsichords and pianos.
 
-see also
+See also
 1) HARVEY FLETCHER, THE JOURNAL OF THE ACOUSTICAL SOCIETY OF AMERICA VOLUME 36,
 NUMBER 1 JANUARY 1964
 2) HAYE HINRICHSEN, REVISTA BRASILEIRA DE ENSINA FISICA, VOLUME 34, NUMBER 2,
 2301 (2012)
 3) Joonas Tuovinen, Signal Processing in a Semi-AutomaticPiano Tuning System
-(MA of Science), Aalto University, School of Electrical Engineering
+(MA of Science), Aalto University, School of Electrical Engineering (2019)
 
 The hotkeys ctrl-y and ctrl-x exits and stops the program, respectively,
 ESC to resume. Ctrl-j and ctrl-k shorten and lengthen the recording interval,
@@ -38,19 +38,16 @@ certain conditions.
 
 import pyaudio
 import numpy as np
-from scipy import signal
-from scipy import sparse
-from scipy.sparse.linalg import spsolve
 import matplotlib.pyplot as plt
 from matplotlib.collections import EventCollection
 import timeit
 import time
 from pynput import keyboard
 import logging
-import warnings
-from .multiProcess_opt import ThreadedOpt
 from .tuningTable import tuningtable
-from .parameters import _debug, INHARM
+from .parameters import _debug, RATE
+from .FFTroutines import fft, peak, harmonics
+
 
 __author__ = "Dr. Ralf Antonius Timmermann"
 __copyright__ = "Copyright (C) Dr. Ralf Antonius Timmermann"
@@ -59,17 +56,17 @@ __license__ = "GPLv3"
 __version__ = "0.6"
 __maintainer__ = "Dr. Ralf A. Timmermann"
 __email__ = "rtimmermann@astro.uni-bonn.de"
-__status__ = "Development"
+__status__ = "QA"
 
 print(__doc__)
 
-# do not modify below
-FORMAT = pyaudio.paInt16
-# mono, not stereo
-CHANNELS: int = 1
-# rate 48 kHz derived from driver -> hardware & sound
-RATE: int = 44100
-SIGMA: float = 1.
+
+format = "%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s"
+logging.basicConfig(format=format,
+                    level=logging.INFO,
+                    datefmt="%H:%M:%S")
+if _debug:
+    logging.getLogger().setLevel(logging.DEBUG)
 
 
 class Tuner:
@@ -89,8 +86,8 @@ class Tuner:
 
         self.callback_output = []
         audio = pyaudio.PyAudio()
-        self.stream = audio.open(format=FORMAT,
-                                 channels=CHANNELS,
+        self.stream = audio.open(format=pyaudio.paInt16,
+                                 channels=1,
                                  rate=RATE,
                                  output=False,
                                  input=True,
@@ -143,195 +140,6 @@ class Tuner:
 
     def on_activate_esc(self):
         self.rc = 'esc'
-
-    """
-https://stackoverflow.com/questions/29156532/python-baseline-correction-library    
-    """
-    @staticmethod
-    def baseline_als_optimized(y, lam, p, niter=10):
-
-        _start = timeit.default_timer()
-
-        L = len(y)
-        D = sparse.diags([1, -2, 1], [0, -1, -2], shape=(L, L - 2))
-        D = lam * D.dot(D.transpose())  # Precompute this term since it does not depend on `w`
-        w = np.ones(L)
-        W = sparse.spdiags(w, 0, L, L)
-        for i in range(niter):
-            W.setdiag(w)  # Do not create a new matrix, just update diagonal values
-            Z = W + D
-            z = spsolve(Z, w * y)
-            w = p * (y > z) + (1 - p) * (y < z)
-            # following early exit clause yields another 50 msec in speed
-            if i > 0:
-                if np.all(np.abs(z - z_last)) < 1.e-1:
-                    break
-            z_last = z
-
-        _stop = timeit.default_timer()
-        logging.debug("baseline: " + str(i) + " iterations")
-        logging.debug("time utilized for baseline [s]: " + str(_stop - _start))
-
-        return z
-
-    @staticmethod
-    def fft(amp, samples=None):
-        """
-        performs FFT on a Hanning apodized time series and a Gauss smoothing afterwards. High pass filter performed as
-        well.
-
-        :param amp: list float
-            time series
-        :param samples: int optional
-             number of samples
-        :return:
-        list float
-            frequency values of spectrum
-        list float
-            intensities
-        """
-        F_FILT = 55.  # high pass cutoff frequency @-3db
-        F_ORDER = 2  # high pass Butterworth filter of order F_ORDER
-        _start = timeit.default_timer()
-
-        if not samples:
-            samples = len(amp)
-        hanning = np.hanning(samples)
-        # gaussian = windows.gaussian(samples, std=0.1 * samples)
-        y_raw = np.fft.rfft(hanning * amp)
-        t1 = np.fft.rfftfreq(samples, 1. / RATE)
-        # if PDS then y = 2. * RATE * np.abs(y_raw) ** 2 / samples
-        # convolve with a Gaussian of width SIGMA
-        spectrum = signal.convolve(in1=np.abs(y_raw),
-                                   in2=signal.gaussian(M=21, std=SIGMA),
-                                   mode='same')
-        # high pass Butterworth filter
-        b, a = signal.butter(F_ORDER, F_FILT, 'high', analog=True)
-        _, h = signal.freqs(b, a, worN=t1)
-        y_final = np.abs(h) * spectrum
-
-        _stop = timeit.default_timer()
-        logging.debug("time utilized for FFT [s]: " + str(_stop - _start))
-
-        return t1, y_final
-
-    @staticmethod
-    def peak(spectrum):
-        """
-        find peaks in frequency spectrum
-        :param spectrum: list
-            spectrum from FFT
-        :return:
-        list1
-            list of peak heights
-        list2
-            list of frequencies
-        """
-        # max number of highest peaks
-        NMAX = 25
-        list1 = []
-        list2 = []
-        _start = timeit.default_timer()
-
-        """
-        Trying to get a handle on the noise level of the FFT. First remove all peaks by setting all values to zero 
-        where values > 6*std. Then, iterate until noise levels do not change more than 10% from the previous one. May 
-        need to be refined. Thereafter, seek a maximum of NMAX peaks with prominences more than 50*std.    
-        """
-        spectrum_n = spectrum
-        for i in range(5):
-            std = np.std(spectrum_n)
-            spectrum_n = np.where(spectrum_n > 6.*std, 0., spectrum_n)
-            if np.abs(np.std(spectrum_n) - std) / std < 0.1:
-                std = np.std(spectrum_n)
-                break
-        logging.debug("noise estimate: " + str(std))
-
-        # find peak according to prominence and remove peaks below threshold
-        # prominences = signal.peak_prominences(x=spectrum, peaks=peaks)[0]
-        # spectrum[peaks] == prominences with zero baseline
-        peaks, _ = signal.find_peaks(x=spectrum,
-                                     distance=16., # min distance of peaks -> may need adjustment
-                                     prominence=50. * std,  # sensitivity minus background
-                                     width=(0, 20))  # max peak width -> may need adjustment
-        nPeaks = len(peaks)
-        # consider NMAX highest, sort key = amplitude descending
-        if nPeaks != 0:
-            list1, list2 = (list(t) for t in zip(*sorted(zip(spectrum[peaks], peaks), reverse=True)))
-            del list2[NMAX:]
-            del list1[NMAX:]
-        # re-sort with sort key = frequency ascending
-            list2, list1 = (list(t) for t in zip(*sorted(zip(list2, list1))))
-
-        _stop = timeit.default_timer()
-        logging.debug("Peaks found: " + str(nPeaks))
-        logging.debug("Time for peak finding [s]: " + str(_stop - _start))
-
-        return list2, list1
-
-    @staticmethod
-    def harmonics(amp, freq, ind, height=None):
-        """
-        :param amp: ndarray
-            amplitudes of FFT transformed spectrum
-        :param freq: ndarray
-            freqencies of FFT transformed spectrum (same dimension of amp
-        :param ind: ndarray
-            peak positions found in FFT spectrum (NMAX highest)
-        :param height: ndarray
-            peak height found in FFT spectrum (NMAX highest)
-        :return:
-        ndarray
-            positions of first 8 partials as found in fit
-        """
-        warnings.filterwarnings('error', message='', category=Warning)
-
-        NPARTIAL = 11
-        initial = []
-        logging.debug("ind: " + str(ind))
-        logging.debug("height: " + str(height))
-
-        _start = timeit.default_timer()
-
-        for i_ind, j_ind in zip(ind, ind[1:]):
-            # Loop through the partials up to NPARTIAL
-            for m, k in zip(range(1, NPARTIAL), range(2, NPARTIAL)):
-                tmp = (j_ind * m / k) ** 2
-                try:
-                    b = (tmp - i_ind ** 2) / ((k * i_ind) ** 2 - tmp * m ** 2)
-                except Warning:
-                    logging.info("devideByZero: discarded value in harmonics finding")
-                    # skip this one
-                    continue
-                # INHARM is also used in boundaries in multiProcess.py
-                if 0 <= b < INHARM:
-                    f_fundamental = i_ind / (m * np.sqrt(1. + b * m ** 2))
-                    logging.debug("partial: {0:d} {1:d} lower: {2:7.2f} upper: {3:7.2f} "
-                                  "b: {4:0.6f} fundamental: {5:7.2f}".
-                                  format(m, k, i_ind, j_ind, b, f_fundamental))
-                    # pump it all to the minimizer and let him decide, what's best
-                    if f_fundamental < 27.5: continue
-                    initial.append(tuple((f_fundamental, b)))
-
-        warnings.resetwarnings()
-
-        if not initial and len(ind) > 0:  # if nothing was found, give it a shot with the strongest peak
-            _, list2 = (list(t) for t in zip(*sorted(zip(height, ind), reverse=True)))  # re-sort with key=height desc
-            initial.append(tuple((list2[0], 0.)))
-        opt = ThreadedOpt(amp, freq, initial, height)
-        opt.run
-        logging.info("Best result [f0, B]=" + str(opt.best_x))
-
-        # prepare for displaying vertical bars, and key finding etc.
-        f_n = np.array([])
-        if opt.best_x is not None:
-            for n in range(1, 11):
-                f_n = np.append(f_n, opt.best_x[0] * n * np.sqrt(1. + opt.best_x[1] * n**2))
-
-        _stop = timeit.default_timer()
-        logging.debug("time utilized for minimizer [s]: " + str(_stop - _start))
-
-        return f_n
 
     def find(self, f_measured):
         """
@@ -414,21 +222,21 @@ https://stackoverflow.com/questions/29156532/python-baseline-correction-library
             resolution = RATE / samples
             logging.info('Resolution (Hz/channel): ' + str(resolution))
 
-            t1, yfft = self.fft(amp=amp,
-                                samples=samples)  # calculate FFT
+            t1, yfft = fft(amp=amp,
+                           samples=samples)  # calculate FFT
 
-            baseline = self.baseline_als_optimized(yfft, lam=5.e5, p=0.2)
-            yfft = yfft - baseline
-            yfft = np.where(yfft < 0., 0., yfft)
+            #baseline = self.baseline_als_optimized(yfft, lam=1.e5, p=0.2)
+            #yfft = yfft - baseline
+            #yfft = np.where(yfft < 0., 0., yfft)
 
-            peakPos, peakHeight = self.peak(spectrum=yfft)  # peakfinding
+            peakPos, peakHeight = peak(spectrum=yfft)  # peakfinding
             peakList = t1[peakPos]
 
             if peakList is not None:
-                f_measured = self.harmonics(amp=yfft,
-                                            freq=t1,
-                                            ind=peakList,
-                                            height=peakHeight)  # find the key
+                f_measured = harmonics(amp=yfft,
+                                       freq=t1,
+                                       ind=peakList,
+                                       height=peakHeight)  # find the key
             else:
                 f_measured = np.array([])
 
@@ -484,15 +292,19 @@ https://stackoverflow.com/questions/29156532/python-baseline-correction-library
 
             for c in ax1.collections:
                 c.remove()
-#            yevents = EventCollection(positions=peakList, #f_measured,
-#                                      color='tab:orange',
-#                                      linelength=0.05*np.max(yfft),
-#                                      linewidth=2.)
-#            ax1.add_collection(yevents)
-            yevents1 = EventCollection(positions=f_measured,
-                                      color='tab:red',
+            """
+            yevents = EventCollection(positions=peakList,
+                                      color='tab:orange',
                                       linelength=0.05*np.max(yfft),
-                                      linewidth=2.)
+                                      linewidth=2.
+                                      )
+            ax1.add_collection(yevents)
+            """
+            yevents1 = EventCollection(positions=f_measured,
+                                       color='tab:red',
+                                       linelength=0.05*np.max(yfft),
+                                       linewidth=2.
+                                       )
             ax1.add_collection(yevents1)
 
             # Rescale the axis so that the data can be seen in the plot
@@ -529,13 +341,6 @@ https://stackoverflow.com/questions/29156532/python-baseline-correction-library
 
 
 def main():
-
-    format = "%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s"
-    logging.basicConfig(format=format,
-                        level=logging.INFO,
-                        datefmt="%H:%M:%S")
-    if _debug:
-        logging.getLogger().setLevel(logging.DEBUG)
 
     for tune in tuningtable.keys():
         print("Tuning ({1:d}) {0:s}".format(tune, list(tuningtable).index(tune)))
