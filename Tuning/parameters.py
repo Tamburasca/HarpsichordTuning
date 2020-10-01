@@ -5,4 +5,4 @@ SIGMA: float = 1.
 # inharmonicity of strings (harpsichord, piano, ...)
 INHARM: float = 0.001
 
-_debug: bool = True
+_debug: bool = False
