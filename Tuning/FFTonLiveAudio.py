@@ -127,15 +127,21 @@ class Tuner:
         print("Recording Time: {0:1.1f}s".format(self.record_seconds))
 
     def on_activate_n(self):
-        self.fmax -= 100
+        if self.fmax > 2000:
+            self.fmax -= 500
+        else:
+            self.fmax -= 100
         if self.fmax < 500:
             self.fmax = 500
         print("Max frequency displayed: {0:1.0f}Hz".format(self.fmax))
 
     def on_activate_m(self):
-        self.fmax += 100
-        if self.fmax > 10000:
-            self.fmax = 10000
+        if self.fmax >= 2000:
+            self.fmax += 500
+        else:
+            self.fmax += 100
+        if self.fmax > 15000:
+            self.fmax = 15000
         print("Max frequency displayed: {0:1.0f}Hz".format(self.fmax))
 
     def on_activate_esc(self):

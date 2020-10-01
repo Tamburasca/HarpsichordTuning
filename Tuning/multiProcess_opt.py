@@ -1,5 +1,5 @@
 from multiprocessing import Process, Queue
-from scipy.optimize import minimize
+from scipy.optimize import minimize, shgo, basinhopping
 import numpy as np
 from operator import itemgetter
 import logging
@@ -12,6 +12,34 @@ logging.basicConfig(format=format,
                     datefmt="%H:%M:%S")
 if _debug:
     logging.getLogger().setLevel(logging.DEBUG)
+
+
+class MyBounds(object):
+
+    def __init__(self, f0):
+        self.xmax = np.array([1.005 * f0, INHARM])
+        self.xmin = np.array([0.995 * f0, 0])
+
+    def __call__(self, **kwargs):
+        x = kwargs["x_new"]
+        tmax = bool(np.all(x <= self.xmax))
+        tmin = bool(np.all(x >= self.xmin))
+        return tmax and tmin
+
+
+class MyTakeStep(object):
+
+   def __init__(self, init):
+        self.s0 = init[0] * 0.001  # stepsize for f0 within .1% at most
+        self.s1 = init[1]
+
+   def __call__(self, x):
+        x[0] += np.random.uniform(-self.s0, self.s0)
+        if self.s1 <= 0:
+            x[1] = 10**np.random.uniform(-6, np.log10(INHARM/2)) - 1.e-6
+        else:
+            x[1] *= 10**np.random.uniform(-1, 1)
+        return x
 
 
 class ThreadedOpt:
@@ -95,13 +123,30 @@ class ThreadedOpt:
         http://people.duke.edu/~ccc14/sta-663-2016/13_Optimization.html
         https://stackoverflow.com/questions/12781622/does-scipys-minimize-function-with-method-cobyla-accept-bounds
         """
+        """
         result = minimize(self.chi_square,
                           [self.a[thread_id], self.b[thread_id]],
                           #bounds=bnds(self.a[thread_id]),
                           method="COBYLA",
                           constraints=cons(self.a[thread_id])
                           #options = {'eps': 1}
+                          )        
+        result = shgo(self.chi_square,
+                          bounds=bnds(self.a[thread_id]),
+                          sampling_method='sobol'
                           )
+        """
+        minimizer_kwargs = {"method": "L-BFGS-B"}
+        mybounds = MyBounds(f0=self.a[thread_id])
+        mytakestep = MyTakeStep([self.a[thread_id], self.b[thread_id]])
+        result = basinhopping(self.chi_square,
+                              [self.a[thread_id], self.b[thread_id]],
+                              minimizer_kwargs=minimizer_kwargs,
+                              niter=10,  # gets really time consuming for higher niter
+                              accept_test=mybounds,
+                              take_step=mytakestep
+                              )
+
         queue.put((result.fun, result.x))
 
     # maximize the cross-correlation (negate result for minimizer)
