@@ -29,13 +29,13 @@ class MyBounds(object):
 
 class MyTakeStep(object):
 
-   def __init__(self, init):
-        self.s0 = init[0] * 0.001  # stepsize for f0 within .1% at most
-        self.s1 = init[1]
+   def __init__(self, initial):
+        self.s0 = initial[0] * 0.001  # stepsize for f0 within .1% at most
+        self.s1 = initial[1]
 
    def __call__(self, x):
         x[0] += np.random.uniform(-self.s0, self.s0)
-        if self.s1 <= 0:
+        if self.s1 == 0 or x[1] <= 0:
             x[1] = 10**np.random.uniform(-6, np.log10(INHARM/2)) - 1.e-6
         else:
             x[1] *= 10**np.random.uniform(-1, 1)
@@ -138,7 +138,7 @@ class ThreadedOpt:
         """
         minimizer_kwargs = {"method": "L-BFGS-B"}
         mybounds = MyBounds(f0=self.a[thread_id])
-        mytakestep = MyTakeStep([self.a[thread_id], self.b[thread_id]])
+        mytakestep = MyTakeStep(initial=[self.a[thread_id], self.b[thread_id]])
         result = basinhopping(self.chi_square,
                               [self.a[thread_id], self.b[thread_id]],
                               minimizer_kwargs=minimizer_kwargs,
