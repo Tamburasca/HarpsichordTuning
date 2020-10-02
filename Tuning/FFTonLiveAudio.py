@@ -78,7 +78,7 @@ class Tuner:
         :param tuning: string
             tuning temperament
         """
-        self.record_seconds = 2.  # lengths of audio signal chunks, can be adjusted
+        self.record_seconds = 2.  # lengths of audio signal chunks in 1st subplot, can be adjusted
         self.fmax = 2000.  # maximum frequency display in 2nd subplot, can be adjusted
         self.a1 = a1
         self.tuning = tuning  # see tuningTable.py
@@ -111,8 +111,7 @@ class Tuner:
         self.rc = 'x'
 
     def on_activate_y(self):
-        if self.stream.is_active():
-            self.stream.stop_stream()
+        if self.stream.is_active(): self.stream.stop_stream()
         print("quitting...")
         self.rc = 'y'
 
@@ -122,26 +121,17 @@ class Tuner:
 
     def on_activate_j(self):
         self.record_seconds -= 0.1
-        if self.record_seconds < 0.1:
-            self.record_seconds = 0.1
+        if self.record_seconds < 0.1: self.record_seconds = 0.1
         print("Recording Time: {0:1.1f}s".format(self.record_seconds))
 
     def on_activate_n(self):
-        if self.fmax > 2000:
-            self.fmax -= 500
-        else:
-            self.fmax -= 100
-        if self.fmax < 500:
-            self.fmax = 500
+        self.fmax -= 500 if self.fmax > 2000 else 100
+        if self.fmax < 500: self.fmax = 500
         print("Max frequency displayed: {0:1.0f}Hz".format(self.fmax))
 
     def on_activate_m(self):
-        if self.fmax >= 2000:
-            self.fmax += 500
-        else:
-            self.fmax += 100
-        if self.fmax > 15000:
-            self.fmax = 15000
+        self.fmax += 500 if self.fmax >= 2000 else 100
+        if self.fmax > 15000: self.fmax = 15000
         print("Max frequency displayed: {0:1.0f}Hz".format(self.fmax))
 
     def on_activate_esc(self):
@@ -159,6 +149,10 @@ class Tuner:
         float, None
             offset from true key in cent or None if error
         """
+        def timeusage():
+            _stop = timeit.default_timer()
+            logging.debug("time utilized for find [s]: " + str(_stop - _start))
+
         _start = timeit.default_timer()
 
         for i in range(-4, 5):  # key range from keys C0 till B8
@@ -166,15 +160,14 @@ class Tuner:
             for key, value in tuningtable[self.tuning].items():
                 displaced = offset + tuningtable[self.tuning].get('A') - value
                 if -60 < displaced < 60:
-                    _stop = timeit.default_timer()
                     logging.debug(str(i) + " " +
                                   str(key) + " " +
                                   str(value) + " " +
                                   str(displaced + tuningtable[self.tuning].get('A') - value))
-                    logging.debug("time utilized for find [s]: " + str(_stop - _start))
-
+                    timeusage()
                     return key, displaced
 
+        timeusage()
         return None, None
 
     @property

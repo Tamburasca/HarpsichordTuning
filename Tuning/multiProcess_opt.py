@@ -29,11 +29,11 @@ class MyBounds(object):
 
 class MyTakeStep(object):
 
-   def __init__(self, initial):
+    def __init__(self, initial):
         self.s0 = initial[0] * 0.002
         self.s1 = initial[1]
 
-   def __call__(self, x):
+    def __call__(self, x):
         # stepsize for f0 within .2% of the initial value i.e. equal to 3.5 cent
         x[0] += np.random.uniform(-self.s0, self.s0)
         # stepsize for B is between factor .2 and 5 of the initial value unless B is zero in which case it is
@@ -41,7 +41,7 @@ class MyTakeStep(object):
         if self.s1 == 0 or x[1] <= 0:
             x[1] = 10**np.random.uniform(-6, np.log10(INHARM/2)) - 1.e-6
         else:
-            x[1] *= 10**np.random.uniform(-0.7, .7)
+            x[1] *= 10**np.random.uniform(-.7, .7)
         return x
 
 
