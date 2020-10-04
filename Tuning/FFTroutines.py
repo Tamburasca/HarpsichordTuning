@@ -71,7 +71,10 @@ def fft(amp, samples=None):
     # gaussian = windows.gaussian(samples, std=0.1 * samples)
     y_raw = np.fft.rfft(hanning * amp)
     t1 = np.fft.rfftfreq(samples, 1. / RATE)
-    # if PDS then y = 2. * RATE * np.abs(y_raw) ** 2 / samples
+    # if Power Spectrum then y = np.abs(y_raw) ** 2 / samples
+    # if PDS then y = 2 * np.abs(y_raw) ** 2 / samples / (RATE * noise power bandwidth)
+    # noise power bandwidth = 1.5 for Hanning window
+    #y_raw = np.abs(y_raw) ** 2 / samples
     # convolve with a Gaussian of width SIGMA
     spectrum = signal.convolve(in1=np.abs(y_raw),
                                in2=signal.gaussian(M=21, std=SIGMA),
@@ -199,11 +202,15 @@ def harmonics(amp, freq, ind, height=None):
         initial.append(tuple((list2[0], 0.)))
     opt = ThreadedOpt(amp, freq, initial, height)
     opt.run
-    logging.info("Best result [f0, B]=" + str(opt.best_x))
 
     # prepare for displaying vertical bars, and key finding etc.
     f_n = np.array([])
     if opt.best_x is not None:
+        logging.info("Best result: f_0 = " +
+                     str(opt.best_x[0]) +
+                     " Hz, B = " +
+                     str(opt.best_x[1])
+                     )
         for n in range(1, 11):
             f_n = np.append(f_n, opt.best_x[0] * n * np.sqrt(1. + opt.best_x[1] * n**2))
 

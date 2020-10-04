@@ -24,6 +24,7 @@ class MyBounds(object):
         x = kwargs["x_new"]
         tmax = bool(np.all(x <= self.xmax))
         tmin = bool(np.all(x >= self.xmin))
+
         return tmax and tmin
 
 
@@ -32,16 +33,22 @@ class MyTakeStep(object):
     def __init__(self, initial):
         self.s0 = initial[0] * 0.002
         self.s1 = initial[1]
+        self.first = True
 
     def __call__(self, x):
-        # stepsize for f0 within .2% of the initial value i.e. equal to 3.5 cent
-        x[0] += np.random.uniform(-self.s0, self.s0)
-        # stepsize for B is between factor .2 and 5 of the initial value unless B is zero in which case it is
-        # between 0 and INHARM/2
-        if self.s1 == 0 or x[1] <= 0:
-            x[1] = 10**np.random.uniform(-6, np.log10(INHARM/2)) - 1.e-6
+        # the very first call try local variables, thereafter global within range
+        if self.first:
+            self.first = False
         else:
-            x[1] *= 10**np.random.uniform(-.7, .7)
+            # stepsize for f0 within .2% of the initial value i.e. equal to 3.5 cent
+            x[0] += np.random.uniform(-self.s0, self.s0)
+            # stepsize for B is between factor .2 and 5 of the initial value unless B is zero in which case it is
+            # between 0 and INHARM/2
+            if self.s1 == 0 or x[1] <= 0:
+                x[1] = 10**np.random.uniform(-6, np.log10(INHARM/2)) - 1.e-6
+            else:
+                x[1] *= 10**np.random.uniform(-.7, .7)
+
         return x
 
 
@@ -145,7 +152,7 @@ class ThreadedOpt:
         result = basinhopping(self.chi_square,
                               [self.a[thread_id], self.b[thread_id]],
                               minimizer_kwargs=minimizer_kwargs,
-                              niter=10,  # gets really time consuming for higher niter
+                              niter=11,  # gets really time consuming for higher niter
                               accept_test=mybounds,
                               take_step=mytakestep
                               )
@@ -163,7 +170,7 @@ class ThreadedOpt:
             f_n = x[0] * n * np.sqrt(tmp)
             for _i, value in enumerate(self.freq[_i:], start=_i):  # resume, where we just left for cpu time reasons
                 if value > f_n:  # mask theoretical frequencies with inharmonicity
-                    r += np.sum(self.amp[_i-2:_i+2])
+                    r += np.sum(self.amp[_i-3:_i+3])
                     break
 
         return -r
