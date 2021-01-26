@@ -146,7 +146,8 @@ class ThreadedOpt:
                       sampling_method='sobol'
                       )
         """
-        minimizer_kwargs = {"method": "L-BFGS-B"}
+        minimizer_kwargs = {"method": "L-BFGS-B",
+                            "args": thread_id}
         mybounds = MyBounds(f0=self.a[thread_id])
         mytakestep = MyTakeStep(initial=[self.a[thread_id], self.b[thread_id]])
         result = basinhopping(self.chi_square,
@@ -160,7 +161,7 @@ class ThreadedOpt:
         queue.put((result.fun, result.x))
 
     # maximize the cross-correlation (negate result for minimizer)
-    def chi_square(self, x):
+    def chi_square(self, x, args):
 
         r = 0
         _i = 0
@@ -170,7 +171,7 @@ class ThreadedOpt:
             f_n = x[0] * n * np.sqrt(tmp)
             for _i, value in enumerate(self.freq[_i:], start=_i):  # resume, where we just left for cpu time reasons
                 if value > f_n:  # mask theoretical frequencies with inharmonicity
-                    r += np.sum(self.amp[_i-3:_i+3])
+                    r += np.sum(self.amp[_i-2:_i+2])
                     break
 
         return -r

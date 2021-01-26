@@ -249,7 +249,9 @@ class Tuner:
                     color = 'green' if displaced >= 0 else 'red'
 
             _start = timeit.default_timer()
-
+            """
+            https://stackoverflow.com/questions/40126176/fast-live-plotting-in-matplotlib-pyplot
+            """
             if _firstplot:  # instantiate first plot and copy background
                 # Setup figure, axis, lines, text and initiate plot once and copy background
                 fig = plt.gcf()
