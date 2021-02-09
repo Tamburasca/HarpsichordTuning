@@ -1,25 +1,25 @@
 #!/usr/bin/env python
 
 """
-FFTonLiveAudio Copyright (C) 2020 Dr. Ralf Antonius Timmermann
+FFTonLiveAudio Copyright (C) 2020-21, Dr. Ralf Antonius Timmermann
 
-A graphical tuning device for string instruments, such as (1) harpsichords
-and (2) pianos. Still testing!
+A graphical tuning tool for string instruments, such as (1) harpsichords
+and (2) pianos.
 
-Collects an audio signal from an input stream, that runs through a FFT with
-a Hanning apodization. Subsequently, in the frequency domain we apply Gauss
-smoothing and a Butterworth high-pass filter, which is followed by a peak
-finding. Of those peaks we try to find the partials (overtones). The
-fundamental is compared with a tuning table (feel free to enhance for
-yourself). The deviation in units of cent is shown in the frequency plot,
-too low (in red), too high (in green).
+Collects an audio signal from the input stream, that runs through a FFT.
+In the frequency domain peak finding is applied. Of all peaks found, in all
+combinations, they are identified as common partials (overtones) to one
+fundamental. It is then compared to a tuning table (input value, feel free
+to enhance special non-equal tunings yourself) and a given pitch value
+(input value). The deviation in units of cent is shown, too low (red),
+too high (green).
 
 Inharmonicity of strings is considered by the equation
 f_n = n * f_1 * sqrt(1 + B * n**2), where n = 1, 2, 3, ... and
 B is the inharmonicity coefficient. The maximum inharmonicity accepted is
 defined in parameters.py Change accordingly for harpsichords and pianos.
 
-See also
+References:
 1) HARVEY FLETCHER, THE JOURNAL OF THE ACOUSTICAL SOCIETY OF AMERICA VOLUME 36,
 NUMBER 1 JANUARY 1964
 2) HAYE HINRICHSEN, REVISTA BRASILEIRA DE ENSINA FISICA, VOLUME 34, NUMBER 2,
@@ -44,16 +44,16 @@ import timeit
 import time
 from pynput import keyboard
 import logging
+from operator import itemgetter
 from .tuningTable import tuningtable
-from .parameters import _debug, RATE
 from .FFTroutines import fft, peak, harmonics
-
+from test import parameters
 
 __author__ = "Dr. Ralf Antonius Timmermann"
 __copyright__ = "Copyright (C) Dr. Ralf Antonius Timmermann"
 __credits__ = ""
 __license__ = "GPLv3"
-__version__ = "0.6"
+__version__ = "1.0"
 __maintainer__ = "Dr. Ralf A. Timmermann"
 __email__ = "rtimmermann@astro.uni-bonn.de"
 __status__ = "QA"
@@ -65,7 +65,7 @@ format = "%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s"
 logging.basicConfig(format=format,
                     level=logging.INFO,
                     datefmt="%H:%M:%S")
-if _debug:
+if parameters.DEBUG:
     logging.getLogger().setLevel(logging.DEBUG)
 
 
@@ -74,12 +74,12 @@ class Tuner:
     def __init__(self, tuning, a1):
         """
         :param a1: float
-            tuning frequency for a1
+            pitch frequency for a1
         :param tuning: string
             tuning temperament
         """
-        self.record_seconds = 2.  # lengths of audio signal chunks in 1st subplot, can be adjusted
-        self.fmax = 2000.  # maximum frequency display in 2nd subplot, can be adjusted
+        self.record_seconds = 2.  # lengths of audio signal chunks in 1st subplot, can be adjusted by hotkey
+        self.fmax = 2000.  # maximum frequency display in 2nd subplot, can be adjusted by hotkey
         self.a1 = a1
         self.tuning = tuning  # see tuningTable.py
         self.rc = None
@@ -88,7 +88,7 @@ class Tuner:
         audio = pyaudio.PyAudio()
         self.stream = audio.open(format=pyaudio.paInt16,
                                  channels=1,
-                                 rate=RATE,
+                                 rate=parameters.RATE,
                                  output=False,
                                  input=True,
                                  stream_callback=self.callback)
@@ -117,11 +117,12 @@ class Tuner:
 
     def on_activate_k(self):
         self.record_seconds += 0.1
+        if self.record_seconds > 5.0: self.record_seconds = 5.0
         print("Recording Time: {0:1.1f}s".format(self.record_seconds))
 
     def on_activate_j(self):
         self.record_seconds -= 0.1
-        if self.record_seconds < 0.1: self.record_seconds = 0.1
+        if self.record_seconds < 0.5: self.record_seconds = 0.5
         print("Recording Time: {0:1.1f}s".format(self.record_seconds))
 
     def on_activate_n(self):
@@ -140,18 +141,17 @@ class Tuner:
     def find(self, f_measured):
         """
         finds key and its offset from true key for given a temperament
-
         :param f_measured: float
             measured frequency
         :return:
         string
             measured key
         float, None
-            offset from true key in cent or None if error
+            offset from true key in cent or None if None found or error
         """
         def timeusage():
             _stop = timeit.default_timer()
-            logging.debug("time utilized for find [s]: " + str(_stop - _start))
+            logging.debug("time utilized for key finding [s]: " + str(_stop - _start))
 
         _start = timeit.default_timer()
 
@@ -206,7 +206,7 @@ class Tuner:
                     time.sleep(.1)
                 self.rc = None
                 self.stream.start_stream()
-                logging.info('Dump last stream ...')
+                logging.info('Dump last audio stream ...')
                 continue
             elif self.rc == 'y':
                 return self.rc
@@ -217,31 +217,24 @@ class Tuner:
 
             samples = len(amp)
             logging.info('Number of samples: ' + str(samples))
-            t = np.arange(samples) / RATE
-            resolution = RATE / samples
+            t = np.arange(samples) / parameters.RATE
+            resolution = parameters.RATE / samples
             logging.info('Resolution (Hz/channel): ' + str(resolution))
 
+            # calculate FFT
             t1, yfft = fft(amp=amp,
-                           samples=samples)  # calculate FFT
+                           samples=samples)
+            # peakfinding
+            peaks = peak(frequency=t1,
+                         spectrum=yfft)
+            peakList = list(map(itemgetter(0), peaks))
 
-            #baseline = self.baseline_als_optimized(yfft, lam=1.e5, p=0.2)
-            #yfft = yfft - baseline
-            #yfft = np.where(yfft < 0., 0., yfft)
-
-            peakPos, peakHeight = peak(spectrum=yfft)  # peakfinding
-            peakList = t1[peakPos]
-
-            if peakList is not None:
-                f_measured = harmonics(amp=yfft,
-                                       freq=t1,
-                                       ind=peakList,
-                                       height=peakHeight)  # find the key
-            else:
-                f_measured = np.array([])
+            if peaks is not None:
+                f_measured = harmonics(peaks=peaks)  # find the key
 
             displayed_text = ""
             color = 'none'
-            if f_measured.size != 0:  # if key is found print it and its offset colored red or green
+            if len(f_measured) != 0:  # if key is found print it and its offset colored red or green
                 tone, displaced = self.find(f_measured=f_measured[0])
                 if tone:
                     displayed_text = "{2:s} (a1={3:3.0f}Hz) {0:s} offset={1:.0f} cent"\
@@ -260,7 +253,6 @@ class Tuner:
                 fig.set_size_inches(12, 8)
                 ln, = ax.plot(t, amp)
                 ln1, = ax1.plot(t1, yfft)
-                #ln2, = ax1.plot(t1, baseline)
                 text = ax1.text(self.fmax, np.max(yfft), "",
                                 # color='',
                                 verticalalignment='top',
@@ -281,8 +273,6 @@ class Tuner:
                 # lower subplot
                 ln1.set_xdata(t1)
                 ln1.set_ydata(yfft)
-                #ln2.set_xdata(t1)
-                #ln2.set_ydata(baseline)
             ax.set_xlim([0., np.max(t)])
             ax1.set_xlim([0., self.fmax])
             # set text attributes of lower subplot
@@ -291,19 +281,19 @@ class Tuner:
             text.set_x(self.fmax)
             text.set_y(np.max(yfft))
 
-            for c in ax1.collections:
-                c.remove()
-            """
+            # remove all collections: beginning from last object
+            while ax1.collections:
+                ax1.collections.pop()
             yevents = EventCollection(positions=peakList,
-                                      color='tab:orange',
+                                      color='tab:olive',
                                       linelength=0.05*np.max(yfft),
                                       linewidth=2.
                                       )
             ax1.add_collection(yevents)
-            """
             yevents1 = EventCollection(positions=f_measured,
                                        color='tab:red',
                                        linelength=0.05*np.max(yfft),
+                                       lineoffset=-0.04 * np.max(yfft),
                                        linewidth=2.
                                        )
             ax1.add_collection(yevents1)

@@ -1,102 +1,63 @@
 from multiprocessing import Process, Queue
-from scipy.optimize import minimize, shgo, basinhopping
+from scipy.optimize import curve_fit
 import numpy as np
 from operator import itemgetter
 import logging
-from .parameters import _debug, INHARM
+from test import parameters
 
 
-format = "%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s"
-logging.basicConfig(format=format,
+myformat = "%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s"
+logging.basicConfig(format=myformat,
                     level=logging.INFO,
                     datefmt="%H:%M:%S")
-if _debug:
+if parameters.DEBUG:
     logging.getLogger().setLevel(logging.DEBUG)
-
-
-class MyBounds(object):
-
-    def __init__(self, f0):
-        self.xmax = np.array([1.005 * f0, INHARM])
-        self.xmin = np.array([0.995 * f0, 0])
-
-    def __call__(self, **kwargs):
-        x = kwargs["x_new"]
-        tmax = bool(np.all(x <= self.xmax))
-        tmin = bool(np.all(x >= self.xmin))
-
-        return tmax and tmin
-
-
-class MyTakeStep(object):
-
-    def __init__(self, initial):
-        self.s0 = initial[0] * 0.002
-        self.s1 = initial[1]
-        self.first = True
-
-    def __call__(self, x):
-        # the very first call try local variables, thereafter global within range
-        if self.first:
-            self.first = False
-        else:
-            # stepsize for f0 within .2% of the initial value i.e. equal to 3.5 cent
-            x[0] += np.random.uniform(-self.s0, self.s0)
-            # stepsize for B is between factor .2 and 5 of the initial value unless B is zero in which case it is
-            # between 0 and INHARM/2
-            if self.s1 == 0 or x[1] <= 0:
-                x[1] = 10**np.random.uniform(-6, np.log10(INHARM/2)) - 1.e-6
-            else:
-                x[1] *= 10**np.random.uniform(-.7, .7)
-
-        return x
 
 
 class ThreadedOpt:
     """
     driver for multiprocessing:
-    called from harmonics to maximize cross correlation. In this case the two
-    1-dimensional sequences have been reduced to those elements not zero to
-    speed up the code.
-    Each minimization call is preformed by a discrete process (multiprocessing)
-    We are still playing around with the optimization method, that sucks somehow
+    called by peak finding to locate exacter peak positions through minimizing
+    a Gauss fit to each individual peak found. Each minimization call is
+    performed by a discrete process (multiprocessing).
     """
 
     # initializations
-    def __init__(self, amp, freq, initial, height=None):
-
-        self.amp = amp
-        self.freq = freq
-        self.a = list(map(itemgetter(0), initial))
-        self.b = list(map(itemgetter(1), initial))
+    def __init__(self, freq, amp, initial):
+        """
+        :param freq: list of floats
+            frequencies of the FFT
+        :param amp:  list of floats
+            amplitudes of the FFT
+        :param initial: float tuple
+            frequencies and corresponding heights of peaks found
+        """
+        self._amp = amp
+        self._freq = freq
         self.num_threads = len(initial)
-        self.best_fun = None
-        self.best_x = None
+        self._x = list(map(itemgetter(0), initial))
+        self._y = list(map(itemgetter(1), initial))
 
     # Run the optimization. Make the threads here.
-    @property
     def run(self):
 
         queue = Queue()
         processes = []
+        peaks = []
         logging.debug("Number of processes: " + str(self.num_threads))
 
         for thread_id in range(self.num_threads):  # Make the threads and start them off
-            p = Process(target=self.target_function,
+            p = Process(target=self.fitting,
                         args=(queue, thread_id,))
             processes.append(p)
             p.start()
 
         for p in processes:
-            p.join(timeout=1)  # resume after timeout
+            p.join(timeout=.1)  # resume after timeout, cleanup later
 
-        self.best_fun = 1.e36
-        for _ in processes:
-            chi, x = queue.get()
-            logging.debug("chi, x: " + str(chi) + ',' + str(x))
-            if chi < self.best_fun:
-                self.best_x = x
-                self.best_fun = chi
+        while not queue.empty():
+            rc = queue.get()
+            peaks.append([rc[0], rc[1]])
         queue.close()
         queue.join_thread()
 
@@ -107,71 +68,71 @@ class ThreadedOpt:
                 p.terminate()
                 logging.warning("Multiprocessing: Process did not join, cleaning up ...")
 
-        return None
+        # unsorted peaks
+        return peaks
 
     # Each thread goes through this.
-    def target_function(self, queue, thread_id):
-
-        # set the boundaries for f_0 within .5% and b < INHARM
-        def bnds(f0):
-            return (0.995 * f0, 1.005 * f0), (0, INHARM)
-
-        # since some methods do not accept boundaries, we convert them to constraints, harhar
-        def cons(f0):
-            bounds = np.asarray(bnds(f0))
-            constraint = []
-            for index in range(len(bounds)):
-                lower, upper = bounds[index]
-                # lower constraint first, upper second
-                constraint.append({'type': 'ineq', 'fun': lambda x, lb=lower, i=index: x[i] - lb})
-                constraint.append({'type': 'ineq', 'fun': lambda x, ub=upper, i=index: ub - x[i]})
-            return constraint
-
+    def fitting(self, queue, thread_id):
         """
-        see also here to follow minimization issues in more detail
-        https://scipy-lectures.org/advanced/mathematical_optimization/
-        http://people.duke.edu/~ccc14/sta-663-2016/13_Optimization.html
-        https://stackoverflow.com/questions/12781622/does-scipys-minimize-function-with-method-cobyla-accept-bounds
-        https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.basinhopping.html
+        :param queue: object
+            common queue
+        :param thread_id: int
+            thread id = 1, 2, ..., len(initial)
+        :return: none
         """
+        window = 6  # width on either side
+        x = self._x[thread_id]
+        y = self._y[thread_id]
+        # do not exceed the array on either side
+        if x-window < 0 or x+window > len(self._freq)-1:
+            logging.warning('Fit initial value out of range: peak disregarded!')
+
+            return
+
+        # Gaussian width to be guessed better
+        guess = [self._freq[x], y, 0.25]
+        boundaries = ([self._freq[x] - window, 0.25*y, 0.],
+                      [self._freq[x] + window, 2*y, 3.])
+        try:
+            popt_ind, pcov = curve_fit(self.gauss,
+                                       self._freq[x-window:x+window],
+                                       self._amp[x-window:x+window],
+                                       p0=guess,
+                                       bounds=boundaries,
+                                       method='dogbox')
+            logging.debug('Position (Hz): {0:e}, Height (arb. Units): {1:e}, FWHM (Hz): {2:e}'
+                          .format(popt_ind[0], popt_ind[1], 2.354 * popt_ind[2]))
+        except RuntimeError:
+            logging.warning('Fit failure: peak disregarded!')
+
+            return
+        # put the results into the queue
+        queue.put(popt_ind)
+
+        return
+
+    @staticmethod
+    def gauss(x, *params):
         """
-        result = minimize(self.chi_square,
-                          [self.a[thread_id], self.b[thread_id]],
-                          #bounds=bnds(self.a[thread_id]),
-                          method="COBYLA",
-                          constraints=cons(self.a[thread_id])
-                          )        
-        result = shgo(self.chi_square,
-                      bounds=bnds(self.a[thread_id]),
-                      sampling_method='sobol'
-                      )
+        superposition of multi-Gaussian curves
+        :param x: list of floats
+            x-values
+        :param params:
+            param[0]: x-value
+            param[1]: amplitude
+            param[2]: width
+            param[0+i]: x-value
+            ...
+            where i = 0, n
+        :return:
+            y-values of multiple Gaussing fit
         """
-        minimizer_kwargs = {"method": "L-BFGS-B",
-                            "args": thread_id}
-        mybounds = MyBounds(f0=self.a[thread_id])
-        mytakestep = MyTakeStep(initial=[self.a[thread_id], self.b[thread_id]])
-        result = basinhopping(self.chi_square,
-                              [self.a[thread_id], self.b[thread_id]],
-                              minimizer_kwargs=minimizer_kwargs,
-                              niter=11,  # gets really time consuming for higher niter
-                              accept_test=mybounds,
-                              take_step=mytakestep
-                              )
+        # Gaussian fit with FFT
+        y = np.zeros_like(x)
+        for i in range(0, len(params), 3):
+            ctr = params[i]
+            amp = params[i + 1]
+            wid = params[i + 2]
+            y = y + amp * np.exp(-0.5 * ((x - ctr) / wid) ** 2)
 
-        queue.put((result.fun, result.x))
-
-    # maximize the cross-correlation (negate result for minimizer)
-    def chi_square(self, x, args):
-
-        r = 0
-        _i = 0
-        for n in range(1, 11):
-            tmp = 1. + x[1] * n ** 2
-            tmp = 0 if tmp < 0 else tmp
-            f_n = x[0] * n * np.sqrt(tmp)
-            for _i, value in enumerate(self.freq[_i:], start=_i):  # resume, where we just left for cpu time reasons
-                if value > f_n:  # mask theoretical frequencies with inharmonicity
-                    r += np.sum(self.amp[_i-2:_i+2])
-                    break
-
-        return -r
+        return y
