@@ -47,7 +47,7 @@ import logging
 from operator import itemgetter
 from .tuningTable import tuningtable
 from .FFTroutines import fft, peak, harmonics
-from test import parameters
+from Tuning import parameters
 
 __author__ = "Dr. Ralf Antonius Timmermann"
 __copyright__ = "Copyright (C) Dr. Ralf Antonius Timmermann"

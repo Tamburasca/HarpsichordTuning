@@ -6,7 +6,7 @@ import warnings
 import math
 from operator import itemgetter
 from .multiProcess_opt import ThreadedOpt
-from test import parameters
+from Tuning import parameters
 
 
 myformat = "%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s"

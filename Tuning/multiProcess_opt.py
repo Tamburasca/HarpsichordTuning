@@ -3,7 +3,7 @@ from scipy.optimize import curve_fit
 import numpy as np
 from operator import itemgetter
 import logging
-from test import parameters
+from Tuning import parameters
 
 
 myformat = "%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s"
