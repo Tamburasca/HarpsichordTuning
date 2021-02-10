@@ -1,7 +1,7 @@
 # Harpsichord Tuning
 
 An automatic tuning tool for string instruments, such as harpsichords and 
-pianos. Further Tests are needed with pianos, owing to the larger inharmonicity 
+pianos. Further tests are needed with pianos, owing to the larger inharmonicity 
 factor.
 
 Collects a mono audio signal from the input stream. The signal 
@@ -20,14 +20,15 @@ fundamental frequency, respectively.
 
 The maximum inharmonicity coefficient needs to be adjusted, depending on 
 the instrument to be tuned, B < 0.001 and < 0.05 for harpsichords and 
-pianos, respectively (see parameters.py).
+pianos, respectively (parameters.py).
  
 The frequency of the first partial f<sub>1</sub> is compared to a value 
-computed from the pitch level (input value for a1) and a tuning table 
-(input value), currently 
-comprising solely Werkmeister III, 1/4 Comma Meantone, and Equal Temperament 
-(feel free to edit/enhance it for yourself). The deviation in units of cent is 
-shown in the frequency plot, too low (in red), too high (in green).
+derived from the pitch level (input value for a1) and a tuning table 
+(input value), currently comprising solely Werkmeister III, 
+1/4 Comma Meantone, and Equal Temperament (feel free to edit/enhance it 
+for yourself). The text in the second subplot shows the key's deviation,
+in units of cent, for the specified tuning and pitch level: too low (in red) 
+and too high (in green).
 
 ![image info](./pictures/screenshot.png)
 
@@ -36,9 +37,7 @@ represents its Fourier analysis in the frequency domain. The olive
 vertical bars indicate the peaks that were identified and located by their 
 frequencies. The red vertical bars show the partials for 
 <em>n<sub>max</sub> &#8804; NPARTIAL</em> as 
-derived from the base frequency and inharmonicity coefficient.
-The text in the upper right corner shows the 
-deviation of the key for a specific tuning and pitch level.
+derived from the computed base frequency and inharmonicity coefficient.
 
 See also:
 

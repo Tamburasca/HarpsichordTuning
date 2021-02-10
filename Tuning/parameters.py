@@ -22,4 +22,4 @@ F_ORDER: int = 1
 NPARTIAL = 11
 
 """debug flag"""
-DEBUG: bool = True
+DEBUG: bool = False
