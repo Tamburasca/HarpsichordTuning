@@ -17,13 +17,11 @@ if parameters.DEBUG:
     logging.getLogger().setLevel(logging.DEBUG)
 
 
-def fft(amp, samples=None):
+def fft(amp):
     """
     performs FFT on a Hanning apodized time series. High pass filter performed on frequency domain.
     :param amp: list float
         time series
-    :param samples: int (optional)
-         number of samples
     :return:
     list float
         frequency values of spectrum
@@ -81,9 +79,7 @@ def peak(frequency, spectrum):
                 * for large wavelength regions, the signal over the scale of 5 or more pixels can be approximated 
                 by a straight line
                 For most spectra, these conditions are met.
-    REFERENCES  * ST-ECF Newsletter, Issue #42:
-                www.spacetelescope.org/about/further_information/newsletters/html/newsletter_42.html
-                * Software: www.stecf.org/software/ASTROsoft/DER_SNR/
+    REFERENCES  * Software: www.stecf.org/software/ASTROsoft/DER_SNR/
     """
     # Values that are exactly zero (padded) are skipped
     flux = np.array(spectrum[np.where(spectrum != 0.0)])

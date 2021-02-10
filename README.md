@@ -7,18 +7,39 @@ factor.
 Collects a mono audio signal from the input stream. The signal 
 runs through a FFT with a Hanning apodization in the time domain. 
 Subsequently, in the frequency domain, Butterworth high-pass filtering 
-is applied before peaks are sought by means of Python's signal 
-module (peak_find). In order to achieve higher accuracy in their 
-positions, the measured peaks are fitted to a Gauss curve. All peak positions 
-are correlated to each other to identify them as partials to
-one common fundamental frequency, where 
+is applied before peaks are sought by utilizing Python's peak_find method of
+the scipy.signal module. In order to achieve higher accuracy in their 
+positions, the measured peaks are fitted to a Gauss curve. 
 
-<em>f<sub>n</sub> = n * f<sub>0</sub> * sqrt(1 + B * n<sup>2</sup>)</em>
+For an ideal string the frequencies of the higher partials are just multiples
+of the fundamental
 
-with n = 1, 2, 3, ... B and f<sub>0</sub> as the inharmonicity coefficient and 
-fundamental frequency, respectively. 
+<em>f<sub>n</sub> = n * f<sub>1</sub> </em> (eq.1)
 
-The maximum inharmonicity coefficient needs to be adjusted, depending on 
+A real string behaves more like a 
+stiff bar and its partials can be well approximated by
+
+<em>f<sub>n</sub> = n * f<sub>0</sub> * sqrt(1 + B * n<sup>2</sup>)</em> (eq.2)
+
+with n = 1, 2, 3, ... B and f<sub>0</sub> are the inharmonicity coefficient and 
+base frequency, respectively.
+
+All peak positions are correlated to each other, such they 
+can be identifed as partials to one common base frequency, 
+applying (eq.2), where now
+
+<em>B = ((f<sub>j</sub> * m / k)<sup>2</sup> - f<sub>i</sub><sup>2</sup>) / 
+((k * f<sub>i</sub>)<sup>2</sup> -
+(f<sub>j</sub> * m / k)<sup>2</sup> * m<sup>2</sup>) </em>, (eq.3)
+
+and
+
+<em>f<sub>0</sub> = f<sub>i</sub> / (m * sqrt(1 + B * m<sup>2</sup>))</em> (eq.4)
+
+The measured frequencies and the
+partials are denoted <em>f<sub>j</sub> < f<sub>j</sub></em> and 
+<em>m < k &#8804; NPARTIAL</em>. The maximum inharmonicity coefficient 
+needs to be adjusted, depending on 
 the instrument to be tuned, B < 0.001 and < 0.05 for harpsichords and 
 pianos, respectively (parameters.py).
  
@@ -33,11 +54,12 @@ and too high (in green).
 ![image info](./pictures/screenshot.png)
 
 The upper plot represents the audio signal in the time domain, whereas the lower
-represents its Fourier analysis in the frequency domain. The olive 
-vertical bars indicate the peaks that were identified and located by their 
-frequencies. The red vertical bars show the partials for 
+represents its Fourier analysis in the frequency domain. The orange 
+vertical bars indicate the peaks that were identified by peak finding 
+and located by their frequencies. The red vertical bars show the partials up to 
 <em>n<sub>max</sub> &#8804; NPARTIAL</em> as 
-derived from the computed base frequency and inharmonicity coefficient.
+derived from the computed base frequency and inharmonicity coefficient applying
+(eq.1)
 
 See also:
 
@@ -50,9 +72,9 @@ NUMBER 1 JANUARY 1964
 
 The hotkeys ctrl-y and ctrl-x exits and stops the program, respectively, 
 ESC to resume. ctrl-j and ctrl-k shorten and lengthen the recording 
-interval within small ranges, whereas ctrl-n and
- ctrl-m diminish and increase the maximum 
-frequency displayed in the lower frequency plot.
+interval within small ranges, whereas ctrl-n and ctrl-m diminish and 
+increase the maximum frequency displayed in the lower frequency plot. The time
+series in the upper subplot can be toggled off/on by pressing ctrl-v.
 
 On certain Linux distributions, a package named python-tk (or similar) needs 
 to be installed, when running in virtual environments.

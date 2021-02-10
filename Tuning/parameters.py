@@ -13,13 +13,13 @@ INHARM: float = 0.001
 NMAX: int = 15
 
 """high pass cutoff frequency @-3db"""
-F_FILT: float = 300. # guess
+F_FILT: float = 150. # guess
 
 """high pass Butterworth filter of order F_ORDER"""
-F_ORDER: int = 1
+F_ORDER: int = 2
 
 """number of partials considered in harmonic finding"""
 NPARTIAL = 11
 
 """debug flag"""
-DEBUG: bool = False
+DEBUG: bool = True

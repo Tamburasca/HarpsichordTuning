@@ -61,8 +61,8 @@ __status__ = "QA"
 print(__doc__)
 
 
-format = "%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s"
-logging.basicConfig(format=format,
+myformat = "%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s"
+logging.basicConfig(format=myformat,
                     level=logging.INFO,
                     datefmt="%H:%M:%S")
 if parameters.DEBUG:
@@ -83,6 +83,7 @@ class Tuner:
         self.a1 = a1
         self.tuning = tuning  # see tuningTable.py
         self.rc = None
+        self.visible = True
 
         self.callback_output = []
         audio = pyaudio.PyAudio()
@@ -107,35 +108,51 @@ class Tuner:
         return None, pyaudio.paContinue
 
     def on_activate_x(self):
+        # suspend the audio stram and freezes the plat
         print("continue with ESC")
         self.rc = 'x'
 
     def on_activate_y(self):
-        if self.stream.is_active(): self.stream.stop_stream()
+        # exits the program
+        if self.stream.is_active(): 
+            self.stream.stop_stream()
         print("quitting...")
         self.rc = 'y'
 
     def on_activate_k(self):
+        # increases the sampling time by .1 s
         self.record_seconds += 0.1
-        if self.record_seconds > 5.0: self.record_seconds = 5.0
+        if self.record_seconds > 5.0: 
+            self.record_seconds = 5.0
         print("Recording Time: {0:1.1f}s".format(self.record_seconds))
 
     def on_activate_j(self):
+        # decreases the sampling time by .1 s
         self.record_seconds -= 0.1
-        if self.record_seconds < 0.5: self.record_seconds = 0.5
+        if self.record_seconds < 0.5: 
+            self.record_seconds = 0.5
         print("Recording Time: {0:1.1f}s".format(self.record_seconds))
 
     def on_activate_n(self):
+        # decreases the max. frequency plotted
         self.fmax -= 500 if self.fmax > 2000 else 100
-        if self.fmax < 500: self.fmax = 500
+        if self.fmax < 500: 
+            self.fmax = 500
         print("Max frequency displayed: {0:1.0f}Hz".format(self.fmax))
 
     def on_activate_m(self):
+        # increases the max. frequency plotted
         self.fmax += 500 if self.fmax >= 2000 else 100
-        if self.fmax > 15000: self.fmax = 15000
+        if self.fmax > 15000: 
+            self.fmax = 15000
         print("Max frequency displayed: {0:1.0f}Hz".format(self.fmax))
 
+    def on_activate_v(self):
+        # toggles on/off the plot in the time domain
+        self.visible = not self.visible
+
     def on_activate_esc(self):
+        # resume the audio streaming
         self.rc = 'esc'
 
     def find(self, f_measured):
@@ -170,7 +187,6 @@ class Tuner:
         timeusage()
         return None, None
 
-    @property
     def animate(self):
         """
         calling routine for audio, FFT, peak and partials and key finding, and plotting. Listens for events in plot
@@ -222,12 +238,12 @@ class Tuner:
             logging.info('Resolution (Hz/channel): ' + str(resolution))
 
             # calculate FFT
-            t1, yfft = fft(amp=amp,
-                           samples=samples)
+            t1, yfft = fft(amp=amp)
+
             # peakfinding
             peaks = peak(frequency=t1,
                          spectrum=yfft)
-            peakList = list(map(itemgetter(0), peaks))
+            peaklist = list(map(itemgetter(0), peaks))
 
             if peaks is not None:
                 f_measured = harmonics(peaks=peaks)  # find the key
@@ -284,8 +300,8 @@ class Tuner:
             # remove all collections: beginning from last object
             while ax1.collections:
                 ax1.collections.pop()
-            yevents = EventCollection(positions=peakList,
-                                      color='tab:olive',
+            yevents = EventCollection(positions=peaklist,
+                                      color='tab:orange',
                                       linelength=0.05*np.max(yfft),
                                       linewidth=2.
                                       )
@@ -320,6 +336,7 @@ class Tuner:
                 # fill in the axes rectangle
                 fig.canvas.blit(ax.bbox)
                 fig.canvas.blit(ax1.bbox)
+            ax.set_visible(self.visible)
 
             fig.canvas.flush_events()
             # resume the audio streaming, expect some retardation for the status change
@@ -346,10 +363,11 @@ def main():
         '<ctrl>+k': a.on_activate_k,
         '<ctrl>+m': a.on_activate_m,
         '<ctrl>+n': a.on_activate_n,
+        '<ctrl>+v': a.on_activate_v,
         '<esc>': a.on_activate_esc})
     h.start()
 
-    a.animate
+    a.animate()
     plt.close('all')
 
     return 0

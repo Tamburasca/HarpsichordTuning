@@ -77,7 +77,7 @@ class ThreadedOpt:
         :param queue: object
             common queue
         :param thread_id: int
-            thread id = 1, 2, ..., len(initial)
+            thread id = 0, 1, 2, ..., len(initial)-1
         :return: none
         """
         window = 6  # width on either side
@@ -123,7 +123,7 @@ class ThreadedOpt:
             param[2]: width
             param[0+i]: x-value
             ...
-            where i = 0, n
+            where i = 0, 1, 2, ...
         :return:
             y-values of multiple Gaussing fit
         """
