@@ -7,32 +7,31 @@ factor.
 Collects a mono audio signal from the input stream. The signal 
 runs through a FFT with a Hanning apodization in the time domain. 
 Subsequently, in the frequency domain, Butterworth high-pass filtering 
-is applied before peaks are sought by utilizing PEAK_FIND of
+is applied before peaks are sought by utilizing FIND_PEAKS of
 the scipy.signal module. In order to achieve higher accuracy in their 
-positions, the measured peaks are fitted to a Gauss curve.
+positions, the peaks found are fitted to a Gauss curve. The center
+frequency are the peak positions further utilized in the calculations.
 
 For an ideal string the frequencies of the higher partials are just multiples
 of the fundamental
 
 <em>f<sub>n</sub> = n * f<sub>1</sub> </em> (eq.1)
 
-However, a real string behaves more like a stiff bar and its partials 
+However, a real string behaves more like a stiff bar. Its partials 
 can be approximated by
 
 <em>f<sub>n</sub> = n * f<sub>0</sub> * sqrt(1 + B * n<sup>2</sup>)</em> (eq.2)
 
-with n = 1, 2, 3, ... B and f<sub>0</sub> are the inharmonicity coefficient and 
+with n = 1, 2, 3, ... B and f<sub>0</sub> as the inharmonicity coefficient and 
 base frequency, respectively.
 
 All peak positions found are correlated to each other, such that they 
 can be identifed as partials to one common base frequency. 
-By applying (eq.2), we get for
+By rewriting (eq.2), we get, for the permutation of two peaks
 
 <em>B = ((f<sub>j</sub> * n<sub>i</sub> / f<sub>i</sub> * n<sub>j</sub>)<sup>2</sup> - 1) / 
 (n<sub>j</sub><sup>2</sup> - (f<sub>j</sub> * n<sub>i</sub> / f<sub>i</sub> * n<sub>j</sub>)<sup>2</sup> * 
 n<sub>i</sub><sup>2</sup> </em>) (eq.3)
-
-and
 
 <em>f<sub>0</sub> = f<sub>i</sub> / (n<sub>i</sub> * 
 sqrt(1 + B * n<sub>i</sub><sup>2</sup>))</em> (eq.4)
@@ -40,7 +39,6 @@ sqrt(1 + B * n<sub>i</sub><sup>2</sup>))</em> (eq.4)
 The measured frequencies and their partials are denoted 
 <em>f<sub>i</sub> < f<sub>j</sub></em> and 
 <em>n<sub>i</sub> < n<sub>j</sub> &#8804; NPARTIAL</em>. 
-
 The maximum inharmonicity coefficient needs to be adjusted, depending on 
 the instrument to be tuned, B < 0.001 and < 0.05 for harpsichords and 
 pianos, respectively 
