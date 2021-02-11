@@ -30,7 +30,7 @@ By applying (eq.2), we get for
 
 <em>B = ((f<sub>j</sub> * n<sub>i</sub> / f<sub>i</sub> * n<sub>j</sub>)<sup>2</sup> - 1) / 
 (n<sub>j</sub><sup>2</sup> - (f<sub>j</sub> * n<sub>i</sub> / f<sub>i</sub> * n<sub>j</sub>)<sup>2</sup> * 
-m<sup>2</sup> </em>) (eq.3)
+n<sub>i</sub><sup>2</sup> </em>) (eq.3)
 
 and
 
