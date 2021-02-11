@@ -37,17 +37,19 @@ and
 <em>f<sub>0</sub> = f<sub>i</sub> / (n<sub>i</sub> * 
 sqrt(1 + B * n<sub>i</sub><sup>2</sup>))</em> (eq.4)
 
-The measured frequencies and the partials are denoted 
-<em>f<sub>j</sub> < f<sub>j</sub></em> and 
+The measured frequencies and their partials are denoted 
+<em>f<sub>i</sub> < f<sub>j</sub></em> and 
 <em>n<sub>i</sub> < n<sub>j</sub> &#8804; NPARTIAL</em>. 
 
 The maximum inharmonicity coefficient needs to be adjusted, depending on 
 the instrument to be tuned, B < 0.001 and < 0.05 for harpsichords and 
-pianos, respectively [parameters.py](parameters.py).
+pianos, respectively 
+[parameters.py](https://github.com/Tamburasca/HarpsichordTuning/blob/master/Tuning/parameters.py).
  
 The frequency of the first partial f<sub>1</sub> is compared to a value
 derived from the pitch level and a tuning table 
-[tuningTable.py](tuningTable.py), currently comprising solely Werkmeister III, 
+[tuningTable.py](https://github.com/Tamburasca/HarpsichordTuning/blob/master/Tuning/tuningTable.py), 
+currently comprising solely Werkmeister III, 
 1/4 Comma Meantone, and Equal Temperament (feel free to edit/enhance it 
 for yourself). The text in the second subplot shows the key's deviation,
 in units of cent, for the specified tuning and pitch level: too low (in red) 
