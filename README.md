@@ -14,7 +14,7 @@ positions, the measured peaks are fitted to a Gauss curve.
 For an ideal string the frequencies of the higher partials are just multiples
 of the fundamental
 
-<em>f<sub>n</sub> = n * f<sub>1</sub> </em> (eq.1)
+<em>f<sub>n</sub> = n * f<sub>1</sub> </em> <p style='text-align: right;'> (eq.1) </p>
 
 A real string behaves more like a 
 stiff bar and its partials can be well approximated by
@@ -25,12 +25,12 @@ with n = 1, 2, 3, ... B and f<sub>0</sub> are the inharmonicity coefficient and
 base frequency, respectively.
 
 All peak positions are correlated to each other, such they 
-can be identifed as partials to one common base frequency, 
-applying (eq.2), where now
+can be identifed as partials to one common base frequency. 
+By applying (eq.2), we get
 
 <em>B = ((f<sub>j</sub> * m / k)<sup>2</sup> - f<sub>i</sub><sup>2</sup>) / 
 ((k * f<sub>i</sub>)<sup>2</sup> -
-(f<sub>j</sub> * m / k)<sup>2</sup> * m<sup>2</sup>) </em>, (eq.3)
+(f<sub>j</sub> * m / k)<sup>2</sup> * m<sup>2</sup>) </em> (eq.3)
 
 and
 
