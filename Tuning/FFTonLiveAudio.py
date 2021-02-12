@@ -53,7 +53,7 @@ __author__ = "Dr. Ralf Antonius Timmermann"
 __copyright__ = "Copyright (C) Dr. Ralf Antonius Timmermann"
 __credits__ = ""
 __license__ = "GPLv3"
-__version__ = "1.0"
+__version__ = "1.0.1"
 __maintainer__ = "Dr. Ralf A. Timmermann"
 __email__ = "rtimmermann@astro.uni-bonn.de"
 __status__ = "QA"
@@ -61,8 +61,7 @@ __status__ = "QA"
 print(__doc__)
 
 
-myformat = "%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s"
-logging.basicConfig(format=myformat,
+logging.basicConfig(format=parameters.myformat,
                     level=logging.INFO,
                     datefmt="%H:%M:%S")
 if parameters.DEBUG:
@@ -351,10 +350,10 @@ class Tuner:
 def main():
 
     for tune in tuningtable.keys():
-        print("Tuning ({1:d}) {0:s}".format(tune, list(tuningtable).index(tune)))
+        print("Temperament ({1:d}) {0:s}".format(tune, list(tuningtable).index(tune)))
 
-    a = Tuner(tuning=list(tuningtable.keys())[int(input("Tuning Number?: "))],
-              a1=float(input("base frequency for a1 in Hz?: ")))
+    a = Tuner(tuning=list(tuningtable.keys())[int(input("Temperament [no]?: "))],
+              a1=float(input("A4 pitch frequency [Hz]?: ")))
 
     h = keyboard.GlobalHotKeys({
         '<ctrl>+x': a.on_activate_x,

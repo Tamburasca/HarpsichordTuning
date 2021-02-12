@@ -6,8 +6,7 @@ import logging
 from Tuning import parameters
 
 
-myformat = "%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s"
-logging.basicConfig(format=myformat,
+logging.basicConfig(format=parameters.myformat,
                     level=logging.INFO,
                     datefmt="%H:%M:%S")
 if parameters.DEBUG:

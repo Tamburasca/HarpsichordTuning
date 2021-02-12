@@ -12,7 +12,7 @@ INHARM: float = 0.001
 """max number of highest peaks"""
 NMAX: int = 15
 
-"""high pass cutoff frequency @-3db"""
+"""high pass cutoff frequency [Hz] @-3db"""
 F_FILT: float = 150. # guess
 
 """high pass Butterworth filter of order F_ORDER"""
@@ -23,3 +23,6 @@ NPARTIAL = 11
 
 """debug flag"""
 DEBUG: bool = False
+
+"""logging format"""
+myformat = "%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s"
