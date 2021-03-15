@@ -137,7 +137,7 @@ def harmonics(peaks):
     # loop through the compination of partials up to NPARTIAL
     for m in range(1, parameters.NPARTIAL):
         for k in range(m+1, parameters.NPARTIAL):
-            # loop through all peaks found (ascending, neested loops), break two loops, if solution found
+            # loop through all peaks found (ascending, neested loops)
             for i in range(0, len(ind)):
                 for j in range(i+1, len(ind)):
                     tmp = (ind[j] * m / k) ** 2
@@ -145,7 +145,6 @@ def harmonics(peaks):
                         b = (tmp - ind[i] ** 2) / ((k * ind[i]) ** 2 - tmp * m ** 2)
                     except Warning:
                         logging.info("devideByZero: discarded value in harmonics finding")
-                        # skip this one
                         continue
                     # allow also negative b value > -0.0001 for uncertainty in line fitting
                     if -0.0001 < b < parameters.INHARM:
@@ -153,10 +152,8 @@ def harmonics(peaks):
                             b = 0
                         f_fundamental = ind[i] / (m * np.sqrt(1. + b * m ** 2))
                         logging.debug("partial: {0:2d} {1:2d} lower: {2:9.4f} upper: {3:9.4f} "
-                                      "b: {4:.1e} fundamental: {5:9.4f}".
-                                      format(m, k, ind[i], ind[j], b, f_fundamental))
-#                        if f_fundamental < 27.5:
-#                            continue
+                                      "b: {4:.1e} fundamental: {5:9.4f}"
+                                      .format(m, k, ind[i], ind[j], b, f_fundamental))
                         initial.append([m, k, ind[i], ind[j], b, f_fundamental])
                         break
                 break

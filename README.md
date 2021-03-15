@@ -1,15 +1,15 @@
 # Harpsichord Tuning
 
-An automatic tuning tool for string instruments, such as harpsichords and 
-pianos. Further tests are needed with pianos, owing to the larger inharmonicity 
+An automatic tuning tool for string instruments, mainly harpsichords and 
+pianos. Tests are needed with pianos, owing to the larger inharmonicity 
 factor.
 
 Collects a mono audio signal from the input stream. The signal 
 runs through a FFT with a Hanning apodization in the time domain. 
 Subsequently, in the frequency domain, Butterworth high-pass filtering 
-is applied before peaks are sought by utilizing FIND_PEAKS of
-the scipy.signal module. In order to achieve higher accuracy in their 
-positions, the peaks found are fitted to a Gauss curve. The center
+is applied before resonance frequencies are sought utilizing FIND_PEAKS of
+scipy.signal. In order to achieve higher accuracy in their 
+positions, the peaks found are fit to a Gaussian curve. The center
 frequency are the peak positions further utilized in the calculations.
 
 For an ideal string the frequencies of the higher partials are just multiples
@@ -27,7 +27,7 @@ base frequency, respectively.
 
 All peak positions found are correlated to each other, such that they 
 can be identifed as partials to one common base frequency. 
-By rewriting (eq.2), we get, for the permutation of two peaks
+By rewriting (eq.2), we get, for all permutations of two frequencies
 
 <em>B = ((f<sub>j</sub> * n<sub>i</sub> / f<sub>i</sub> * n<sub>j</sub>)<sup>2</sup> - 1) / 
 (n<sub>j</sub><sup>2</sup> - (f<sub>j</sub> * n<sub>i</sub> / f<sub>i</sub> * n<sub>j</sub>)<sup>2</sup> * 
@@ -56,14 +56,28 @@ and too high (in green).
 ![image info](./pictures/screenshot.png)
 
 The upper plot represents the audio signal in the time domain, whereas the lower
-represents its Fourier analysis in the frequency domain. The orange 
+represents its Fourier transform to the frequency domain. The orange 
 vertical bars indicate the peaks that were identified by peak finding 
 and located by their frequencies. The red vertical bars show the partials up to 
 <em>n<sub>max</sub> &#8804; NPARTIAL</em> as 
 derived from the computed base frequency and inharmonicity coefficient applying
 (eq.2)
 
-See also:
+The hotkeys ctrl-y and ctrl-x exits and stops the program, respectively, 
+ESC to resume. ctrl-j and ctrl-k shorten and lengthen the recording 
+interval, whereas ctrl-n and ctrl-m diminish and 
+increase the maximum frequency displayed in the lower frequency plot. The time
+series in the upper subplot can be toggled off/on by pressing ctrl-v.
+
+On certain Linux distributions, a package named python-tk (or similar) needs 
+to be installed, when running in virtual environments.
+
+Also note that the module pynput utilized here may encounter 
+[plattform limitations](https://pynput.readthedocs.io/en/latest/limitations.html#)
+
+Run the program with: <em>python3 -m Tuning</em>
+
+References:
 
 1) HARVEY FLETCHER, THE JOURNAL OF THE ACOUSTICAL SOCIETY OF AMERICA VOLUME 36,
 NUMBER 1 JANUARY 1964
@@ -71,18 +85,3 @@ NUMBER 1 JANUARY 1964
 2301 (2012)
 3) JOONAS TUOVINEN, SIGNAL PROCESSING IN A SEMI-AUTOMATIC PIANO TUNING SYSTEM
 (MA OF SCIENCE), AALTO UNIVERSITY, SCHOOL OF ELECTRICAL ENGINEERING (2019)
-
-The hotkeys ctrl-y and ctrl-x exits and stops the program, respectively, 
-ESC to resume. ctrl-j and ctrl-k shorten and lengthen the recording 
-interval within small ranges, whereas ctrl-n and ctrl-m diminish and 
-increase the maximum frequency displayed in the lower frequency plot. The time
-series in the upper subplot can be toggled off/on by pressing ctrl-v.
-
-On certain Linux distributions, a package named python-tk (or similar) needs 
-to be installed, when running in virtual environments.
-
-Also note that the module pynput utilized here 
-may encounter 
-[plattform limitations](https://pynput.readthedocs.io/en/latest/limitations.html#)
-
-Run the program with: <em>python3 -m Tuning</em>
