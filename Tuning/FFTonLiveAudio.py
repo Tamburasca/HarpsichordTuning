@@ -388,7 +388,8 @@ def main():
 
     a = Tuner(
         tuning=list(tuningtable.keys())[int(input("Temperament [no]?: "))],
-        a1=float(input("A4 pitch frequency [Hz]?: ")))
+        a1=float(input("A4 pitch frequency [Hz]?: "))
+    )
 
     h = keyboard.GlobalHotKeys({
         '<ctrl>+x': a.on_activate_x,
