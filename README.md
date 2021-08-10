@@ -25,8 +25,8 @@ can be approximated by
 
 (2) <em>f<sub>n</sub> = n * f<sub>0</sub> * sqrt(1 + B * n<sup>2</sup>)</em>
 
-where n = 1, 2, 3, ... B and f<sub>0</sub> as the inharmonicity coefficient and 
-base frequency, respectively.
+where n = 1, 2, 3, ... B and f<sub>0</sub> are the inharmonicity coefficient 
+and base frequency, respectively.
 
 All peak positions found are correlated to each other, such that they 
 can be identifed as partials to one common base frequency. 
