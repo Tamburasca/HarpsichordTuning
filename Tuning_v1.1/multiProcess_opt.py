@@ -13,7 +13,7 @@ if parameters.DEBUG:
     logging.getLogger().setLevel(logging.DEBUG)
 
 
-class ThreadedOpt(object):
+class ThreadedOpt:
     """
     driver for multiprocessing:
     called by peak finding to locate exacter peak positions through minimizing
@@ -31,28 +31,28 @@ class ThreadedOpt(object):
         :param initial: float tuple
             frequencies and corresponding heights of peaks found
         """
-        self.__amp = amp
-        self.__freq = freq
-        self.__num_threads = len(initial)
-        self.__x = list(map(itemgetter(0), initial))
-        self.__y = list(map(itemgetter(1), initial))
+        self._amp = amp
+        self._freq = freq
+        self.num_threads = len(initial)
+        self._x = list(map(itemgetter(0), initial))
+        self._y = list(map(itemgetter(1), initial))
 
+    # Run the optimization. Make the threads here.
     def run(self):
-        """Run the optimization. Make the threads here."""
+
         queue = Queue()
-        processes, peaks = list(), list()
-        logging.debug("Number of processes: {0}".format(
-            str(self.__num_threads)))
+        processes = []
+        peaks = []
+        logging.debug("Number of processes: " + str(self.num_threads))
 
-        for thread_id in range(self.__num_threads):
-            # Make the threads and start them off
-            _process = Process(target=self.fitting,
-                               args=(queue, thread_id,))
-            processes.append(_process)
-            _process.start()
+        for thread_id in range(self.num_threads):  # Make the threads and start them off
+            p = Process(target=self.fitting,
+                        args=(queue, thread_id,))
+            processes.append(p)
+            p.start()
 
-        for _process in processes:
-            _process.join(timeout=.05)  # resume after timeout, cleanup later
+        for p in processes:
+            p.join(timeout=.1)  # resume after timeout, cleanup later
 
         while not queue.empty():
             rc = queue.get()
@@ -62,17 +62,17 @@ class ThreadedOpt(object):
 
         # clean up processes that did not join within timeout period
         while processes:
-            _process = processes.pop()
-            if _process.is_alive():
-                _process.terminate()
-                logging.warning(
-                    "Multiprocessing: Process did not join, cleaning up ...")
+            p = processes.pop()
+            if p.is_alive():
+                p.terminate()
+                logging.warning("Multiprocessing: Process did not join, cleaning up ...")
 
+        # unsorted peaks
         return peaks
 
+    # Each thread goes through this.
     def fitting(self, queue, thread_id):
         """
-        Each thread goes through this.
         :param queue: object
             common queue
         :param thread_id: int
@@ -80,30 +80,27 @@ class ThreadedOpt(object):
         :return: none
         """
         window = 6  # width on either side
-        x = self.__x[thread_id]
-        y = self.__y[thread_id]
+        x = self._x[thread_id]
+        y = self._y[thread_id]
         # do not exceed the array on either side
-        if x-window < 0 or x+window > len(self.__freq)-1:
+        if x-window < 0 or x+window > len(self._freq)-1:
             logging.warning('Fit initial value out of range: peak disregarded!')
 
             return
 
         # Gaussian width to be guessed better
-        guess = [self.__freq[x], y, 2.]
-        boundaries = ([self.__freq[x] - window, 0.25*y, 1.],
-                      [self.__freq[x] + window, 2*y, 4.])
+        guess = [self._freq[x], y, 0.25]
+        boundaries = ([self._freq[x] - window, 0.25*y, 0.],
+                      [self._freq[x] + window, 2*y, 3.])
         try:
             popt_ind, pcov = curve_fit(self.gauss,
-                                       self.__freq[x-window:x+window],
-                                       self.__amp[x-window:x+window],
+                                       self._freq[x-window:x+window],
+                                       self._amp[x-window:x+window],
                                        p0=guess,
                                        bounds=boundaries,
                                        method='dogbox')
-            logging.debug(
-                "Position (Hz): {0:e}, "
-                "Height (arb. Units): {1:e}, "
-                "FWHM (Hz): {2:e}"
-                .format(popt_ind[0], popt_ind[1], 2.354 * popt_ind[2]))
+            logging.debug('Position (Hz): {0:e}, Height (arb. Units): {1:e}, FWHM (Hz): {2:e}'
+                          .format(popt_ind[0], popt_ind[1], 2.354 * popt_ind[2]))
         except RuntimeError:
             logging.warning('Fit failure: peak disregarded!')
 
@@ -116,7 +113,7 @@ class ThreadedOpt(object):
     @staticmethod
     def gauss(x, *params):
         """
-        superposition of multi-Gaussian curves on FFT
+        superposition of multi-Gaussian curves
         :param x: list of floats
             x-values
         :param params:
@@ -129,6 +126,7 @@ class ThreadedOpt(object):
         :return:
             y-values of multiple Gaussing fit
         """
+        # Gaussian fit with FFT
         y = np.zeros_like(x)
         for i in range(0, len(params), 3):
             ctr = params[i]

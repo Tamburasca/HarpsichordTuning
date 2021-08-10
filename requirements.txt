@@ -1,6 +1,7 @@
-pynput       >=1.6.8
+pynput       >=1.7.1
 PyAudio      >=0.2.11
-numpy        >=1.18.1
-scipy        >=1.4.1
-matplotlib   >=3.2.1
+numpy        >=1.19.1
+scipy        >=1.5.2
+matplotlib   >=3.3.1
+scikit-image >=0.17.2
 

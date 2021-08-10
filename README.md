@@ -1,73 +1,73 @@
 # Harpsichord Tuning
 
 An automatic tuning tool for string instruments, mainly harpsichords and 
-pianos. Tests are needed with pianos, owing to the larger inharmonicity 
+pianos. Tests are still needed with pianos, owing to the larger inharmonicity 
 factor.
 
-Collects a mono audio signal from the input stream. The signal 
-runs through a FFT with a Hanning apodization in the time domain. 
+Collects a mono audio signal from the input stream. The FFT is performed on 
+slices of sizes 2<sup>N</sup> samples with a Hanning apodization in the time 
+domain, where the slices are shifted with respect to their previous by 
+multiples of 1024 samples. N is either 15 or 16.
 Subsequently, in the frequency domain, Butterworth high-pass filtering 
-is applied before resonance frequencies are sought utilizing FIND_PEAKS of
-scipy.signal. In order to achieve higher accuracy in their 
-positions, the peaks found are fit to a Gaussian curve. The center
-frequency are the peak positions further utilized in the calculations.
+is applied before the resonance frequencies are sought. In order to achieve 
+higher accuracy in their positions, the peaks found are fit to a Gaussian curve. 
+The center frequency are the peak positions utilized in further 
+calculations.
 
 For an ideal string the frequencies of the higher partials are just multiples
 of the fundamental
 
-<em>f<sub>n</sub> = n * f<sub>1</sub> </em> (eq.1)
+(1) <em>f<sub>n</sub> = n * f<sub>1</sub> </em>
 
 However, a real string behaves more like a stiff bar. Its partials 
 can be approximated by
 
-<em>f<sub>n</sub> = n * f<sub>0</sub> * sqrt(1 + B * n<sup>2</sup>)</em> (eq.2)
+(2) <em>f<sub>n</sub> = n * f<sub>0</sub> * sqrt(1 + B * n<sup>2</sup>)</em>
 
-with n = 1, 2, 3, ... B and f<sub>0</sub> as the inharmonicity coefficient and 
+where n = 1, 2, 3, ... B and f<sub>0</sub> as the inharmonicity coefficient and 
 base frequency, respectively.
 
 All peak positions found are correlated to each other, such that they 
 can be identifed as partials to one common base frequency. 
 By rewriting (eq.2), we get, for all permutations of two frequencies
 
-<em>B = ((f<sub>j</sub> * n<sub>i</sub> / f<sub>i</sub> * n<sub>j</sub>)<sup>2</sup> - 1) / 
+(3) <em>B = ((f<sub>j</sub> * n<sub>i</sub> / f<sub>i</sub> * n<sub>j</sub>)
+<sup>2</sup> - 1) / 
 (n<sub>j</sub><sup>2</sup> - (f<sub>j</sub> * n<sub>i</sub> / f<sub>i</sub> * n<sub>j</sub>)<sup>2</sup> * 
-n<sub>i</sub><sup>2</sup> </em>) (eq.3)
+n<sub>i</sub><sup>2</sup> </em>)
 
-<em>f<sub>0</sub> = f<sub>i</sub> / (n<sub>i</sub> * 
-sqrt(1 + B * n<sub>i</sub><sup>2</sup>))</em> (eq.4)
+(4) <em>f<sub>0</sub> = f<sub>i</sub> / (n<sub>i</sub> *
+sqrt(1 + B * n<sub>i</sub><sup>2</sup>))</em>
 
 The measured frequencies and their partials are denoted 
 <em>f<sub>i</sub> < f<sub>j</sub></em> and 
 <em>n<sub>i</sub> < n<sub>j</sub> &#8804; NPARTIAL</em>. 
 The maximum inharmonicity coefficient needs to be adjusted, depending on 
 the instrument to be tuned, B < 0.001 and < 0.05 for harpsichords and 
-pianos, respectively 
+pianos, respectively in
 [parameters.py](https://github.com/Tamburasca/HarpsichordTuning/blob/master/Tuning/parameters.py).
  
-The frequency of the first partial f<sub>1</sub> is compared to a value
-derived from the pitch level and a tuning table 
+The frequency of the first partial f<sub>1</sub> (base frequency) is compared 
+to a value derived from the pitch level and a tuning table 
 [tuningTable.py](https://github.com/Tamburasca/HarpsichordTuning/blob/master/Tuning/tuningTable.py), 
 currently comprising solely Werkmeister III, 
 1/4 Comma Meantone, and Equal Temperament (feel free to edit/enhance it 
-for yourself). The text in the second subplot shows the key's deviation,
+for yourself). The text in the plot shows the key's deviation,
 in units of cent, for the specified tuning and pitch level: too low (in red) 
 and too high (in green).
 
 ![image info](./pictures/screenshot.png)
 
-The upper plot represents the audio signal in the time domain, whereas the lower
-represents its Fourier transform to the frequency domain. The orange 
-vertical bars indicate the peaks that were identified by peak finding 
-and located by their frequencies. The red vertical bars show the partials up to 
+The orange vertical bars indicate the peaks that were identified by the peak 
+finding routine. The red vertical bars show the partials up to 
 <em>n<sub>max</sub> &#8804; NPARTIAL</em> as 
 derived from the computed base frequency and inharmonicity coefficient applying
 (eq.2)
 
 The hotkeys ctrl-y and ctrl-x exits and stops the program, respectively, 
-ESC to resume. ctrl-j and ctrl-k shorten and lengthen the recording 
-interval, whereas ctrl-n and ctrl-m diminish and 
-increase the maximum frequency displayed in the lower frequency plot. The time
-series in the upper subplot can be toggled off/on by pressing ctrl-v.
+ESC to resume. ctrl-j and ctrl-k shorten and lengthen the shift of the sclices, 
+whereas ctrl-n and ctrl-m diminish and increase the maximum frequency 
+displayed.
 
 On certain Linux distributions, a package named python-tk (or similar) needs 
 to be installed, when running in virtual environments.
