@@ -5,8 +5,9 @@ pianos. Tests are still needed with pianos, owing to the larger inharmonicity
 factor.
 
 Collects a mono audio signal from the input stream. The FFT is performed on 
-slices of sizes 2<sup>N</sup> samples with a Hanning apodization in the time 
-domain, where the slices are shifted with respect to their previous by 
+audio slices of size 2<sup>N</sup> samples with a Hanning apodization in the 
+time 
+domain, where the slices are shifted with respect to their previous one by 
 multiples of 1024 samples. N is either 15 or 16.
 Subsequently, in the frequency domain, Butterworth high-pass filtering 
 is applied before the resonance frequencies are sought. In order to achieve 
