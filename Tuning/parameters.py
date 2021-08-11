@@ -1,5 +1,5 @@
 """audio sampling rate in kHz derived from driver -> hardware & sound
-no necessity to modify!"""
+do not modify!"""
 RATE: int = 44100
 
 """size of slices: samples per FFT. Can be modifed to 2**N, where N is
@@ -17,6 +17,15 @@ FREQUENCY_MAX: float = 2000.
 """noise level needs to be adjusted such, that there are no peaks detected with 
 no key pressed (silence). This needs to be worked on in a later version."""
 NOISE_LEVEL: float = 100.
+
+"""minimum distance between two peaks to identify a peak"""
+DISTANCE: int = 6
+
+"""min and max width of peak to identify a peak"""
+WIDTH: tuple = (0, 8)
+
+"""window for Gauss fits: no of channels on either side"""
+FIT_WINDOW: int = 6
 
 """max. inharmonicity of strings considered (harpsichord, piano, ...)"""
 INHARM: float = 0.001

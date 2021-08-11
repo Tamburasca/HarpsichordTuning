@@ -79,7 +79,7 @@ class ThreadedOpt(object):
             thread id = 0, 1, 2, ..., len(initial)-1
         :return: none
         """
-        window = 6  # width on either side
+        window = parameters.FIT_WINDOW
         x = self.__x[thread_id]
         y = self.__y[thread_id]
         # do not exceed the array on either side

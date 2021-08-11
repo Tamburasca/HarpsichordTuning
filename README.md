@@ -1,20 +1,19 @@
 # Harpsichord Tuning
 
 An automatic tuning tool for string instruments, mainly harpsichords and 
-pianos. Tests are still needed with pianos, owing to the larger inharmonicity 
+pianos. Tests are still needed with pianos, owing to larger inharmonicity 
 factor.
 
-Collects a mono audio signal from the input stream, splits it into smaller, 
-overlapping slices, and applies the Fourier transform to each 
+This application collects a mono audio signal from the input stream, splits it 
+into smaller, overlapping slices, and applies the Fourier transform to each 
 (known as the short time Fourier transform). The slices have a size of 
-2<sup>N</sup> samples, where N is 15 or 16, and they overlap by multiples 
-of 1024 samples. A Hanning window is multiplied with the audio signal in 
-each slice. 
+2<sup>N</sup> samples, where N is 15 or 16, and overlap by multiples 
+of 1024 samples. Each slice is apodized with a Hanning window.
 Subsequently, in the frequency domain, Butterworth high-pass filtering 
 is applied to suppress noise from low frequencies before the fundamental and 
 overtone frequencies are sought. In order to achieve
-higher accuracy in their positions, we fit a Gaussian to the peaks found. 
-Their centroids are utilized in the 
+higher accuracy in their positions, we fit a Gaussian to the strongest peaks 
+found. Their centroids are utilized in the 
 derivation of the fundamental frequency and the inharmonicity factor.
 
 For an ideal string the frequencies of higher partials are just multiples
@@ -22,12 +21,12 @@ of the fundamental frequency
 
 **(1) <em>f<sub>n</sub> = n * f<sub>1</sub> </em>**, 
 
-where n = 1, 2, 3, ... The ear hears the fundamental frequency most prominently, but the overall 
-sound is also colored by the presence of various overtones (frequencies greater 
-than the fundamental frequency).
+where n = 1, 2, 3, ... The ear hears the fundamental frequency most prominently, 
+but the overall sound is also colored by the presence of various overtones 
+(frequencies greater than the fundamental frequency).
 
-However, a real string behaves more like a 
-stiff bar. Its partials can be approximated by
+However, a real string behaves more like a stiff bar. Its partials can be 
+approximated by
 
 **(2) <em>f<sub>n</sub> = n * f<sub>0</sub> * sqrt(1 + B * n<sup>2</sup>)</em>**
 

@@ -102,12 +102,12 @@ def peak(frequency, spectrum):
     # prominences = signal.peak_prominences(x=spectrum, peaks=peaks)[0]
     # spectrum[peaks] == prominences with zero baseline
     peaks, _ = signal.find_peaks(x=spectrum,
-                                 # min distance of peaks -> may need adjustment
-                                 distance=6,
+                                 # min distance between two peaks
+                                 distance=parameters.DISTANCE,
                                  # sensitivity minus background
                                  prominence=parameters.NOISE_LEVEL * std,
-                                 # max peak width -> may need adjustment
-                                 width=(0, 8))
+                                 # peak width
+                                 width=parameters.WIDTH)
     npeaks = len(peaks)
     logging.debug("Peaks found: " + str(npeaks))
     _stop = timeit.default_timer()
