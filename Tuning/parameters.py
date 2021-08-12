@@ -22,13 +22,13 @@ no key pressed (silence). This needs to be worked on in a later version."""
 NOISE_LEVEL: float = 100.
 
 """minimum distance between two peaks in channels to identify a peak as such"""
-DISTANCE: int = 6
+DISTANCE: int = 8
 
 """min and max width of peak in channels to identify a peak as such"""
 WIDTH: tuple = (0, 8)
 
 """window for Gauss fits: no of channels on either side"""
-FIT_WINDOW: int = 6
+FIT_WINDOW: int = 5
 
 """max. inharmonicity of strings considered (harpsichord, piano, ...)"""
 INHARM: float = 0.001
