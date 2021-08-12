@@ -11,17 +11,20 @@ SLICE_LENGTH: int = 32768  # 65536
 to its previous, can be adjusted by +/-1024 samples through hotkeys crtl-j/k"""
 SLICE_SHIFT: int = 16384  # 8192
 
-"""initial max frequency [Hz] displayed, can be adjusted through ctrl-n/m"""
-FREQUENCY_MAX: float = 2000.
+"""high pass cutoff frequency [Hz] @-3db"""
+F_FILT: float = 120.
+
+"""high pass Butterworth filter of order F_ORDER"""
+F_ORDER: int = 2
 
 """noise level needs to be adjusted such, that there are no peaks detected with 
 no key pressed (silence). This needs to be worked on in a later version."""
 NOISE_LEVEL: float = 100.
 
-"""minimum distance between two peaks to identify a peak"""
+"""minimum distance between two peaks in channels to identify a peak as such"""
 DISTANCE: int = 6
 
-"""min and max width of peak to identify a peak"""
+"""min and max width of peak in channels to identify a peak as such"""
 WIDTH: tuple = (0, 8)
 
 """window for Gauss fits: no of channels on either side"""
@@ -33,14 +36,11 @@ INHARM: float = 0.001
 """max number of highest peaks"""
 NMAX: int = 15
 
-"""high pass cutoff frequency [Hz] @-3db"""
-F_FILT: float = 120.
-
-"""high pass Butterworth filter of order F_ORDER"""
-F_ORDER: int = 2
-
 """number of partials considered in harmonic finding"""
 NPARTIAL: int = 11
+
+"""initial max frequency [Hz] displayed, can be adjusted through ctrl-n/m"""
+FREQUENCY_MAX: float = 2000.
 
 """debug flag"""
 DEBUG: bool = True
