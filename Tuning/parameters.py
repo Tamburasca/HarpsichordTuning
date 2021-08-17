@@ -12,14 +12,14 @@ to its previous, can be adjusted by +/-1024 samples through hotkeys crtl-j/k"""
 SLICE_SHIFT: int = 16384  # 8192
 
 """high pass cutoff frequency [Hz] @-3db"""
-F_FILT: float = 120.
+F_FILT: float = 150.
 
 """high pass Butterworth filter of order F_ORDER"""
 F_ORDER: int = 2
 
 """noise level needs to be adjusted such, that there are no peaks detected with 
 no key pressed (silence). This needs to be worked on in a later version."""
-NOISE_LEVEL: float = 100.
+NOISE_LEVEL: float = 75.
 
 """minimum distance between two peaks in channels to identify a peak as such"""
 DISTANCE: int = 8
@@ -40,7 +40,7 @@ NMAX: int = 15
 NPARTIAL: int = 11
 
 """initial max frequency [Hz] displayed, can be adjusted through ctrl-n/m"""
-FREQUENCY_MAX: float = 2000.
+FREQUENCY_MAX: int = 2000
 
 """debug flag"""
 DEBUG: bool = True

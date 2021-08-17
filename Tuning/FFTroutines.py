@@ -33,15 +33,9 @@ def fft(amp):
     _start = timeit.default_timer()
 
     y_raw = np.fft.rfft(hanning * amp)
-    """
-    # if Power Spectrum then y = np.abs(y_raw) ** 2 / samples
-    # if PDS then y = 2 * np.abs(y_raw) ** 2 / samples / 
-    # (RATE * noise power bandwidth)
-    # noise power bandwidth = 1.5 for Hanning window
-    y_raw = np.abs(y_raw) ** 2 / samples
-    # convolve with a Gaussian of width SIGMA
-    spectrum = signal.convolve(in1=np.abs(y_raw),
-                               in2=signal.gaussian(M=21, std=SIGMA),
+    """convolve with a Gaussian of width SIGMA
+    y_raw = signal.convolve(in1=np.abs(y_raw),
+                               in2=signal.gaussian(M=11, std=1),
                                mode='same')
     """
     # analog high pass Butterworth filter
@@ -54,7 +48,11 @@ def fft(amp):
                         a=a,
                         worN=t1)
     y_final = np.abs(h * y_raw)
-
+    """if PSD then 
+    psd = 2. * np.abs(y_raw)**2 / samples**2 * noise power bandwidth
+    # noise power bandwidth = 1.5 for Hanning window
+    y_final = 2 * 1.5 * y_final ** 2 / len(amp)**2
+    """
     _stop = timeit.default_timer()
     logging.debug("time utilized for FFT [s]: " + str(_stop - _start))
 

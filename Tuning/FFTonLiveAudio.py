@@ -51,11 +51,17 @@ from .tuningTable import tuningtable
 from .FFTroutines import fft, peak, harmonics
 from Tuning import parameters
 
+"""
+2021/ß8/14 - Ralf A. Timmermann <rtimmermann@gmx.de>
+- Update to version 2.1.0
+    * new hotkeys to change minimum frequency in Fourier spectrum
+"""
+
 __author__ = "Dr. Ralf Antonius Timmermann"
 __copyright__ = "Copyright (C) Dr. Ralf Antonius Timmermann"
 __credits__ = ""
 __license__ = "GPLv3"
-__version__ = "2.0.1"
+__version__ = "2.1.0"
 __maintainer__ = "Dr. Ralf A. Timmermann"
 __email__ = "rtimmermann@astro.uni-bonn.de"
 __status__ = "QA"
@@ -77,8 +83,9 @@ class Tuner:
         :param tuning: string
             tuning temperament
         """
-        self.step = parameters.SLICE_SHIFT
-        self.fmax = parameters.FREQUENCY_MAX
+        self.step: int = parameters.SLICE_SHIFT
+        self.fmax: int = parameters.FREQUENCY_MAX
+        self.fmin: int = 0
         self.a1 = kwargs.get('a1')
         self.tuning = kwargs.get('tuning')  # see tuningTable.py
         self.rc = None
@@ -120,14 +127,30 @@ class Tuner:
         self.step += 1024
         if self.step > parameters.SLICE_LENGTH:
             self.step = parameters.SLICE_LENGTH
-        print("Slice shift: {0:d} bytes".format(self.step))
+        print("Slice shift: {0:d} samples".format(self.step))
 
     def on_activate_j(self):
         # decreases the shift by which the slices progress
         self.step -= 1024
         if self.step < 4096:
             self.step = 4096
-        print("Slice shift: {0:d} bytes".format(self.step))
+        print("Slice shift: {0:d} samples".format(self.step))
+
+    def on_activate_na(self):
+        # decreases the min. frequency plotted
+        self.fmin -= 500 if self.fmin > 1500 else 100
+        if self.fmin < 0:
+            self.fmin = 0
+        print("Min frequency displayed: {0:1.0f}Hz".format(self.fmin))
+
+    def on_activate_ma(self):
+        # increases the min. frequency plotted
+        self.fmin += 500 if self.fmin >= 1500 else 100
+        if self.fmin > 14500:
+            self.fmin = 14500
+        print("Min frequency displayed: {0:1.0f}Hz".format(self.fmin))
+        if self.fmax - self.fmin < 500:
+            self.on_activate_m()
 
     def on_activate_n(self):
         # decreases the max. frequency plotted
@@ -135,6 +158,8 @@ class Tuner:
         if self.fmax < 500:
             self.fmax = 500
         print("Max frequency displayed: {0:1.0f}Hz".format(self.fmax))
+        if self.fmax - self.fmin < 500:
+            self.on_activate_na()
 
     def on_activate_m(self):
         # increases the max. frequency plotted
@@ -296,7 +321,7 @@ class Tuner:
                             "{0:s} offset={1:.0f} cent".format(tone, displaced)
                         color = 'green' if displaced >= 0 else 'red'
 
-                """Matplotlib block"""
+                # Matplotlib block
                 _start = timeit.default_timer()
                 if _firstplot:
                     # Setup figure, axis, lines, text and initiate plot once
@@ -311,7 +336,7 @@ class Tuner:
                                     fontsize=12,
                                     fontweight='bold'
                                     )
-                    text1 = ax1.text(0., np.max(yfft), "",
+                    text1 = ax1.text(self.fmin, np.max(yfft), "",
                                      horizontalalignment='left',
                                      verticalalignment='top')
                     ax1.set_title(label=displayed_title,
@@ -324,14 +349,14 @@ class Tuner:
                     ln1.set_xdata(t1)
                     ln1.set_ydata(yfft)
                 # set text attributes of lower subplot
-                ax1.set_xlim([0., self.fmax])
+                ax1.set_xlim([self.fmin, self.fmax])
                 text.set_text(displayed_text)
                 text.set_color(color)
                 text.set_x(self.fmax)
                 text.set_y(np.max(yfft))
                 text1.set_text(info_text)
                 text1.set_color(info_color)
-                text1.set_x(0.)
+                text1.set_x(self.fmin)
                 text1.set_y(np.max(yfft))
 
                 # remove all collections: last object first (reverse)
@@ -397,8 +422,11 @@ def main():
         '<ctrl>+j': a.on_activate_j,
         '<ctrl>+k': a.on_activate_k,
         '<ctrl>+m': a.on_activate_m,
+        '<alt>+m': a.on_activate_ma,
         '<ctrl>+n': a.on_activate_n,
-        '<esc>': a.on_activate_esc})
+        '<alt>+n': a.on_activate_na,
+        '<esc>': a.on_activate_esc,
+        'q': a.on_activate_y})
     h.start()
 
     a.animate()

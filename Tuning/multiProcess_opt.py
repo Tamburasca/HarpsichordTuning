@@ -5,7 +5,6 @@ from operator import itemgetter
 import logging
 from Tuning import parameters
 
-
 logging.basicConfig(format=parameters.myformat,
                     level=logging.INFO,
                     datefmt="%H:%M:%S")
