@@ -27,10 +27,11 @@ NUMBER 1 JANUARY 1964
 3) Joonas Tuovinen, Signal Processing in a Semi-AutomaticPiano Tuning System
 (MA of Science), Aalto University, School of Electrical Engineering (2019)
 
-The hotkeys ctrl-y and ctrl-x exits and stops the program, respectively,
+The hotkey ctrl-y and ctrl-x exits and stops the program, respectively,
 ESC to resume. Ctrl-j and ctrl-k shorten and lengthen the shift between the
-individual audio slices, whereas ctrl-n and ctrl-m diminish and increase the
-max frequency displayed. Parameters can be adjusted in the parameters.py file.
+audio slices, whereas ctrl-n (alt-n) and ctrl-m (alt-m) diminish and
+increase the max (min) frequency displayed. Parameters can be adjusted in the
+parameters.py file.
 
 This program comes with ABSOLUTELY NO WARRANTY.
 This is free software, and you are welcome to redistribute it under
@@ -55,13 +56,17 @@ from Tuning import parameters
 2021/ß8/14 - Ralf A. Timmermann <rtimmermann@gmx.de>
 - Update to version 2.1.0
     * new hotkeys to change minimum frequency in Fourier spectrum
+2021/ß8/18 - Ralf A. Timmermann <rtimmermann@gmx.de>
+- Update to version 2.2.0
+    * nested pie to display deviation of key from target value, parameter.PIE
+    to toggle to previous setup 
 """
 
 __author__ = "Dr. Ralf Antonius Timmermann"
 __copyright__ = "Copyright (C) Dr. Ralf Antonius Timmermann"
 __credits__ = ""
 __license__ = "GPLv3"
-__version__ = "2.1.0"
+__version__ = "2.2.0"
 __maintainer__ = "Dr. Ralf A. Timmermann"
 __email__ = "rtimmermann@astro.uni-bonn.de"
 __status__ = "QA"
@@ -88,6 +93,7 @@ class Tuner:
         self.fmin: int = 0
         self.a1 = kwargs.get('a1')
         self.tuning = kwargs.get('tuning')  # see tuningTable.py
+        self.v = True
         self.rc = None
 
         self.callback_output = list()
@@ -111,6 +117,10 @@ class Tuner:
         self.callback_output.append(audio_data)
 
         return None, pyaudio.paContinue
+
+    def on_activate_v(self):
+        # not used to date
+        self.v = not self.v
 
     def on_activate_x(self):
         # suspend the audio stram and freezes the plat
@@ -207,7 +217,7 @@ class Tuner:
                     return key, displaced
 
         timeusage()
-        return None, None
+        return '', 0
 
     def slice(self):
         """
@@ -266,6 +276,34 @@ class Tuner:
         string
             return code
         """
+        def pie(axes, displaced, key_pressed):
+            # delete all patches and texts from inset_pie axes that piled up
+            # print(axes.__dict__)
+            while axes.patches:
+                axes.patches.pop()
+            while axes.texts:
+                axes.texts.pop()
+            inset_pie.text(x=0,
+                           y=0,
+                           s="{0}".format(key_pressed),
+                           fontdict={'fontsize': 20,
+                                     'horizontalalignment': 'center',
+                                     'verticalalignment': 'center'})
+            inset_pie.pie(
+                [-displaced, 100 + displaced] if displaced < 0 else [
+                    displaced, 100 - displaced],
+                startangle=90,
+                colors=['red' if displaced < 0 else 'green', 'white'],
+                counterclock=displaced < 0,
+                labels=(
+                    "{0:.0f} cent".format(displaced) if key_pressed else '', ''
+                ),
+                wedgeprops=dict(width=.6,
+                                edgecolor='black',
+                                lw=.5))
+
+            return
+
         _firstplot = True
         plt.ion()  # Stop matplotlib windows from blocking
 
@@ -276,7 +314,6 @@ class Tuner:
 
         # start Recording
         self.stream.start_stream()
-
         # main loop while audio stream active
         while self.stream.is_active():
             slices = self.slice()
@@ -290,16 +327,14 @@ class Tuner:
                 del self.callback_output[0:self.step // 1024]
                 # calculate FFT
                 t1, yfft = fft(amp=sl)
-                # peakfinding
+                # call peakfinding
                 peaks = peak(frequency=t1,
                              spectrum=yfft)
                 peaklist = list(map(itemgetter(0), peaks))
-                # harmonics
+                # call harmonics
                 if peaks is not None:
                     f_measured = harmonics(peaks=peaks)  # find the key
 
-                displayed_text = ""
-                color = None
                 displayed_title = "{0:s} (a1={1:3.0f}Hz)".format(self.tuning,
                                                                  self.a1)
                 info_text = "Resolution: {2:3.1f} Hz/channel\n" \
@@ -312,14 +347,18 @@ class Tuner:
                               'color': 'darkred',
                               'weight': 'normal',
                               'size': 14}
-
+                off_text = ''
+                off_color = None
                 if len(f_measured) != 0:
                     # if key is found print it and its offset colored red/green
-                    tone, displaced = self.find(f_measured=f_measured[0])
-                    if tone:
-                        displayed_text = \
-                            "{0:s} offset={1:.0f} cent".format(tone, displaced)
-                        color = 'green' if displaced >= 0 else 'red'
+                    key, off = self.find(f_measured=f_measured[0])
+                    if key and not parameters.PIE:
+                        off_text = \
+                            "{0:s} offset={1:.0f} cent".format(key, off)
+                        off_color = 'green' if off >= 0 else 'red'
+                else:
+                    off = 0.
+                    key = ''
 
                 # Matplotlib block
                 _start = timeit.default_timer()
@@ -329,6 +368,11 @@ class Tuner:
                     fig = plt.gcf()
                     ax1 = fig.add_subplot(111)
                     fig.set_size_inches(12, 6)
+                    if parameters.PIE:
+                        # inset_axes with nested pie and equal aspect ratio
+                        inset_pie = ax1.inset_axes([0.65, 0.5, 0.35, 0.5])
+                        inset_pie.axis('equal')
+                    # define plot
                     ln1, = ax1.plot(t1, yfft)
                     text = ax1.text(self.fmax, np.max(yfft), "",
                                     verticalalignment='top',
@@ -348,18 +392,24 @@ class Tuner:
                 else:
                     ln1.set_xdata(t1)
                     ln1.set_ydata(yfft)
-                # set text attributes of lower subplot
+
+                # set attributes of subplot
                 ax1.set_xlim([self.fmin, self.fmax])
-                text.set_text(displayed_text)
-                text.set_color(color)
                 text.set_x(self.fmax)
                 text.set_y(np.max(yfft))
+                if parameters.PIE:
+                    # call nested pie inset
+                    pie(axes=inset_pie,
+                        displaced=off,
+                        key_pressed=key)
+                else:
+                    text.set_text(off_text)
+                    text.set_color(off_color)
                 text1.set_text(info_text)
                 text1.set_color(info_color)
                 text1.set_x(self.fmin)
                 text1.set_y(np.max(yfft))
-
-                # remove all collections: last object first (reverse)
+                # remove all collections from axes, reverse order
                 while ax1.collections:
                     ax1.collections.pop()
                 yevents = EventCollection(positions=peaklist,
@@ -395,9 +445,8 @@ class Tuner:
                     # fill in the axes rectangle
                     fig.canvas.blit(ax1.bbox)
 
+                # resume audio streaming, expect retardation for status change
                 fig.canvas.flush_events()
-                # resume the audio streaming, expect some retardation for the
-                # status change
 
                 _stop = timeit.default_timer()
                 logging.debug("time utilized for matplotlib [s]: {0}".format(
@@ -417,6 +466,7 @@ def main():
     )
 
     h = keyboard.GlobalHotKeys({
+        '<ctrl>+v': a.on_activate_v,  # not used to date
         '<ctrl>+x': a.on_activate_x,
         '<ctrl>+y': a.on_activate_y,
         '<ctrl>+j': a.on_activate_j,

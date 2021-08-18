@@ -42,6 +42,9 @@ NPARTIAL: int = 11
 """initial max frequency [Hz] displayed, can be adjusted through ctrl-n/m"""
 FREQUENCY_MAX: int = 2000
 
+"""display either text or nested pie"""
+PIE = True
+
 """debug flag"""
 DEBUG: bool = True
 

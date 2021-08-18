@@ -6,7 +6,7 @@ factor.
 
 The current application collects a mono audio signal from the input stream,
 splits it into smaller, overlapping slices, and applies the Fourier transform to
-each (known as the short time Fourier transform). The slices have a size of
+each (known as short time Fourier transform: STFT). The slices have a size of
 2<sup>N</sup> samples, with N=15 or 16, and overlap by multiples of 1024
 samples. Each slice is apodized with a Hanning window. Subsequently, in the
 frequency domain, Butterworth high-pass filtering is applied to suppress noise
@@ -73,10 +73,10 @@ finding routine. The red vertical bars show the partials up to
 derived from the computed base frequency and inharmonicity coefficient 
 when applying (2).
 
-The hotkeys ctrl-y and ctrl-x exits and stops the program, respectively, 
+The hotkey ctrl-y and ctrl-x exits and stops the program, respectively, 
 ESC to resume. ctrl-j and ctrl-k shorten and lengthen the slice shift, 
-whereas ctrl-n and ctrl-m diminish and increase the maximum frequency 
-displayed.
+whereas ctrl-n (alt-n) and ctrl-m (alt-m) diminish and increase the maximum 
+(minimum) frequency that is displayed.
 
 On certain Linux distributions, a package named python-tk (or similar) needs 
 to be installed, when running in virtual environments.
