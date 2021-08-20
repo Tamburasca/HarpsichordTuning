@@ -54,10 +54,10 @@ from Tuning import parameters
 
 """
 2021/ß8/14 - Ralf A. Timmermann <rtimmermann@gmx.de>
-- Update to version 2.1.0
+- Update to version 2.1
     * new hotkeys to change minimum frequency in Fourier spectrum
 2021/ß8/18 - Ralf A. Timmermann <rtimmermann@gmx.de>
-- Update to version 2.2.0
+- Update to version 2.2
     * nested pie to display deviation of key from target value, parameter.PIE
     to toggle to previous setup 
 """
@@ -66,7 +66,7 @@ __author__ = "Dr. Ralf Antonius Timmermann"
 __copyright__ = "Copyright (C) Dr. Ralf Antonius Timmermann"
 __credits__ = ""
 __license__ = "GPLv3"
-__version__ = "2.2.0"
+__version__ = "2.2.1"
 __maintainer__ = "Dr. Ralf A. Timmermann"
 __email__ = "rtimmermann@astro.uni-bonn.de"
 __status__ = "QA"
