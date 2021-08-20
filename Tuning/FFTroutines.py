@@ -71,7 +71,7 @@ def peak(frequency, spectrum):
         (no baseline subtracted)
     """
     _start = timeit.default_timer()
-    listf = []
+    listf = list()
 
     """
     DESCRIPTION: 

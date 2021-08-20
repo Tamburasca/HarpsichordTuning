@@ -119,7 +119,7 @@ class Tuner:
         return None, pyaudio.paContinue
 
     def on_activate_v(self):
-        # not used to date
+        # toggle, not used to date
         self.v = not self.v
 
     def on_activate_x(self):
@@ -276,6 +276,14 @@ class Tuner:
         string
             return code
         """
+        f_measured = list()
+        fig = None
+        ln1 = None
+        ax1 = None
+        text, text1 = None, None
+        inset_pie = None
+        ax1background = None
+
         def pie(axes, displaced, key_pressed):
             # delete all patches and texts from inset_pie axes that piled up
             # print(axes.__dict__)
@@ -283,13 +291,13 @@ class Tuner:
                 axes.patches.pop()
             while axes.texts:
                 axes.texts.pop()
-            inset_pie.text(x=0,
-                           y=0,
-                           s="{0}".format(key_pressed),
-                           fontdict={'fontsize': 20,
-                                     'horizontalalignment': 'center',
-                                     'verticalalignment': 'center'})
-            inset_pie.pie(
+            axes.text(x=0,
+                      y=0,
+                      s="{0}".format(key_pressed),
+                      fontdict={'fontsize': 20,
+                                'horizontalalignment': 'center',
+                                'verticalalignment': 'center'})
+            axes.pie(
                 [-displaced, 100 + displaced] if displaced < 0 else [
                     displaced, 100 - displaced],
                 startangle=90,
