@@ -59,14 +59,16 @@ from Tuning import parameters
 2021/ß8/18 - Ralf A. Timmermann <rtimmermann@gmx.de>
 - Update to version 2.2
     * nested pie to display deviation of key from target value, parameter.PIE
-    to toggle to previous setup 
+    to toggle to previous setup
+    * hotkey to reset to initial values
+    * inner pie filled with color to indicate correct tuning  
 """
 
 __author__ = "Dr. Ralf Antonius Timmermann"
 __copyright__ = "Copyright (C) Dr. Ralf Antonius Timmermann"
 __credits__ = ""
 __license__ = "GPLv3"
-__version__ = "2.2.1"
+__version__ = "2.2.2"
 __maintainer__ = "Dr. Ralf A. Timmermann"
 __email__ = "rtimmermann@astro.uni-bonn.de"
 __status__ = "QA"
@@ -131,6 +133,13 @@ class Tuner:
         # exits the program
         print("quitting...")
         self.rc = 'y'
+
+    def on_activate_r(self):
+        # reset parameters to initial values
+        print("reseting parameters...")
+        self.fmin = 0
+        self.fmax = parameters.FREQUENCY_MAX
+        self.step = parameters.SLICE_SHIFT
 
     def on_activate_k(self):
         # increases the shift by which the slices progress
@@ -309,6 +318,12 @@ class Tuner:
                 wedgeprops=dict(width=.6,
                                 edgecolor='black',
                                 lw=.5))
+            if key_pressed and -2 < displaced < 2:
+                # 2 cents within the target means key is well tuned
+                axes.pie([1],
+                         colors='y',
+                         radius=0.4
+                         )
 
             return
 
@@ -474,17 +489,18 @@ def main():
     )
 
     h = keyboard.GlobalHotKeys({
-        '<ctrl>+v': a.on_activate_v,  # not used to date
-        '<ctrl>+x': a.on_activate_x,
-        '<ctrl>+y': a.on_activate_y,
-        '<ctrl>+j': a.on_activate_j,
-        '<ctrl>+k': a.on_activate_k,
-        '<ctrl>+m': a.on_activate_m,
-        '<alt>+m': a.on_activate_ma,
-        '<ctrl>+n': a.on_activate_n,
-        '<alt>+n': a.on_activate_na,
-        '<esc>': a.on_activate_esc,
-        'q': a.on_activate_y})
+        '<ctrl>+v': a.on_activate_v,  # toggle not used to date
+        '<ctrl>+x': a.on_activate_x,  # halt
+        '<ctrl>+y': a.on_activate_y,  # exit
+        '<ctrl>+j': a.on_activate_j,  # decrease slices shift
+        '<ctrl>+k': a.on_activate_k,  # increase slices shift
+        '<ctrl>+r': a.on_activate_r,  # reset parameter to initial values
+        '<ctrl>+m': a.on_activate_m,  # increase max freq
+        '<ctrl>+n': a.on_activate_n,  # decrease max freq
+        '<alt>+m': a.on_activate_ma,  # increase min freq
+        '<alt>+n': a.on_activate_na,  # decrease min freq
+        '<esc>': a.on_activate_esc,  # resume
+        'q': a.on_activate_y})  # exit through closing plot window
     h.start()
 
     a.animate()
