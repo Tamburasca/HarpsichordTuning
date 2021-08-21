@@ -68,7 +68,7 @@ __author__ = "Dr. Ralf Antonius Timmermann"
 __copyright__ = "Copyright (C) Dr. Ralf Antonius Timmermann"
 __credits__ = ""
 __license__ = "GPLv3"
-__version__ = "2.2.2"
+__version__ = "2.2.3"
 __maintainer__ = "Dr. Ralf A. Timmermann"
 __email__ = "rtimmermann@astro.uni-bonn.de"
 __status__ = "QA"
@@ -302,10 +302,11 @@ class Tuner:
                 axes.texts.pop()
             axes.text(x=0,
                       y=0,
-                      s="{0}".format(key_pressed),
+                      s=key_pressed,
                       fontdict={'fontsize': 20,
                                 'horizontalalignment': 'center',
                                 'verticalalignment': 'center'})
+            # outer pie
             axes.pie(
                 [-displaced, 100 + displaced] if displaced < 0 else [
                     displaced, 100 - displaced],
@@ -316,15 +317,15 @@ class Tuner:
                     "{0:.0f} cent".format(displaced) if key_pressed else '', ''
                 ),
                 wedgeprops=dict(width=.6,
-                                edgecolor='black',
+                                edgecolor='k',
                                 lw=.5))
-            if key_pressed and -2 < displaced < 2:
-                # 2 cents within the target means key is well tuned
-                axes.pie([1],
-                         colors='y',
-                         radius=0.4
-                         )
-
+            # inner pie
+            axes.pie([1],
+                     # 2 cents within the target means key is well tuned
+                     # color pie white (default) to make it intransparent
+                     colors='y' if key_pressed and -2 < displaced < 2 else 'w',
+                     radius=0.4
+                     )
             return
 
         _firstplot = True
@@ -391,9 +392,13 @@ class Tuner:
                     fig = plt.gcf()
                     ax1 = fig.add_subplot(111)
                     fig.set_size_inches(12, 6)
+                    fig.canvas.set_window_title('Digital Tuner (c) Ralf A. '
+                                                'Timmermann')
                     if parameters.PIE:
                         # inset_axes with nested pie and equal aspect ratio
-                        inset_pie = ax1.inset_axes([0.65, 0.5, 0.35, 0.5])
+                        inset_pie = ax1.inset_axes(
+                            bounds=[0.65, 0.5, 0.35, 0.5],
+                            zorder=5)  # default
                         inset_pie.axis('equal')
                     # define plot
                     ln1, = ax1.plot(t1, yfft)
