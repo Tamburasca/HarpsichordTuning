@@ -322,9 +322,9 @@ class Tuner:
             # inner pie
             axes.pie([1],
                      # 2 cents within the target means key is well tuned
-                     # color pie white (default) to make it intransparent
+                     # paint pie white (default) to make it opaque
                      colors='y' if key_pressed and -2 < displaced < 2 else 'w',
-                     radius=0.4
+                     radius=.4
                      )
             return
 
