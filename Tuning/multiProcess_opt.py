@@ -54,8 +54,7 @@ class ThreadedOpt(object):
             _process.join(timeout=.05)  # resume after timeout, cleanup later
 
         while not queue.empty():
-            rc = queue.get()
-            peaks.append([rc[0], rc[1]])
+            peaks.append(queue.get())
         queue.close()
         queue.join_thread()
 
@@ -89,7 +88,7 @@ class ThreadedOpt(object):
 
         # Gaussian width to be guessed better
         guess = [self.__freq[x], y, 2.]
-        boundaries = ([self.__freq[x] - window, 0.25*y, 1.],
+        boundaries = ([self.__freq[x] - window, 0.25*y, .5],
                       [self.__freq[x] + window, 2*y, 4.])
         try:
             popt_ind, pcov = curve_fit(self.gauss,
@@ -98,11 +97,6 @@ class ThreadedOpt(object):
                                        p0=guess,
                                        bounds=boundaries,
                                        method='dogbox')
-            logging.debug(
-                "Position (Hz): {0:e}, "
-                "Height (arb. Units): {1:e}, "
-                "FWHM (Hz): {2:e}"
-                .format(popt_ind[0], popt_ind[1], 2.354 * popt_ind[2]))
         except RuntimeError:
             logging.warning('Fit failure: peak disregarded!')
 

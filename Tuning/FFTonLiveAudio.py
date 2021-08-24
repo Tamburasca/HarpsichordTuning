@@ -61,14 +61,15 @@ from Tuning import parameters
     * nested pie to display deviation of key from target value, parameter.PIE
     to toggle to previous setup
     * hotkey to reset to initial values
-    * inner pie filled with color to indicate correct tuning  
+    * inner pie filled with color to indicate correct tuning
+    * DEBUG: order peak list by frequency (ascending)  
 """
 
 __author__ = "Dr. Ralf Antonius Timmermann"
 __copyright__ = "Copyright (C) Dr. Ralf Antonius Timmermann"
 __credits__ = ""
 __license__ = "GPLv3"
-__version__ = "2.2.3"
+__version__ = "2.2.4"
 __maintainer__ = "Dr. Ralf A. Timmermann"
 __email__ = "rtimmermann@astro.uni-bonn.de"
 __status__ = "QA"
@@ -256,12 +257,12 @@ class Tuner:
             self.stream.stop_stream()
             return None
 
-        logging.debug("=== starting cycle ===")
+        logging.debug("=== new cycle ===")
         _start = timeit.default_timer()
         # wait until buffer filled by at least one FFT slice, where
         # length is in units of buffer = 1024
         while len(self.callback_output) < parameters.SLICE_LENGTH // 1024:
-            time.sleep(0.001)
+            time.sleep(0.02)
         # Convert the list of numpy-arrays into a 1D array (column-wise)
         amp = np.hstack(self.callback_output)
         slices = util.view_as_windows(amp,
@@ -293,6 +294,7 @@ class Tuner:
         inset_pie = None
         ax1background = None
 
+        # matplotlib subroutine for pie inlet
         def pie(axes, displaced, key_pressed):
             # delete all patches and texts from inset_pie axes that piled up
             # print(axes.__dict__)
@@ -326,6 +328,40 @@ class Tuner:
                      colors='y' if key_pressed and -2 < displaced < 2 else 'w',
                      radius=.4
                      )
+
+            return
+
+        # vertical bar subroutine
+        def eventcollection(axes, peak_list, f_meas):
+            # remove all previous collections from axes, reverse order
+            while axes.collections:
+                axes.collections.pop()
+            y_axis0, y_axis1 = axes.get_ylim()
+            if parameters.DEBUG:
+                yevents = EventCollection(
+                    positions=peak_list,
+                    color='tab:orange',
+                    lineoffset=(y_axis0 + y_axis1) / 2,
+                    linelength=np.abs(y_axis0) + y_axis1,
+                    linewidth=1.
+                )
+            else:
+                yevents = EventCollection(
+                    positions=peak_list,
+                    color='tab:orange',
+                    linelength=-2 * y_axis0,
+                    lineoffset=0.,
+                    linewidth=2.
+                )
+            axes.add_collection(yevents)
+            yevents1 = EventCollection(positions=f_meas,
+                                       color='tab:red',
+                                       linelength=-2 * y_axis0,
+                                       lineoffset=y_axis0,
+                                       linewidth=2.
+                                       )
+            axes.add_collection(yevents1)
+
             return
 
         _firstplot = True
@@ -338,6 +374,8 @@ class Tuner:
 
         # start Recording
         self.stream.start_stream()
+        logging.info(
+            "Permit a few cycles to configure the audio device for sound input")
         # main loop while audio stream active
         while self.stream.is_active():
             slices = self.slice()
@@ -347,10 +385,11 @@ class Tuner:
             # work off all slices, before pulling from audio stream
             for sl in slices:
                 logging.debug("no of slices: " + str(len(slices)))
-                # remove first step of slice
+                # remove current slice from beginning of buffer
                 del self.callback_output[0:self.step // 1024]
                 # calculate FFT
                 t1, yfft = fft(amp=sl)
+                ymax = np.max(yfft)
                 # call peakfinding
                 peaks = peak(frequency=t1,
                              spectrum=yfft)
@@ -392,8 +431,8 @@ class Tuner:
                     fig = plt.gcf()
                     ax1 = fig.add_subplot(111)
                     fig.set_size_inches(12, 6)
-                    fig.canvas.set_window_title('Digital Tuner (c) Ralf A. '
-                                                'Timmermann')
+                    fig.canvas.set_window_title(
+                        'Digital String Tuner (c) Ralf A. Timmermann')
                     if parameters.PIE:
                         # inset_axes with nested pie and equal aspect ratio
                         inset_pie = ax1.inset_axes(
@@ -402,13 +441,13 @@ class Tuner:
                         inset_pie.axis('equal')
                     # define plot
                     ln1, = ax1.plot(t1, yfft)
-                    text = ax1.text(self.fmax, np.max(yfft), "",
+                    text = ax1.text(self.fmax, ymax, '',
                                     verticalalignment='top',
                                     horizontalalignment='right',
                                     fontsize=12,
                                     fontweight='bold'
                                     )
-                    text1 = ax1.text(self.fmin, np.max(yfft), "",
+                    text1 = ax1.text(self.fmin, ymax, '',
                                      horizontalalignment='left',
                                      verticalalignment='top')
                     ax1.set_title(label=displayed_title,
@@ -423,36 +462,25 @@ class Tuner:
 
                 # set attributes of subplot
                 ax1.set_xlim([self.fmin, self.fmax])
+                # permit some percentages of margin to the x-axes
+                ax1.set_ylim([-0.04 * ymax, 1.025 * ymax])
                 text.set_x(self.fmax)
-                text.set_y(np.max(yfft))
+                text.set_y(ymax)
                 if parameters.PIE:
                     # call nested pie inset
                     pie(axes=inset_pie,
                         displaced=off,
                         key_pressed=key)
                 else:
+                    # plain text
                     text.set_text(off_text)
                     text.set_color(off_color)
                 text1.set_text(info_text)
                 text1.set_color(info_color)
                 text1.set_x(self.fmin)
-                text1.set_y(np.max(yfft))
-                # remove all collections from axes, reverse order
-                while ax1.collections:
-                    ax1.collections.pop()
-                yevents = EventCollection(positions=peaklist,
-                                          color='tab:orange',
-                                          linelength=0.05 * np.max(yfft),
-                                          linewidth=2.
-                                          )
-                ax1.add_collection(yevents)
-                yevents1 = EventCollection(positions=f_measured,
-                                           color='tab:red',
-                                           linelength=0.05 * np.max(yfft),
-                                           lineoffset=-0.04 * np.max(yfft),
-                                           linewidth=2.
-                                           )
-                ax1.add_collection(yevents1)
+                text1.set_y(ymax)
+                # plot vertical bars
+                eventcollection(ax1, peaklist, f_measured)
 
                 # Rescale the axis so that the data can be seen in the plot
                 # if you know the bounds of your data you could just set this
@@ -487,7 +515,6 @@ def main():
     for tune in tuningtable.keys():
         print("Temperament ({1:d}) {0:s}".format(tune,
                                                  list(tuningtable).index(tune)))
-
     a = Tuner(
         tuning=list(tuningtable.keys())[int(input("Temperament [no]?: "))],
         a1=float(input("A4 pitch frequency [Hz]?: "))

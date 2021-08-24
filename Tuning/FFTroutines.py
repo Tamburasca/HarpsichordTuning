@@ -123,6 +123,12 @@ def peak(frequency, spectrum):
                           amp=spectrum,
                           initial=listtup)
         listf = opt.run()
+        sortedf = sorted(listf, key=lambda x: x[0])
+        for line in sortedf:
+            logging.debug(
+                "Position (Hz): {0:e}, "
+                "Height (arb. Units): {1:e}, "
+                "FWHM (Hz): {2:e}".format(line[0], line[1], 2.354 * line[2]))
 
     logging.debug("Peaks considered: " + str(len(listf)))
     _stop = timeit.default_timer()
