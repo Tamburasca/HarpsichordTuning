@@ -53,23 +53,25 @@ from .FFTroutines import fft, peak, harmonics
 from Tuning import parameters
 
 """
-2021/ß8/14 - Ralf A. Timmermann <rtimmermann@gmx.de>
+2021/08/14 - Ralf A. Timmermann
 - Update to version 2.1
     * new hotkeys to change minimum frequency in Fourier spectrum
-2021/ß8/18 - Ralf A. Timmermann <rtimmermann@gmx.de>
+2021/08/26 - Ralf A. Timmermann
 - Update to version 2.2
     * nested pie to display deviation of key from target value, parameter.PIE
     to toggle to previous setup
     * hotkey to reset to initial values
     * inner pie filled with color to indicate correct tuning
-    * DEBUG: order peak list by frequency (ascending)  
+    * DEBUG: order peak list by frequency (ascending)
+    * DEBUG: utilized time in ms
+    * INFO: best results with f_1 instead of f_0  
 """
 
 __author__ = "Dr. Ralf Antonius Timmermann"
 __copyright__ = "Copyright (C) Dr. Ralf Antonius Timmermann"
 __credits__ = ""
 __license__ = "GPLv3"
-__version__ = "2.2.4"
+__version__ = "2.2.5"
 __maintainer__ = "Dr. Ralf A. Timmermann"
 __email__ = "rtimmermann@astro.uni-bonn.de"
 __status__ = "QA"
@@ -161,14 +163,14 @@ class Tuner:
         self.fmin -= 500 if self.fmin > 1500 else 100
         if self.fmin < 0:
             self.fmin = 0
-        print("Min frequency displayed: {0:1.0f}Hz".format(self.fmin))
+        print("Min frequency displayed: {0:1.0f} Hz".format(self.fmin))
 
     def on_activate_ma(self):
         # increases the min. frequency plotted
         self.fmin += 500 if self.fmin >= 1500 else 100
         if self.fmin > 14500:
             self.fmin = 14500
-        print("Min frequency displayed: {0:1.0f}Hz".format(self.fmin))
+        print("Min frequency displayed: {0:1.0f} Hz".format(self.fmin))
         if self.fmax - self.fmin < 500:
             self.on_activate_m()
 
@@ -177,7 +179,7 @@ class Tuner:
         self.fmax -= 500 if self.fmax > 2000 else 100
         if self.fmax < 500:
             self.fmax = 500
-        print("Max frequency displayed: {0:1.0f}Hz".format(self.fmax))
+        print("Max frequency displayed: {0:1.0f} Hz".format(self.fmax))
         if self.fmax - self.fmin < 500:
             self.on_activate_na()
 
@@ -186,7 +188,7 @@ class Tuner:
         self.fmax += 500 if self.fmax >= 2000 else 100
         if self.fmax > 15000:
             self.fmax = 15000
-        print("Max frequency displayed: {0:1.0f}Hz".format(self.fmax))
+        print("Max frequency displayed: {0:1.0f} Hz".format(self.fmax))
 
     def on_activate_esc(self):
         # resume the audio streaming
@@ -206,8 +208,8 @@ class Tuner:
 
         def timeusage():
             _stop = timeit.default_timer()
-            logging.debug("time utilized for key finding [s]: {0}".format(
-                str(_stop - _start)))
+            logging.debug("time utilized for key finding: {0:.2f} ms".format(
+                (_stop - _start) * 1000.))
 
         _start = timeit.default_timer()
 
@@ -273,8 +275,8 @@ class Tuner:
         logging.debug("Audio shape: {0}, Sliced audio shape: {1}"
                       .format(amp.shape,
                               slices.shape))
-        logging.debug("time utilized for Audio [s]: {0}".format(
-            str(_stop - _start)))
+        logging.debug("time utilized for Audio: {0:.2f} ms".format(
+            (_stop - _start) * 1000.))
 
         return slices
 
@@ -398,7 +400,7 @@ class Tuner:
                 if peaks is not None:
                     f_measured = harmonics(peaks=peaks)  # find the key
 
-                displayed_title = "{0:s} (a1={1:3.0f}Hz)".format(self.tuning,
+                displayed_title = "{0:s} (a1={1:3.0f} Hz)".format(self.tuning,
                                                                  self.a1)
                 info_text = "Resolution: {2:3.1f} Hz/channel\n" \
                             "Audio shape: {0} [slices, samples]\n" \
@@ -505,8 +507,8 @@ class Tuner:
                 fig.canvas.flush_events()
 
                 _stop = timeit.default_timer()
-                logging.debug("time utilized for matplotlib [s]: {0}".format(
-                    str(_stop - _start)))
+                logging.debug("time utilized for matplotlib: {0:.2f} ms".format(
+                    (_stop - _start) * 1000.))
 
         return self.rc
 
@@ -521,18 +523,21 @@ def main():
     )
 
     h = keyboard.GlobalHotKeys({
-        '<ctrl>+v': a.on_activate_v,  # toggle not used to date
+        '<ctrl>+v': a.on_activate_v,  # not used to date
         '<ctrl>+x': a.on_activate_x,  # halt
         '<ctrl>+y': a.on_activate_y,  # exit
+        '<ctrl>+w': a.on_activate_y,  # exit
+        '<alt>+w': a.on_activate_y,   # exit
+        'q': a.on_activate_y,         # exit through closing plot window
+        '<esc>': a.on_activate_esc,   # resume
         '<ctrl>+j': a.on_activate_j,  # decrease slices shift
         '<ctrl>+k': a.on_activate_k,  # increase slices shift
         '<ctrl>+r': a.on_activate_r,  # reset parameter to initial values
         '<ctrl>+m': a.on_activate_m,  # increase max freq
         '<ctrl>+n': a.on_activate_n,  # decrease max freq
         '<alt>+m': a.on_activate_ma,  # increase min freq
-        '<alt>+n': a.on_activate_na,  # decrease min freq
-        '<esc>': a.on_activate_esc,  # resume
-        'q': a.on_activate_y})  # exit through closing plot window
+        '<alt>+n': a.on_activate_na   # decrease min freq
+        })
     h.start()
 
     a.animate()

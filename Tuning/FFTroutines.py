@@ -54,7 +54,8 @@ def fft(amp):
     y_final = 2 * 1.5 * y_final ** 2 / len(amp)**2
     """
     _stop = timeit.default_timer()
-    logging.debug("time utilized for FFT [s]: " + str(_stop - _start))
+    logging.debug("time utilized for FFT: {0:.2f} ms".format(
+        (_stop - _start) * 1000.))
 
     return t1, y_final
 
@@ -109,7 +110,8 @@ def peak(frequency, spectrum):
     npeaks = len(peaks)
     logging.debug("Peaks found: " + str(npeaks))
     _stop = timeit.default_timer()
-    logging.debug("Time for peak finding [s]: " + str(_stop - _start))
+    logging.debug("Time for peak finding: {0:.2f} ms".format(
+        (_stop - _start) * 1000.))
 
     _start = timeit.default_timer()
     # consider NMAX highest, sort key = amplitude descending
@@ -126,13 +128,14 @@ def peak(frequency, spectrum):
         sortedf = sorted(listf, key=lambda x: x[0])
         for line in sortedf:
             logging.debug(
-                "Position (Hz): {0:e}, "
+                "Position: {0:e} Hz, "
                 "Height (arb. Units): {1:e}, "
-                "FWHM (Hz): {2:e}".format(line[0], line[1], 2.354 * line[2]))
+                "FWHM: {2:e} Hz".format(line[0], line[1], 2.354 * line[2]))
 
     logging.debug("Peaks considered: " + str(len(listf)))
     _stop = timeit.default_timer()
-    logging.debug("Time for peak fitting [s]: " + str(_stop - _start))
+    logging.debug("Time for peak fitting: {0:.2f} ms".format(
+        (_stop - _start) * 1000.))
 
     return listf
 
@@ -148,7 +151,7 @@ def harmonics(peaks):
         positions of first NPARTIAL partials
     """
     _start = timeit.default_timer()
-    initial = []
+    initial = list()
 
     # sort by frequency ascending
     peaks.sort(key=lambda x: x[0])
@@ -208,23 +211,29 @@ def harmonics(peaks):
             for dat in tmp:
                 f0.append(dat[5])
                 b.append(dat[4])
-        logging.info("Best result: f_0 = {0} Hz, B = {1}".format(
-            str(np.average(f0)),
-            str(np.average(b)))
-        )
-        for n in range(1, parameters.NPARTIAL):
-            f_n = np.append(f_n,
-                            np.average(f0) * n * np.sqrt(
-                                1. + np.average(b) * n ** 2))
+        # disregard everything below 26.5 Hz = A0
+        if np.average(f0) >= 26.5:
+            for n in range(1, parameters.NPARTIAL):
+                f_n = np.append(f_n,
+                                np.average(f0) * n * np.sqrt(
+                                    1. + np.average(b) * n ** 2))
+            if f_n[0] >= 26.5:
+                logging.info(
+                    "Best result: f_1 = {0:.2f} Hz, B = {1:.1e}".format(
+                        f_n[0], np.average(b)))
     elif not initial and len(ind) > 0:
         # if fundamental could not be calculated through at least two lines,
         # give it a shot with the strongest peak found
         peaks.sort(key=lambda x: x[1], reverse=True)  # sort by amplitude desc
         f1 = list(map(itemgetter(0), peaks))[0]
-        if f1 >= 27.0:
+        # disregard everything below 26.5 Hz = A0
+        if f1 >= 26.5:
             f_n.append(f1)
+            logging.info("Best result: f_1 = {0:.2f} Hz, B = {1:.1e}".format(
+                f1, 0.))
 
     _stop = timeit.default_timer()
-    logging.debug("time utilized for harmonics [s]: " + str(_stop - _start))
+    logging.debug("time utilized for harmonics: {0:.2f} ms".format(
+        (_stop - _start) * 1000.))
 
     return f_n

@@ -34,7 +34,7 @@ FIT_WINDOW: int = 5
 INHARM: float = 0.001
 
 """max number of highest peaks"""
-NMAX: int = 15
+NMAX: int = 16
 
 """number of partials considered in harmonic finding"""
 NPARTIAL: int = 11
@@ -46,7 +46,7 @@ FREQUENCY_MAX: int = 2000
 PIE = True
 
 """debug flag"""
-DEBUG: bool = False
+DEBUG: bool = True
 
 """logging format"""
 myformat = "%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s"
