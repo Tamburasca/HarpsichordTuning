@@ -39,15 +39,16 @@ certain conditions.
 """
 
 import pyaudio
-import numpy as np
+from numpy import frombuffer, int16, hstack, log2, abs, max
 import matplotlib.pyplot as plt
 from matplotlib.collections import EventCollection
 from skimage import util
-import timeit
-import time
+from timeit import default_timer
+from time import sleep
 from pynput import keyboard
-import logging
 from operator import itemgetter
+import logging
+
 from .tuningTable import tuningtable
 from .FFTroutines import fft, peak, harmonics
 from Tuning import parameters
@@ -64,14 +65,15 @@ from Tuning import parameters
     * inner pie filled with color to indicate correct tuning
     * DEBUG: order peak list by frequency (ascending)
     * DEBUG: utilized time in ms
-    * INFO: best results with f_1 instead of f_0  
+    * INFO: best results with f_1 instead of f_0
+    * import solely modules to be used  
 """
 
 __author__ = "Dr. Ralf Antonius Timmermann"
 __copyright__ = "Copyright (C) Dr. Ralf Antonius Timmermann"
 __credits__ = ""
 __license__ = "GPLv3"
-__version__ = "2.2.5"
+__version__ = "2.2.6"
 __maintainer__ = "Dr. Ralf A. Timmermann"
 __email__ = "rtimmermann@astro.uni-bonn.de"
 __status__ = "QA"
@@ -118,7 +120,7 @@ class Tuner:
         :param flag:
         :return:
         """
-        audio_data = np.frombuffer(in_data, dtype=np.int16)
+        audio_data = frombuffer(in_data, dtype=int16)
         self.callback_output.append(audio_data)
 
         return None, pyaudio.paContinue
@@ -207,14 +209,14 @@ class Tuner:
         """
 
         def timeusage():
-            _stop = timeit.default_timer()
+            _stop = default_timer()
             logging.debug("time utilized for key finding: {0:.2f} ms".format(
                 (_stop - _start) * 1000.))
 
-        _start = timeit.default_timer()
+        _start = default_timer()
 
         for i in range(-4, 5):  # key range from keys C0 till B8
-            offset = np.log2(f_measured / self.a1) * 1200 - i * 1200
+            offset = log2(f_measured / self.a1) * 1200 - i * 1200
             for key, value in tuningtable[self.tuning].items():
                 displaced = offset + tuningtable[self.tuning].get('A') - value
                 if -60 < displaced < 60:
@@ -245,7 +247,7 @@ class Tuner:
             self.stream.stop_stream()
             while self.rc not in ['esc', 'y']:
                 # loop and wait until ESC or ctrl-y is pressed
-                time.sleep(.1)
+                sleep(.1)
             if self.rc == 'esc':
                 self.callback_output = list()
                 self.stream.start_stream()
@@ -260,18 +262,18 @@ class Tuner:
             return None
 
         logging.debug("=== new cycle ===")
-        _start = timeit.default_timer()
+        _start = default_timer()
         # wait until buffer filled by at least one FFT slice, where
         # length is in units of buffer = 1024
         while len(self.callback_output) < parameters.SLICE_LENGTH // 1024:
-            time.sleep(0.02)
+            sleep(0.02)
         # Convert the list of numpy-arrays into a 1D array (column-wise)
-        amp = np.hstack(self.callback_output)
+        amp = hstack(self.callback_output)
         slices = util.view_as_windows(amp,
                                       window_shape=(
                                           parameters.SLICE_LENGTH,),
                                       step=self.step)
-        _stop = timeit.default_timer()
+        _stop = default_timer()
         logging.debug("Audio shape: {0}, Sliced audio shape: {1}"
                       .format(amp.shape,
                               slices.shape))
@@ -344,7 +346,7 @@ class Tuner:
                     positions=peak_list,
                     color='tab:orange',
                     lineoffset=(y_axis0 + y_axis1) / 2,
-                    linelength=np.abs(y_axis0) + y_axis1,
+                    linelength=abs(y_axis0) + y_axis1,
                     linewidth=1.
                 )
             else:
@@ -391,7 +393,7 @@ class Tuner:
                 del self.callback_output[0:self.step // 1024]
                 # calculate FFT
                 t1, yfft = fft(amp=sl)
-                ymax = np.max(yfft)
+                ymax = max(yfft)
                 # call peakfinding
                 peaks = peak(frequency=t1,
                              spectrum=yfft)
@@ -401,7 +403,7 @@ class Tuner:
                     f_measured = harmonics(peaks=peaks)  # find the key
 
                 displayed_title = "{0:s} (a1={1:3.0f} Hz)".format(self.tuning,
-                                                                 self.a1)
+                                                                  self.a1)
                 info_text = "Resolution: {2:3.1f} Hz/channel\n" \
                             "Audio shape: {0} [slices, samples]\n" \
                             "Slice shift: {1:d} samples".format(slices.shape,
@@ -426,7 +428,7 @@ class Tuner:
                     key = ''
 
                 # Matplotlib block
-                _start = timeit.default_timer()
+                _start = default_timer()
                 if _firstplot:
                     # Setup figure, axis, lines, text and initiate plot once
                     # and copy background
@@ -506,7 +508,7 @@ class Tuner:
                 # resume audio streaming, expect retardation for status change
                 fig.canvas.flush_events()
 
-                _stop = timeit.default_timer()
+                _stop = default_timer()
                 logging.debug("time utilized for matplotlib: {0:.2f} ms".format(
                     (_stop - _start) * 1000.))
 

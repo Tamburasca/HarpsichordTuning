@@ -1,8 +1,11 @@
-import numpy as np
+from numpy import hanning
+from numpy import sqrt, abs, average, median, where, append, array
+from numpy.fft import rfft, rfftfreq
 from scipy import signal
-import timeit
+from timeit import default_timer
+from math import gcd
 import logging
-import math
+
 from operator import itemgetter
 from .multiProcess_opt import ThreadedOpt
 from Tuning import parameters
@@ -13,9 +16,9 @@ logging.basicConfig(format=parameters.myformat,
 if parameters.DEBUG:
     logging.getLogger().setLevel(logging.DEBUG)
 
-hanning = np.hanning(parameters.SLICE_LENGTH)
-t1 = np.fft.rfftfreq(parameters.SLICE_LENGTH,
-                     1. / parameters.RATE)
+hanning = hanning(parameters.SLICE_LENGTH)
+t1 = rfftfreq(parameters.SLICE_LENGTH, 
+              1. / parameters.RATE)
 
 
 def fft(amp):
@@ -30,11 +33,11 @@ def fft(amp):
     list float
         intensities
     """
-    _start = timeit.default_timer()
+    _start = default_timer()
 
-    y_raw = np.fft.rfft(hanning * amp)
+    y_raw = rfft(hanning * amp)
     """convolve with a Gaussian of width SIGMA
-    y_raw = signal.convolve(in1=np.abs(y_raw),
+    y_raw = signal.convolve(in1=abs(y_raw),
                                in2=signal.gaussian(M=11, std=1),
                                mode='same')
     """
@@ -47,13 +50,13 @@ def fft(amp):
     _, h = signal.freqs(b=b,
                         a=a,
                         worN=t1)
-    y_final = np.abs(h * y_raw)
+    y_final = abs(h * y_raw)
     """if PSD then 
-    psd = 2. * np.abs(y_raw)**2 / samples**2 * noise power bandwidth
+    psd = 2. * abs(y_raw)**2 / samples**2 * noise power bandwidth
     # noise power bandwidth = 1.5 for Hanning window
     y_final = 2 * 1.5 * y_final ** 2 / len(amp)**2
     """
-    _stop = timeit.default_timer()
+    _stop = default_timer()
     logging.debug("time utilized for FFT: {0:.2f} ms".format(
         (_stop - _start) * 1000.))
 
@@ -71,7 +74,7 @@ def peak(frequency, spectrum):
         list (float) of tuples with peak frequencies and corresponding heights
         (no baseline subtracted)
     """
-    _start = timeit.default_timer()
+    _start = default_timer()
     listf = list()
 
     """
@@ -91,9 +94,9 @@ def peak(frequency, spectrum):
     REFERENCES  * Software: www.stecf.org/software/ASTROsoft/DER_SNR/
     """
     # Values that are exactly zero (padded) are skipped
-    flux = np.array(spectrum[np.where(spectrum != 0.0)])
+    flux = array(spectrum[where(spectrum != 0.0)])
     i = len(flux)
-    std = 0.6052697 * np.median(
+    std = 0.6052697 * median(
         abs(2.0 * flux[2:i - 2] - flux[0:i - 4] - flux[4:i]))
     logging.debug("noise estimate: " + str(std))
 
@@ -109,11 +112,11 @@ def peak(frequency, spectrum):
                                  width=parameters.WIDTH)
     npeaks = len(peaks)
     logging.debug("Peaks found: " + str(npeaks))
-    _stop = timeit.default_timer()
+    _stop = default_timer()
     logging.debug("Time for peak finding: {0:.2f} ms".format(
         (_stop - _start) * 1000.))
 
-    _start = timeit.default_timer()
+    _start = default_timer()
     # consider NMAX highest, sort key = amplitude descending
     if npeaks != 0:
         listtup = list(zip(peaks, spectrum[peaks]))
@@ -133,7 +136,7 @@ def peak(frequency, spectrum):
                 "FWHM: {2:e} Hz".format(line[0], line[1], 2.354 * line[2]))
 
     logging.debug("Peaks considered: " + str(len(listf)))
-    _stop = timeit.default_timer()
+    _stop = default_timer()
     logging.debug("Time for peak fitting: {0:.2f} ms".format(
         (_stop - _start) * 1000.))
 
@@ -150,7 +153,7 @@ def harmonics(peaks):
     list (float)
         positions of first NPARTIAL partials
     """
-    _start = timeit.default_timer()
+    _start = default_timer()
     initial = list()
 
     # sort by frequency ascending
@@ -179,7 +182,7 @@ def harmonics(peaks):
                         # in line fitting
                         if b < 0:
                             b = 0
-                        f_fundamental = ind[i] / (m * np.sqrt(1. + b * m ** 2))
+                        f_fundamental = ind[i] / (m * sqrt(1. + b * m ** 2))
                         logging.debug(
                             "partial: {0:2d} {1:2d} "
                             "lower: {2:9.4f} upper: {3:9.4f} "
@@ -199,7 +202,7 @@ def harmonics(peaks):
         f0, b = list(), list()
         for item in reversed(initial):
             i = item[0]
-            if math.gcd(item[0], item[1]) == 1:
+            if gcd(item[0], item[1]) == 1:
                 tmp = list(filter(lambda x: x[0] == item[0], initial))
                 for dat in tmp:
                     f0.append(dat[5])
@@ -212,15 +215,14 @@ def harmonics(peaks):
                 f0.append(dat[5])
                 b.append(dat[4])
         # disregard everything below 26.5 Hz = A0
-        if np.average(f0) >= 26.5:
+        if average(f0) >= 26.5:
             for n in range(1, parameters.NPARTIAL):
-                f_n = np.append(f_n,
-                                np.average(f0) * n * np.sqrt(
-                                    1. + np.average(b) * n ** 2))
+                f_n = append(f_n, average(f0) * n * sqrt(
+                    1. + average(b) * n ** 2))
             if f_n[0] >= 26.5:
                 logging.info(
                     "Best result: f_1 = {0:.2f} Hz, B = {1:.1e}".format(
-                        f_n[0], np.average(b)))
+                        f_n[0], average(b)))
     elif not initial and len(ind) > 0:
         # if fundamental could not be calculated through at least two lines,
         # give it a shot with the strongest peak found
@@ -232,7 +234,7 @@ def harmonics(peaks):
             logging.info("Best result: f_1 = {0:.2f} Hz, B = {1:.1e}".format(
                 f1, 0.))
 
-    _stop = timeit.default_timer()
+    _stop = default_timer()
     logging.debug("time utilized for harmonics: {0:.2f} ms".format(
         (_stop - _start) * 1000.))
 

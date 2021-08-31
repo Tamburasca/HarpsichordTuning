@@ -36,19 +36,15 @@ All peak positions are correlated to each other, such that they
 can be identifed as higher partials to one common base frequency f<sub>0</sub>. 
 By rewriting (2), we get for two frequencies from all peak permutations
 
-**(3) <em>B = (C - 1) (n<sub>j</sub><sup>2</sup> - C * 
-n<sub>i</sub><sup>2</sup>)</em>**, 
-
+**(3) <em>B = (C - 1) / (j<sup>2</sup> - C * i<sup>2</sup>)</em>**, 
 where 
-**<em>C = (f<sub>j</sub> * n<sub>i</sub> / f<sub>i</sub> * n<sub>j</sub>)
-<sup>2</sup></em>**
+**<em>C = (f<sub>j</sub> * i / f<sub>i</sub> * j) <sup>2</sup></em>**
 
-**(4) <em>f<sub>0</sub> = f<sub>i</sub> / (n<sub>i</sub> *
-sqrt(1 + B * n<sub>i</sub><sup>2</sup>))</em>**
+**(4) <em>f<sub>0</sub> = f<sub>i</sub> / (i * sqrt(1 + B * i<sup>2</sup>))</em>**
 
 The measured frequencies and their partials are denoted
 **<em>f<sub>i</sub> < f<sub>j</sub></em>** and **1 &#8804;
-<em>n<sub>i</sub> < n<sub>j</sub> &#8804; NPARTIAL</em>**. 
+<em>i < j &#8804; NPARTIAL</em>**. 
 The maximum inharmonicity coefficient needs to be adjusted in
 [parameters.py](https://github.com/Tamburasca/HarpsichordTuning/blob/master/Tuning/parameters.py), 
 depending on the instrument to be tuned, B < 0.001 and < 0.05 for 

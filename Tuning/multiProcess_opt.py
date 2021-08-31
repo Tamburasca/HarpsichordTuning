@@ -1,8 +1,9 @@
 from multiprocessing import Process, Queue
 from scipy.optimize import curve_fit
-import numpy as np
+from numpy import exp, zeros_like
 from operator import itemgetter
 import logging
+
 from Tuning import parameters
 
 logging.basicConfig(format=parameters.myformat,
@@ -86,7 +87,7 @@ class ThreadedOpt(object):
 
             return
 
-        # Gaussian width to be guessed better
+        # Gaussian width to determine centroid
         guess = [self.__freq[x], y, 2.]
         boundaries = ([self.__freq[x] - window, 0.25*y, .5],
                       [self.__freq[x] + window, 2*y, 4.])
@@ -122,11 +123,11 @@ class ThreadedOpt(object):
         :return:
             y-values of multiple Gaussing fit
         """
-        y = np.zeros_like(x)
+        y = zeros_like(x)
         for i in range(0, len(params), 3):
             ctr = params[i]
             amp = params[i + 1]
             wid = params[i + 2]
-            y = y + amp * np.exp(-0.5 * ((x - ctr) / wid) ** 2)
+            y = y + amp * exp(-0.5 * ((x - ctr) / wid) ** 2)
 
         return y
