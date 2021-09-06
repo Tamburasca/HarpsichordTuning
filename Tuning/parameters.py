@@ -5,7 +5,7 @@ RATE: int = 44100
 """size of slices: samples per FFT. Can be modifed to 2**N, where N is
 32768: N = 15 => 0.743 sec sampling time/slice
 65536: N = 16 => 1.486 sec sampling time/slice"""
-SLICE_LENGTH: int = 65536  # 32768
+SLICE_LENGTH: int = 2 ** 15
 
 """no of samples (initial value) by which each slice is shifted with regard 
 to its previous, can be adjusted by +/-1024 samples through hotkeys crtl-j/k"""
@@ -19,7 +19,7 @@ F_ORDER: int = 2
 
 """noise level needs to be adjusted such, that there are no peaks detected with 
 no key pressed (silence). This needs to be worked on in a later version."""
-NOISE_LEVEL: float = 50.
+NOISE_LEVEL: float = 75.
 
 """minimum distance between two peaks in channels to identify a peak as such"""
 DISTANCE: int = 8
@@ -42,11 +42,8 @@ NPARTIAL: int = 11
 """initial max frequency [Hz] displayed, can be adjusted through ctrl-n/m"""
 FREQUENCY_MAX: int = 2000
 
-"""display either text or nested pie"""
-PIE = True
-
 """debug flag"""
-DEBUG: bool = True
+DEBUG: bool = False
 
 """logging format"""
 myformat = "%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s"

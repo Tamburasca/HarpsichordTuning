@@ -1,17 +1,18 @@
 # Harpsichord Tuning
 
-An automatic tuning tool for string instruments, mainly harpsichords and 
+An automatic tuning tool for string instruments, such as harpsichords and 
 pianos. Tests are still needed with pianos, owing to their larger inharmonicity 
 factor.
 
 The current application collects a mono audio signal from the input stream,
 splits it into smaller, overlapping slices, and applies the Fourier transform to
-each (known as short time Fourier transform: STFT). The slices have a size of
-2<sup>N</sup> samples, with N=15 or 16, and overlap by multiples of 1024
+each (known as short time Fourier transform: STFT). The slices have sizes of
+2<sup>N</sup> samples, where N=15 or 16 (sampling period = 0.74 or 1.49 s, 
+respectively), and overlap by multiples of 1024
 samples. Each slice is apodized with a Hanning window. Subsequently, in the
 frequency domain, Butterworth high-pass filtering is applied to suppress noise
 at low frequencies before the fundamental and overtone frequencies are sought.
-In order to achieve higher accuracy in their positions, we fit a Gaussian to the
+In order to achieve higher accuracy in their positions, we fit Gaussians to the
 NMAX strongest peaks found. Their centroids are utilized in the derivation 
 of the fundamental frequency and the inharmonicity factor.
 
@@ -42,7 +43,7 @@ where
 
 **(4) <em>f<sub>0</sub> = f<sub>i</sub> / (i * sqrt(1 + B * i<sup>2</sup>))</em>**
 
-The measured frequencies and their partials are denoted
+The measured frequencies of the partials are denoted
 **<em>f<sub>i</sub> < f<sub>j</sub></em>** and **1 &#8804;
 <em>i < j &#8804; NPARTIAL</em>**. 
 The maximum inharmonicity coefficient needs to be adjusted in
@@ -69,10 +70,10 @@ finding routine. The red vertical bars show the partials up to
 derived from the computed base frequency and inharmonicity coefficient 
 when applying (2).
 
-The hotkey ctrl-y and ctrl-x exits and stops the program, respectively, 
-ESC to resume. ctrl-j and ctrl-k shorten and lengthen the slice shift, 
-whereas ctrl-n (alt-n) and ctrl-m (alt-m) diminish and increase the maximum 
-(minimum) frequency that is displayed.
+The hotkey 'ctrl-y' or 'x' stops the program or toggles between halt and 
+resume, respectively. 'Ctrl-j' and 'ctrl-k' shorten and lengthen the shift 
+between the audio slices, whereas 'ctrl-n' ('alt-n') and 'ctrl-m' ('alt-m') 
+diminish and increase the max (min) frequency displayed.
 
 On certain Linux distributions, a package named python-tk (or similar) needs 
 to be installed, when running in virtual environments.
