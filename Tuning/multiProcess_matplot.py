@@ -1,4 +1,4 @@
-from multiprocessing import Process, Queue
+from multiprocessing import Process
 import matplotlib.pyplot as plt
 from matplotlib.collections import EventCollection
 from timeit import default_timer
@@ -21,7 +21,6 @@ class MPmatplot(Process):
         self.__a1 = kwargs.get('a1')
         self.__firstplot = True
         self.__resolution = parameters.RATE / parameters.SLICE_LENGTH * 1.5
-        plt.ion()  # Stop matplotlib windows from blocking
         logging.debug(
             "Resolution incl. Hanning apodization (Hz/channel) ~ {0}"
             .format(str(self.__resolution)))
@@ -103,14 +102,41 @@ class MPmatplot(Process):
         return
 
     def run(self):
+        """
+        Matplotlib commands swapped to a proprietary process. Run in an
+        endless loop. Variables (in dict) are passed from animate through a
+        queue.
+        :return:
+        """
+        plt.ion()  # Stop matplotlib windows from blocking
+        fig = plt.gcf()
+        fig.set_size_inches(12, 6)
+        fig.canvas.set_window_title(
+            'Digital String Tuner (c) Ralf Antonius Timmermann')
+        ax1 = fig.add_subplot(111)
+        ax1.set_xlabel('Frequency/Hz')
+        ax1.set_ylabel('Intensity/arb. units')
+        # inset_axes with nested pie and equal aspect ratio
+        inset_pie = ax1.inset_axes(
+            bounds=[0.65, 0.5, 0.35, 0.5],
+            zorder=5)  # default
+        inset_pie.axis('equal')
+
+        displayed_title = "{0:s} (a1={1:3.0f} Hz)".format(self.__tuning,
+                                                          self.__a1)
+        font_title = {'family': 'serif',
+                      'color': 'darkred',
+                      'weight': 'normal',
+                      'size': 14}
+
         # run eternally
         while True:
             # fetch parameter from queue, block till message is available
             dic = self.__queue.get(block=True)
             # check if there're already some messages more than that just picked
-            if self.__queue.qsize() > 1:
-                logging.warning("{0} messages in MP queue".format(
-                    self.__queue.qsize()))
+            qsize = self.__queue.qsize()
+            if qsize > 0:
+                logging.warning("{0} messages in MP queue".format(qsize))
             _start = default_timer()
             t1 = dic.get('t1')
             yfft = dic.get('yfft')
@@ -118,8 +144,6 @@ class MPmatplot(Process):
             fmin = dic.get('fmin')
             fmax = dic.get('fmax')
 
-            displayed_title = "{0:s} (a1={1:3.0f} Hz)".format(self.__tuning,
-                                                              self.__a1)
             info_text = "Resolution: {2:3.1f} Hz/channel\n" \
                         "Audio shape: {0} [slices, samples]\n" \
                         "Slice shift: {1:d} samples".format(
@@ -127,26 +151,9 @@ class MPmatplot(Process):
                             dic.get('step'),
                             self.__resolution)
             info_color = 'red' if dic.get('slices').shape[0] > 3 else 'black'
-            font_title = {'family': 'serif',
-                          'color': 'darkred',
-                          'weight': 'normal',
-                          'size': 14}
 
-            # Matplotlib block
             if self.__firstplot:
-                # Setup figure, axis, lines, text and initiate plot once
-                # and copy background
-                fig = plt.gcf()
-                ax1 = fig.add_subplot(111)
-                fig.set_size_inches(12, 6)
-                fig.canvas.set_window_title(
-                    'Digital String Tuner (c) Ralf Antonius Timmermann')
-                # inset_axes with nested pie and equal aspect ratio
-                inset_pie = ax1.inset_axes(
-                    bounds=[0.65, 0.5, 0.35, 0.5],
-                    zorder=5)  # default
-                inset_pie.axis('equal')
-                # define plot
+                # Setup line, define plot, text, and copy background once
                 ln1, = ax1.plot(t1, yfft)
                 text = ax1.text(fmax, ymax, '',
                                 verticalalignment='top',
@@ -160,8 +167,6 @@ class MPmatplot(Process):
                 ax1.set_title(label=displayed_title,
                               loc='right',
                               fontdict=font_title)
-                ax1.set_xlabel('Frequency/Hz')
-                ax1.set_ylabel('Intensity/arb. units')
                 ax1background = fig.canvas.copy_from_bbox(ax1.bbox)
             else:
                 ln1.set_xdata(t1)

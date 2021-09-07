@@ -2,19 +2,18 @@
 do not modify!"""
 RATE: int = 44100
 
-"""size of slices: samples per FFT. Can be modifed to 2**N, where N is
-32768: N = 15 => 0.743 sec sampling time/slice
-65536: N = 16 => 1.486 sec sampling time/slice"""
+"""size of slices: samples per FFT. Can be modifed to 2**N, where
+N = 15/16 => 32768/65536 samples/slice: 0.743/1.486 sec sampling time/slice"""
 SLICE_LENGTH: int = 2 ** 15
 
 """no of samples (initial value) by which each slice is shifted with regard 
 to its previous, can be adjusted by +/-1024 samples through hotkeys crtl-j/k"""
-SLICE_SHIFT: int = 16384  # 8192
+SLICE_SHIFT: int = 16384
 
-"""high pass cutoff frequency [Hz] @-3db"""
-F_FILT: float = 200  # 150.
+"""F_FILT: high pass cutoff frequency [Hz]"""
+F_FILT: float = 200
 
-"""high pass Butterworth filter of order F_ORDER"""
+"""F_ORDER: order of high pass Butterworth filter"""
 F_ORDER: int = 2
 
 """noise level needs to be adjusted such, that there are no peaks detected with 

@@ -66,7 +66,7 @@ from Tuning import parameters
     function (l1-norm) for a LASSO regression is minimized.
     * hotkey 'x' to toggle between halt and resume.
     * matplotlib commands are swapped to new superclass MPmatplot in 
-    multiProcess_matplot.py that will be started as a propriatary process, 
+    multiProcess_matplot.py that will be started in a proprietary process, 
     variables in dict passed through queue.
 """
 
@@ -74,7 +74,7 @@ __author__ = "Dr. Ralf Antonius Timmermann"
 __copyright__ = "Copyright (C) Dr. Ralf Antonius Timmermann"
 __credits__ = ""
 __license__ = "GPLv3"
-__version__ = "2.3.1"
+__version__ = "2.3.2"
 __maintainer__ = "Dr. Ralf A. Timmermann"
 __email__ = "rtimmermann@astro.uni-bonn.de"
 __status__ = "QA"
