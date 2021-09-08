@@ -74,7 +74,7 @@ __author__ = "Dr. Ralf Antonius Timmermann"
 __copyright__ = "Copyright (C) Dr. Ralf Antonius Timmermann"
 __credits__ = ""
 __license__ = "GPLv3"
-__version__ = "2.3.2"
+__version__ = "2.3.3"
 __maintainer__ = "Dr. Ralf A. Timmermann"
 __email__ = "rtimmermann@astro.uni-bonn.de"
 __status__ = "QA"
@@ -320,8 +320,7 @@ class Tuner:
                     key = ''
                 # send params into queue for plotting
                 queue.put(
-                    {'t1': t1,
-                     'yfft': yfft,
+                    {'yfft': yfft,
                      'key': key,
                      'off': off,
                      'slices': slices,

@@ -1,6 +1,7 @@
 from multiprocessing import Process
 import matplotlib.pyplot as plt
 from matplotlib.collections import EventCollection
+from numpy.fft import rfftfreq
 from timeit import default_timer
 import logging
 
@@ -16,11 +17,13 @@ if parameters.DEBUG:
 class MPmatplot(Process):
     def __init__(self, queue, **kwargs):
         super().__init__(daemon=True)
+        self.__firstplot = True
+        self.__resolution = parameters.RATE / parameters.SLICE_LENGTH * 1.5
+        self.__t1 = rfftfreq(parameters.SLICE_LENGTH,
+                             1. / parameters.RATE)
         self.__queue = queue
         self.__tuning = kwargs.get('tuning')
         self.__a1 = kwargs.get('a1')
-        self.__firstplot = True
-        self.__resolution = parameters.RATE / parameters.SLICE_LENGTH * 1.5
         logging.debug(
             "Resolution incl. Hanning apodization (Hz/channel) ~ {0}"
             .format(str(self.__resolution)))
@@ -138,7 +141,6 @@ class MPmatplot(Process):
             if qsize > 0:
                 logging.warning("{0} messages in MP queue".format(qsize))
             _start = default_timer()
-            t1 = dic.get('t1')
             yfft = dic.get('yfft')
             ymax = max(yfft)
             fmin = dic.get('fmin')
@@ -154,7 +156,7 @@ class MPmatplot(Process):
 
             if self.__firstplot:
                 # Setup line, define plot, text, and copy background once
-                ln1, = ax1.plot(t1, yfft)
+                ln1, = ax1.plot(self.__t1, yfft)
                 text = ax1.text(fmax, ymax, '',
                                 verticalalignment='top',
                                 horizontalalignment='right',
@@ -169,7 +171,7 @@ class MPmatplot(Process):
                               fontdict=font_title)
                 ax1background = fig.canvas.copy_from_bbox(ax1.bbox)
             else:
-                ln1.set_xdata(t1)
+                ln1.set_xdata(self.__t1)
                 ln1.set_ydata(yfft)
             # set attributes of subplot
             ax1.set_xlim([fmin, fmax])

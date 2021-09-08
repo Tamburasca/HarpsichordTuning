@@ -53,7 +53,7 @@ def fft(amp):
                  worN=t1)
     y_final = abs(h * y_raw)
     """if PSD then 
-    psd = 2. * abs(y_raw)**2 / samples**2 * noise power bandwidth
+    psd = 2. * noise power bandwidth * abs(y_raw)**2 / samples**2
     # noise power bandwidth = 1.5 for Hanning window
     y_final = 2 * 1.5 * y_final ** 2 / len(amp)**2
     """
