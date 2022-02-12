@@ -54,13 +54,12 @@ harpsichords and pianos, respectively.
 The frequency of the first partial f<sub>1</sub> (fundamental) is 
 compared to a value derived from the pitch level and a tuning table 
 [tuningTable.py](https://github.com/Tamburasca/HarpsichordTuning/blob/master/Tuning/tuningTable.py), 
-currently comprising Werkmeister III, 
-1/4 Comma Meantone, and Equal Temperament (feel free to edit/enhance it 
-for yourself). We have not yet considered enharmonic equivalency, hence, one 
-would have to enable/disable certain keys, such as A♭ vs. G#. 
-The text in the plot shows the key's 
-deviation, in units of cent, for the specified tuning and pitch level: 
-too low (in red) and too high (in green).
+currently comprising Werkmeister III, 1/4 Comma Meantone, and Equal Temperament 
+(feel free to edit/enhance it for yourself). We have not yet considered 
+enharmonic equivalency, hence, one would have to enable/disable certain keys, 
+such as A♭ vs. G#. The key in the center of the pie shows what key was 
+pressed and its deviation, in units of cent, for the specified tuning and 
+pitch level: too low (in red) and too high (in green).
 
 ![image info](./pictures/screenshot.png)
 

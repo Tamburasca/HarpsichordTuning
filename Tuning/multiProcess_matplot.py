@@ -26,7 +26,7 @@ class MPmatplot(Process):
         self.__a1 = kwargs.get('a1')
         logging.debug(
             "Resolution incl. Hanning apodization (Hz/channel) ~ {0}"
-            .format(str(self.__resolution)))
+            .format(self.__resolution))
 
     @staticmethod
     def pie(axes, displaced, key_pressed):
