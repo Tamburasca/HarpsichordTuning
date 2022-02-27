@@ -8,10 +8,12 @@ The current application collects a mono audio signal from the input stream,
 splits it into smaller, overlapping slices, and applies the Fourier transform to
 each (known as short time Fourier transform: STFT). The slices have sizes of
 2<sup>N</sup> samples, where N=15 or 16 (sampling period = 0.74 or 1.49 s, 
-respectively), and overlap by multiples of 1024
-samples. Each slice is apodized with a Hanning window. Subsequently, in the
+respectively), and overlap by multiples of 1024 samples. Each slice is apodized 
+utilizing Hanning windowing. Adopting a reduction in resolution of 1.5 with 
+Hanning, the resulting frequency resolution becomes 2.0 and 1.0 Hz for 
+a sampling period = 0.74 and 1.49 s, respectively. Subsequently, in the
 frequency domain, Butterworth high-pass filtering is applied to suppress noise
-at low frequencies before the fundamental and overtone frequencies are sought.
+at the bottom, before the fundamental and overtone frequencies are sought.
 In order to achieve higher accuracy in their positions, we fit Gaussians to the
 NMAX strongest peaks found. Their centroids are utilized in the derivation 
 of the fundamental frequency and the inharmonicity factor.
@@ -21,7 +23,8 @@ of the fundamental frequency
 
 **(1) <em>f<sub>n</sub> = n * f<sub>1</sub> </em>**, 
 
-where n = 1, 2, 3, ... The ear hears the fundamental frequency most prominently, 
+where n is the n<em>th</em> partial. 
+The ear hears the fundamental frequency most prominently, 
 but the overall sound is also colored by the presence of various overtones 
 (frequencies greater than the fundamental frequency).
 
@@ -72,7 +75,8 @@ when applying (2).
 The hotkey 'ctrl-y' or 'x' stops the program or toggles between halt and 
 resume, respectively. 'Ctrl-j' and 'ctrl-k' shorten and lengthen the shift 
 between the audio slices, whereas 'ctrl-n' ('alt-n') and 'ctrl-m' ('alt-m') 
-diminish and increase the max (min) frequency displayed.
+diminish and increase the max (min) frequency displayed. 'ctrl-r' resets 
+parameter to initial values.
 
 On certain Linux distributions, a package named python-tk (or similar) needs 
 to be installed, when running in virtual environments.

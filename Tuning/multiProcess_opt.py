@@ -89,7 +89,7 @@ class ThreadedOpt(object):
 
         # Gaussian width to determine centroid
         guess = [self.__freq[x], y, 2.]
-        boundaries = ([self.__freq[x] - window, 0.25*y, .5],
+        boundaries = ([self.__freq[x] - window, 0.25*y, .4],
                       [self.__freq[x] + window, 2*y, 4.])
         try:
             popt_ind, pcov = curve_fit(self.gauss,

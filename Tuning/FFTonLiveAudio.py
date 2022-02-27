@@ -20,8 +20,9 @@ defined in parameters.py Change accordingly for harpsichords and pianos.
 The hotkey 'ctrl-y' and 'x' stops the program and toggles between halt and
 resume, respectively. 'Ctrl-j' and 'ctrl-k' shorten and lengthen the shift
 between the audio slices, whereas 'ctrl-n' ('alt-n') and 'ctrl-m' ('alt-m')
-diminish and increase the max (min) frequency displayed. Parameters,
-such as noise level, can be adjusted in the parameters.py file.
+diminish and increase the max (min) frequency displayed. 'ctrl-r' reset
+parameter to initial values. Parameters, such as noise level, can be adjusted
+in the parameters.py file.
 
 This program comes with ABSOLUTELY NO WARRANTY.
 This is free software, and you are welcome to redistribute it under
@@ -49,7 +50,7 @@ from Tuning import parameters
 - Update to version 2.1
     * new hotkeys to change minimum frequency in Fourier spectrum
 2021/08/26 - Ralf A. Timmermann
-- Update to version 2.2
+- version 2.2
     * nested pie to display deviation of key from target value, parameter.PIE
     to toggle to previous setup
     * hotkey to reset to initial values
@@ -58,8 +59,8 @@ from Tuning import parameters
     * DEBUG: utilized time in ms
     * INFO: best results with f_1 instead of f_0
     * import solely modules to be used  
-2021/09/06 - Ralf A. Timmermann
-- Update to version 2.3
+2022/02/26 - Ralf A. Timmermann
+- version 2.3
     * f0 and b are derived from combinations of partitials with no common 
     divisor. In ambiguous cases the calculated partials' frequencies  
     (as derived from f0 and b) are compared with those measured and the cost 
@@ -68,13 +69,14 @@ from Tuning import parameters
     * matplotlib commands are swapped to new superclass MPmatplot in 
     multiProcess_matplot.py that will be started in a proprietary process, 
     variables in dict passed through queue.
+    * new plot parameters moved to parameters.py 
 """
 
 __author__ = "Dr. Ralf Antonius Timmermann"
 __copyright__ = "Copyright (C) Dr. Ralf Antonius Timmermann"
 __credits__ = ""
 __license__ = "GPLv3"
-__version__ = "2.3.3"
+__version__ = "2.3.4"
 __maintainer__ = "Dr. Ralf A. Timmermann"
 __email__ = "rtimmermann@astro.uni-bonn.de"
 __status__ = "QA"
@@ -161,32 +163,32 @@ class Tuner:
 
     def on_activate_na(self):
         # decreases the min. frequency plotted
-        self.fmin -= 500 if self.fmin > 1500 else 100
+        self.fmin -= parameters.FREQUENCY_STEP if self.fmin > 1500 else 100
         if self.fmin < 0:
             self.fmin = 0
         print("Min frequency displayed: {0:1.0f} Hz".format(self.fmin))
 
     def on_activate_ma(self):
         # increases the min. frequency plotted
-        self.fmin += 500 if self.fmin >= 1500 else 100
+        self.fmin += parameters.FREQUENCY_STEP if self.fmin >= 1500 else 100
         if self.fmin > 14500:
             self.fmin = 14500
         print("Min frequency displayed: {0:1.0f} Hz".format(self.fmin))
-        if self.fmax - self.fmin < 500:
+        if self.fmax - self.fmin < parameters.FREQUENCY_WIDTH_MIN:
             self.on_activate_m()
 
     def on_activate_n(self):
         # decreases the max. frequency plotted
-        self.fmax -= 500 if self.fmax > 2000 else 100
+        self.fmax -= parameters.FREQUENCY_STEP if self.fmax > 2000 else 100
         if self.fmax < 500:
             self.fmax = 500
         print("Max frequency displayed: {0:1.0f} Hz".format(self.fmax))
-        if self.fmax - self.fmin < 500:
+        if self.fmax - self.fmin < parameters.FREQUENCY_WIDTH_MIN:
             self.on_activate_na()
 
     def on_activate_m(self):
         # increases the max. frequency plotted
-        self.fmax += 500 if self.fmax >= 2000 else 100
+        self.fmax += parameters.FREQUENCY_STEP if self.fmax >= 2000 else 100
         if self.fmax > 15000:
             self.fmax = 15000
         print("Max frequency displayed: {0:1.0f} Hz".format(self.fmax))

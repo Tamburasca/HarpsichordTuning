@@ -20,7 +20,7 @@ class MPmatplot(Process):
         self.__firstplot = True
         self.__resolution = parameters.RATE / parameters.SLICE_LENGTH * 1.5
         self.__t1 = rfftfreq(parameters.SLICE_LENGTH,
-                             1. / parameters.RATE)
+                             1./parameters.RATE)
         self.__queue = queue
         self.__tuning = kwargs.get('tuning')
         self.__a1 = kwargs.get('a1')
@@ -136,7 +136,7 @@ class MPmatplot(Process):
         while True:
             # fetch parameter from queue, block till message is available
             dic = self.__queue.get(block=True)
-            # check if there're already some messages more than that just picked
+            # check if there are already some messages more than those picked
             qsize = self.__queue.qsize()
             if qsize > 0:
                 logging.warning("{0} messages in MP queue".format(qsize))

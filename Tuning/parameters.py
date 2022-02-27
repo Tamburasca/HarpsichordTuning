@@ -40,6 +40,8 @@ NPARTIAL: int = 11
 
 """initial max frequency [Hz] displayed, can be adjusted through ctrl-n/m"""
 FREQUENCY_MAX: int = 2000
+FREQUENCY_WIDTH_MIN: int = 500
+FREQUENCY_STEP: int = 500
 
 """debug flag"""
 DEBUG: bool = False

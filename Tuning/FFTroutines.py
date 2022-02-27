@@ -1,4 +1,4 @@
-from numpy import hanning
+from numpy import hanning, hamming
 from numpy import sqrt, abs, average, median, where, append, array, mean
 from numpy.fft import rfft, rfftfreq
 from scipy.signal import convolve, butter, freqs, find_peaks
@@ -18,6 +18,7 @@ if parameters.DEBUG:
     logging.getLogger().setLevel(logging.DEBUG)
 
 hanning = hanning(parameters.SLICE_LENGTH)
+hamming = hamming(parameters.SLICE_LENGTH)
 t1 = rfftfreq(parameters.SLICE_LENGTH,
               1. / parameters.RATE)
 
@@ -36,8 +37,9 @@ def fft(amp):
     """
     _start = default_timer()
 
-    y_raw = rfft(hanning * amp)
-    """convolve with a Gaussian of width SIGMA
+    y_raw = rfft(hamming * amp)
+    """
+    convolve with a Gaussian of width SIGMA
     y_raw = convolve(in1=abs(y_raw),
                      in2=gaussian(M=11, std=1),
                      mode='same')
@@ -220,6 +222,7 @@ def harmonics(peaks):
     """
     _start = default_timer()
     initial = list()
+    l1 = dict()
 
     # sort by frequency ascending
     peaks.sort(key=lambda x: x[0])
@@ -228,17 +231,15 @@ def harmonics(peaks):
     logging.debug("ind: " + str(ind))
     logging.debug("height: " + str(height))
 
-    l1 = dict()
     # loop through the combination of partials up to NPARTIAL
     for m in range(1, parameters.NPARTIAL):
         for k in range(m+1, parameters.NPARTIAL):
             # loop through all peaks found (ascending, neested loops)
             for i in range(0, len(ind)):
                 for j in range(i+1, len(ind)):
-                    tmp = (ind[j] * m / k) ** 2
+                    tmp = ((ind[j] * m) / (ind[i] * k))**2
                     try:
-                        b = (tmp - ind[i] ** 2) / \
-                            ((k * ind[i]) ** 2 - tmp * m ** 2)
+                        b = (tmp - 1.) / (k**2 - tmp * m**2)
                     except ZeroDivisionError:
                         logging.info("devideByZero: "
                                      "discarded value in harmonics finding")
@@ -246,15 +247,16 @@ def harmonics(peaks):
                     if -0.0001 < b < parameters.INHARM:
                         # allow also negative b value > -0.0001 for uncertainty
                         # in the line fitting
-                        if b < 0:
-                            b = 0
                         f_fundamental = ind[i] / (m * sqrt(1. + b * m ** 2))
                         logging.debug(
                             "partial: {0:2d} {1:2d} "
                             "lower: {2:9.4f} upper: {3:9.4f} "
-                            "b: {4:.1e} fundamental: {5:9.4f}"
+                            "b: {4: .1e} fundamental: {5:9.4f}"
                             .format(m, k, ind[i], ind[j], b, f_fundamental))
-                        initial.append([m, k, ind[i], ind[j], b, f_fundamental])
+                        # always b >= 0
+                        initial.append(
+                            [m, k, ind[i], ind[j], max(b, 0.), f_fundamental]
+                        )
                         if gcd(m, k) == 1:
                             if m not in l1:
                                 # create keys in dict with empty list values
@@ -309,7 +311,7 @@ def harmonics(peaks):
         # give it a shot with the strongest peak being found
         peaks.sort(key=lambda x: x[1], reverse=True)  # sort by amplitude desc
         f1 = list(map(itemgetter(0), peaks))[0]
-        # disregard f0<26.5 Hz = A0
+        # disregard f0 < 26.5 Hz = A0
         if f1 > 26.5:
             f_n.append(f1)
             logging.info("Best result: f_1 = {0:.2f} Hz, B = {1:.1e}".format(
