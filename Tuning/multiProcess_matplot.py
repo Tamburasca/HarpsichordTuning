@@ -2,9 +2,13 @@ from multiprocessing import Process
 import matplotlib.pyplot as plt
 from matplotlib.collections import EventCollection
 from numpy.fft import rfftfreq
+from numpy import ones, array
+from scipy.sparse.linalg import spsolve
+from scipy import sparse
 from timeit import default_timer
 import logging
 
+from .FFTaux import mytimer
 from Tuning import parameters
 
 logging.basicConfig(format=parameters.myformat,
@@ -12,6 +16,34 @@ logging.basicConfig(format=parameters.myformat,
                     datefmt="%H:%M:%S")
 if parameters.DEBUG:
     logging.getLogger().setLevel(logging.DEBUG)
+
+
+@mytimer("baseline calculation")
+def baseline_als_optimized(y, lam, p, niter=10):
+    """
+    https://stackoverflow.com/questions/29156532/python-baseline-correction-library
+    ToDo: routines consumes between 80 and 110 ms, hence is disregarded!
+    """
+    z = array([])
+    z_last = array([])
+    lth = len(y)
+    d = sparse.diags([1, -2, 1], [0, -1, -2], shape=(lth, lth-2))
+    # Precompute this term since it does not depend on `w`
+    d = lam * d.dot(d.transpose())
+    w = ones(lth)
+    wo = sparse.spdiags(w, 0, lth, lth)
+    for i in range(niter):
+        wo.setdiag(w)  # Do not create a new matrix, just update diagonal values
+        zo = wo + d
+        z = spsolve(zo, w * y)
+        w = p * (y > z) + (1 - p) * (y < z)
+        # following early exit clause yields another 50 msec in speed
+        if i > 0:
+            if all(abs(z - z_last)) < 1.e-1:
+                break
+        z_last = z
+
+    return z
 
 
 class MPmatplot(Process):
@@ -91,14 +123,14 @@ class MPmatplot(Process):
                 color='tab:orange',
                 linelength=-2 * y_axis0,
                 lineoffset=0.,
-                linewidth=2.
+                linewidth=1.5
             )
         axes.add_collection(yevents)
         yevents1 = EventCollection(positions=f_meas,
                                    color='tab:red',
                                    linelength=-2 * y_axis0,
                                    lineoffset=y_axis0,
-                                   linewidth=2.
+                                   linewidth=1.5
                                    )
         axes.add_collection(yevents1)
 
@@ -124,7 +156,6 @@ class MPmatplot(Process):
             bounds=[0.65, 0.5, 0.35, 0.5],
             zorder=5)  # default
         inset_pie.axis('equal')
-
         displayed_title = "{0:s} (a1={1:3.0f} Hz)".format(self.__tuning,
                                                           self.__a1)
         font_title = {'family': 'serif',
@@ -140,8 +171,10 @@ class MPmatplot(Process):
             qsize = self.__queue.qsize()
             if qsize > 0:
                 logging.warning("{0} messages in MP queue".format(qsize))
-            _start = default_timer()
             yfft = dic.get('yfft')
+#            baseline = baseline_als_optimized(yfft, lam=3.e4, p=.01, niter=1)
+#            yfft = yfft - baseline
+#            yfft = where(yfft < 0., 0., yfft)
             ymax = max(yfft)
             fmin = dic.get('fmin')
             fmax = dic.get('fmax')
@@ -154,9 +187,11 @@ class MPmatplot(Process):
                             self.__resolution)
             info_color = 'red' if dic.get('slices').shape[0] > 3 else 'black'
 
+            _start = default_timer()
             if self.__firstplot:
                 # Setup line, define plot, text, and copy background once
                 ln1, = ax1.plot(self.__t1, yfft)
+#                ln2, = ax1.plot(self.__t1, baseline)
                 text = ax1.text(fmax, ymax, '',
                                 verticalalignment='top',
                                 horizontalalignment='right',
@@ -173,6 +208,8 @@ class MPmatplot(Process):
             else:
                 ln1.set_xdata(self.__t1)
                 ln1.set_ydata(yfft)
+#                ln2.set_xdata(self.__t1)
+#                ln2.set_ydata(baseline)
             # set attributes of subplot
             ax1.set_xlim([fmin, fmax])
             # permit some percentages of margin to the x-axes
@@ -192,8 +229,8 @@ class MPmatplot(Process):
                                  dic.get('peaklist'),
                                  dic.get('f_measured'))
             # Rescale the axis so that the data can be seen in the plot
-            # if you know the bounds of your data you could just set this
-            # once, such that the axis don't keep changing
+            # if you know the bounds of your data you could just set this once,
+            # such that the axis don't keep changing
             ax1.relim()
             ax1.autoscale_view()
 
@@ -213,6 +250,6 @@ class MPmatplot(Process):
             # resume audio streaming, expect retardation for status change
             fig.canvas.flush_events()
 
-            _stop = default_timer()
-            logging.debug("time utilized for matplotlib: {0:.2f} ms".format(
-                (_stop - _start) * 1000.))
+            logging.debug("Time utilized for matplotlib: {0:.2f} ms".format(
+                (default_timer() - _start) * 1_000)
+            )

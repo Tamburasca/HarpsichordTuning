@@ -11,7 +11,7 @@ to its previous, can be adjusted by +/-1024 samples through hotkeys crtl-j/k"""
 SLICE_SHIFT: int = 16384
 
 """F_FILT: high pass cutoff frequency [Hz]"""
-F_FILT: float = 200
+F_FILT: float = 100
 
 """F_ORDER: order of high pass Butterworth filter"""
 F_ORDER: int = 2
@@ -24,7 +24,7 @@ NOISE_LEVEL: float = 75.
 DISTANCE: int = 8
 
 """(min, max) width of peak in channels to identify a peak as such"""
-WIDTH: tuple = (0, 8)
+WIDTH: tuple = (1, 8)
 
 """window for Gauss fits: no of channels on either side"""
 FIT_WINDOW: int = 5
@@ -38,13 +38,15 @@ NMAX: int = 16
 """number of partials considered in harmonic finding"""
 NPARTIAL: int = 11
 
-"""initial max frequency [Hz] displayed, can be adjusted through ctrl-n/m"""
+"""
+initial max frequency [Hz] displayed, can be adjusted via ctrl-n/m or alt-n/m
+"""
 FREQUENCY_MAX: int = 2000
 FREQUENCY_WIDTH_MIN: int = 500
 FREQUENCY_STEP: int = 500
 
 """debug flag"""
-DEBUG: bool = False
+DEBUG: bool = True
 
 """logging format"""
 myformat = "%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s"

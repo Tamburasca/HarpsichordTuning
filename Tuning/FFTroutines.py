@@ -1,14 +1,13 @@
-from numpy import hanning, hamming
-from numpy import sqrt, abs, average, median, where, append, array, mean
+from numpy import hanning, hamming, sqrt, abs, average, median, append, array,\
+    mean, insert
 from numpy.fft import rfft, rfftfreq
-from scipy.signal import convolve, butter, freqs, find_peaks
-from scipy.signal.windows import gaussian
-from timeit import default_timer
+from scipy.signal import butter, freqs, find_peaks, peak_prominences
 from math import gcd
 import logging
-
 from operator import itemgetter
+
 from .multiProcess_opt import ThreadedOpt
+from .FFTaux import mytimer
 from Tuning import parameters
 
 logging.basicConfig(format=parameters.myformat,
@@ -19,10 +18,46 @@ if parameters.DEBUG:
 
 hanning = hanning(parameters.SLICE_LENGTH)
 hamming = hamming(parameters.SLICE_LENGTH)
-t1 = rfftfreq(parameters.SLICE_LENGTH,
-              1. / parameters.RATE)
+t1 = rfftfreq(parameters.SLICE_LENGTH, 1./parameters.RATE)
 
 
+class Noise:
+    """
+    DESCRIPTION:
+    This snippet computes the noise following the definition set forth by the
+    Spectral Container. Working Group of ST-ECF, MAST and CADC.
+    noise  = 1.482602 / sqrt(6) median(abs(2 flux_i - flux_i-2 - flux_i+2))
+    values with padded zeros are skipped
+    NOTES
+    The algorithm is an unbiased estimator describing the spectrum as a whole as
+    long as
+    * the noise is uncorrelated in wavelength bins spaced two pixels apart
+    * the noise is Normal distributed
+    * for large wavelength regions, the signal over the scale of 5 or more
+    pixels can be approximated by a straight line
+    For most spectra, these conditions are met.
+    REFERENCES  * Software: www.stecf.org/software/ASTROsoft/DER_SNR/
+
+    Comment: __call__ not utilized, as windows can be used
+    """
+    def __init__(self, flux: array):
+        i = len(flux)
+        self.__flux = abs(2. * flux[2:i - 2] - flux[0:i - 4] - flux[4:i])
+        # padding two value to prepend and two to append
+        self.__b = insert(self.__flux, 0, [flux[0]]*2)
+        self.__b = append(self.__b, [self.__flux[-1]]*2)
+        self.__l = len(self.__b)
+
+    def __call__(self, value: int, width: int = 50):
+        low = value - width if value - width >= 0 else 0
+        high = value + width if value + width < self.__l else self.__l - 1
+        return average(self.__b[low:high])
+
+    def total(self):
+        return 0.6052697 * median(self.__flux)
+
+
+@mytimer
 def fft(amp):
     """
     performs FFT on a Hanning apodized time series. High pass filter performed
@@ -35,8 +70,6 @@ def fft(amp):
     list float
         intensities
     """
-    _start = default_timer()
-
     y_raw = rfft(hamming * amp)
     """
     convolve with a Gaussian of width SIGMA
@@ -54,18 +87,17 @@ def fft(amp):
                  a=a,
                  worN=t1)
     y_final = abs(h * y_raw)
-    """if PSD then 
+    """
+    if PSD then: 
     psd = 2. * noise power bandwidth * abs(y_raw)**2 / samples**2
     # noise power bandwidth = 1.5 for Hanning window
     y_final = 2 * 1.5 * y_final ** 2 / len(amp)**2
     """
-    _stop = default_timer()
-    logging.debug("time utilized for FFT: {0:.2f} ms".format(
-        (_stop - _start) * 1000.))
 
     return t1, y_final
 
 
+@mytimer("peak finding (subtract time consumed for Gauss fits)")
 def peak(frequency, spectrum):
     """
     find peaks in frequency spectrum
@@ -77,49 +109,29 @@ def peak(frequency, spectrum):
         list (float) of tuples with peak frequencies and corresponding heights
         (no baseline subtracted)
     """
-    _start = default_timer()
     listf = list()
 
-    """
-    DESCRIPTION: 
-    This snippet computes the noise following the definition set forth by the 
-    Spectral Container. Working Group of ST-ECF, MAST and CADC.
-    noise  = 1.482602 / sqrt(6) median(abs(2 flux_i - flux_i-2 - flux_i+2))
-    values with padded zeros are skipped
-    NOTES
-    The algorithm is an unbiased estimator describing the spectrum as a whole as
-    long as
-    * the noise is uncorrelated in wavelength bins spaced two pixels apart
-    * the noise is Normal distributed
-    * for large wavelength regions, the signal over the scale of 5 or more 
-    pixels can be approximated by a straight line
-    For most spectra, these conditions are met.
-    REFERENCES  * Software: www.stecf.org/software/ASTROsoft/DER_SNR/
-    """
-    # Values that are exactly zero (padded) are skipped
-    flux = array(spectrum[where(spectrum != 0.0)])
-    i = len(flux)
-    std = 0.6052697 * median(
-        abs(2.0 * flux[2:i - 2] - flux[0:i - 4] - flux[4:i]))
-    logging.debug("noise estimate: " + str(std))
+    noise = Noise(flux=spectrum)
+    std = noise.total()
+    logging.debug("Noise estimate: {0}".format(std))
 
     # find peak according to prominence and remove peaks below threshold
     # prominences = signal.peak_prominences(x=spectrum, peaks=peaks)[0]
     # spectrum[peaks] == prominences with zero baseline
-    peaks, _ = find_peaks(x=spectrum,
-                          # min distance between two peaks
-                          distance=parameters.DISTANCE,
-                          # sensitivity minus background
-                          prominence=parameters.NOISE_LEVEL * std,
-                          # peak width
-                          width=parameters.WIDTH)
+    peaks, properties = find_peaks(x=spectrum,
+                                   # min distance between two peaks
+                                   distance=parameters.DISTANCE,
+                                   # sensitivity minus background
+                                   prominence=parameters.NOISE_LEVEL * std,
+                                   # peak width
+                                   width=parameters.WIDTH)
+    # peak_height = peak_prominences(spectrum, peaks)[0]
+    # print(spectrum[peaks], peak_height)
+    # print(peaks, properties)
     npeaks = len(peaks)
-    logging.debug("Peaks found: " + str(npeaks))
-    _stop = default_timer()
-    logging.debug("Time for peak finding: {0:.2f} ms".format(
-        (_stop - _start) * 1000.))
+    logging.debug("Peaks found: {0}".format(npeaks))
+#    peaks = [i for i in peaks if spectrum[i] > 5. * noise(i, 50)]
 
-    _start = default_timer()
     # consider NMAX highest, sort key = amplitude descending
     if npeaks != 0:
         listtup = list(zip(peaks, spectrum[peaks]))
@@ -137,11 +149,7 @@ def peak(frequency, spectrum):
                 "Position: {0:e} Hz, "
                 "Height (arb. Units): {1:e}, "
                 "FWHM: {2:e} Hz".format(line[0], line[1], 2.354 * line[2]))
-
     logging.debug("Peaks considered: " + str(len(listf)))
-    _stop = default_timer()
-    logging.debug("Time for peak fitting: {0:.2f} ms".format(
-        (_stop - _start) * 1000.))
 
     return listf
 
@@ -158,13 +166,13 @@ def bisection(vector, value):
     n = len(vector)
     if value < vector[0]:
         return -1
-    elif value > vector[n-1]:
+    elif value > vector[n - 1]:
         return n
     jl = 0  # Initialize lower
     ju = n - 1  # and upper limits.
-    while ju-jl > 1:
+    while ju - jl > 1:
         # If we are not yet done,
-        jm = (ju+jl) >> 1  # compute a midpoint with a bitshift
+        jm = (ju + jl) >> 1  # compute a midpoint with a bitshift
         if value >= vector[jm]:
             jl = jm  # and replace either the lower limit
         else:
@@ -172,8 +180,8 @@ def bisection(vector, value):
         # Repeat until the test condition is satisfied.
     if value == vector[0]:  # edge cases at bottom
         return 0
-    elif value == vector[n-1]:  # and top
-        return n-1
+    elif value == vector[n - 1]:  # and top
+        return n - 1
     else:
         return jl
 
@@ -204,12 +212,13 @@ def l1_fit(x0, fo):
         elif idx == num_freq:
             l1 += abs(found - freq[num_freq-1])  # >max frequency
         else:
-            # consider closest candidate of neighbors
+            # consider the closest candidate of neighbors
             l1 += min(abs(found - freq[idx]), abs(found - freq[idx + 1]))
 
     return l1
 
 
+@mytimer
 def harmonics(peaks):
     """
     finds harmonics between each two frequencies by applying the inharmonicity
@@ -220,7 +229,7 @@ def harmonics(peaks):
     list (float)
         positions of first NPARTIAL partials
     """
-    _start = default_timer()
+
     initial = list()
     l1 = dict()
 
@@ -316,9 +325,5 @@ def harmonics(peaks):
             f_n.append(f1)
             logging.info("Best result: f_1 = {0:.2f} Hz, B = {1:.1e}".format(
                 f1, 0.))
-
-    _stop = default_timer()
-    logging.debug("time utilized for harmonics: {0:.2f} ms".format(
-        (_stop - _start) * 1000.))
 
     return f_n

@@ -43,6 +43,7 @@ import logging
 from .tuningTable import tuningtable
 from .FFTroutines import fft, peak, harmonics
 from .multiProcess_matplot import MPmatplot
+from .FFTaux import mytimer
 from Tuning import parameters
 
 """
@@ -70,6 +71,8 @@ from Tuning import parameters
     multiProcess_matplot.py that will be started in a proprietary process, 
     variables in dict passed through queue.
     * new plot parameters moved to parameters.py 
+    * consumed time per module in DEBUG mode measured in wrapper mytimer
+    * FFTaux.py added
 """
 
 __author__ = "Dr. Ralf Antonius Timmermann"
@@ -193,6 +196,7 @@ class Tuner:
             self.fmax = 15000
         print("Max frequency displayed: {0:1.0f} Hz".format(self.fmax))
 
+    @mytimer("peak finding")
     def find(self, f_measured):
         """
         finds key and its offset from true key for given a temperament
@@ -204,14 +208,6 @@ class Tuner:
         float, None
             offset from true key in cent or None if None found or error
         """
-
-        def timeusage():
-            _stop = default_timer()
-            logging.debug("time utilized for key finding: {0:.2f} ms".format(
-                (_stop - _start) * 1000.))
-
-        _start = default_timer()
-
         for i in range(-4, 5):  # key range from keys C0 till B8
             offset = log2(f_measured / self.a1) * 1200 - i * 1200
             for key, value in tuningtable[self.tuning].items():
@@ -224,12 +220,12 @@ class Tuner:
                                           str(displaced +
                                               tuningtable[self.tuning].get('A')
                                               - value)))
-                    timeusage()
+
                     return key, displaced
 
-        timeusage()
         return '', 0
 
+    @mytimer("audio")
     def slice(self):
         """
         collects the audio data and arranges it into slices of length
@@ -252,7 +248,6 @@ class Tuner:
             logging.info(
                 "Clearing audio buffer and resuming audio stream ...")
         logging.debug("=== new audio cycle: filling buffer ===")
-        _start = default_timer()
         # wait until buffer filled by at least one FFT slice, where
         # length is in units of buffer = 1024
         while len(self.callback_output) < parameters.SLICE_LENGTH // 1024:
@@ -263,12 +258,9 @@ class Tuner:
                                       window_shape=(
                                           parameters.SLICE_LENGTH,),
                                       step=self.step)
-        _stop = default_timer()
         logging.debug("Audio shape: {0}, Sliced audio shape: {1}"
                       .format(amp.shape,
                               slices.shape))
-        logging.debug("time utilized for Audio: {0:.2f} ms".format(
-            (_stop - _start) * 1000.))
 
         return slices
 

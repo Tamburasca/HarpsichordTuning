@@ -4,6 +4,7 @@ from numpy import exp, zeros_like
 from operator import itemgetter
 import logging
 
+from .FFTaux import mytimer
 from Tuning import parameters
 
 logging.basicConfig(format=parameters.myformat,
@@ -16,7 +17,7 @@ if parameters.DEBUG:
 class ThreadedOpt(object):
     """
     driver for multiprocessing:
-    called by peak finding to locate exacter peak positions through minimizing
+    called by peak finding to locate exact peak positions through minimizing
     a Gauss fit to each individual peak found. Each minimization call is
     performed by a discrete process (multiprocessing).
     """
@@ -37,6 +38,7 @@ class ThreadedOpt(object):
         self.__x = list(map(itemgetter(0), initial))
         self.__y = list(map(itemgetter(1), initial))
 
+    @mytimer("Gauss fits")
     def run(self):
         """Run the optimization. Make the threads here."""
         queue = Queue()
