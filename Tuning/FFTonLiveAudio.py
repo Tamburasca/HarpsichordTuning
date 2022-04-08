@@ -33,7 +33,6 @@ import pyaudio
 from numpy import frombuffer, int16, hstack, log2
 import matplotlib.pyplot as plt
 from skimage import util
-from timeit import default_timer
 from time import sleep
 from pynput import keyboard
 from operator import itemgetter
@@ -79,7 +78,7 @@ __author__ = "Dr. Ralf Antonius Timmermann"
 __copyright__ = "Copyright (C) Dr. Ralf Antonius Timmermann"
 __credits__ = ""
 __license__ = "GPLv3"
-__version__ = "2.3.4"
+__version__ = "2.3.5"
 __maintainer__ = "Dr. Ralf A. Timmermann"
 __email__ = "rtimmermann@astro.uni-bonn.de"
 __status__ = "QA"
@@ -104,10 +103,10 @@ class Tuner:
         self.step: int = parameters.SLICE_SHIFT
         self.fmax: int = parameters.FREQUENCY_MAX
         self.fmin: int = 0
-        self.a1 = kwargs.get('a1')
-        self.tuning = kwargs.get('tuning')  # see tuningTable.py
-        self.x = True
-        self.rc = None
+        self.a1: float = kwargs.get('a1')
+        self.tuning: float = kwargs.get('tuning')  # see tuningTable.py
+        self.x: bool = True
+        self.rc: str = None
 
         self.callback_output = list()
         audio = pyaudio.PyAudio()

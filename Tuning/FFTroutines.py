@@ -201,7 +201,7 @@ def l1_fit(x0, fo):
         f = i * x0[0] * sqrt(1. + x0[1] * i * i)
         freq.append(f)
         if f > fmax:
-            break  # exit if superseeded max. frequency measured to save time
+            break  # exit if superseded max. frequency measured to save time
     num_freq = len(freq)
     l1 = 0.  # l1 cost function
     for found in fo:

@@ -22,7 +22,7 @@ if parameters.DEBUG:
 def baseline_als_optimized(y, lam, p, niter=10):
     """
     https://stackoverflow.com/questions/29156532/python-baseline-correction-library
-    ToDo: routines consumes between 80 and 110 ms, hence is disregarded!
+    ToDo: consumes between 80 and 110 ms, hence is disregarded!
     """
     z = array([])
     z_last = array([])
@@ -178,7 +178,6 @@ class MPmatplot(Process):
             ymax = max(yfft)
             fmin = dic.get('fmin')
             fmax = dic.get('fmax')
-
             info_text = "Resolution: {2:3.1f} Hz/channel\n" \
                         "Audio shape: {0} [slices, samples]\n" \
                         "Slice shift: {1:d} samples".format(
@@ -250,6 +249,6 @@ class MPmatplot(Process):
             # resume audio streaming, expect retardation for status change
             fig.canvas.flush_events()
 
-            logging.debug("Time utilized for matplotlib: {0:.2f} ms".format(
+            logging.debug("Time utilized for matplot: {0:.2f} ms".format(
                 (default_timer() - _start) * 1_000)
             )
