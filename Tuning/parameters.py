@@ -59,7 +59,7 @@ FREQUENCY_WIDTH_MIN: int = 500
 FREQUENCY_STEP: int = 500
 
 """debug flag"""
-DEBUG: bool = True
+DEBUG: bool = False
 
 """logging format"""
 myformat = "%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s"
