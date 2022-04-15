@@ -72,16 +72,23 @@ from Tuning import parameters
     * new plot parameters moved to parameters.py 
     * consumed time per module in DEBUG mode measured in wrapper mytimer
     * FFTaux.py added
+2022/04/10 - Ralf A. Timmermann
+- version 3.0 (productive)
+    * Finding the NMAX highes peaks in the frequency spectrum: prominence 
+    for find_peaks disabled, peak heights minus background calculated by 
+    utilizing the average interpolated positions of left and right intersection 
+    points of a horizontal line at the respective evaluation height.
+    * modified global hot keys, such as q is disabled.
 """
 
 __author__ = "Dr. Ralf Antonius Timmermann"
 __copyright__ = "Copyright (C) Dr. Ralf Antonius Timmermann"
 __credits__ = ""
 __license__ = "GPLv3"
-__version__ = "2.3.5"
+__version__ = "3.0"
 __maintainer__ = "Dr. Ralf A. Timmermann"
 __email__ = "rtimmermann@astro.uni-bonn.de"
-__status__ = "QA"
+__status__ = "Prod"
 
 print(__doc__)
 
@@ -337,11 +344,9 @@ def main():
     )
 
     h = keyboard.GlobalHotKeys({
-        'x': a.on_activate_x,         # toggle between halt & resume
-        'q': a.on_activate_y,         # exit through closing plot window
         '<ctrl>+y': a.on_activate_y,  # exit
         '<ctrl>+w': a.on_activate_y,  # exit
-        '<alt>+w': a.on_activate_y,   # exit
+        '<ctrl>+x': a.on_activate_x,  # toggle halt/resume
         '<ctrl>+j': a.on_activate_j,  # decrease slices shift
         '<ctrl>+k': a.on_activate_k,  # increase slices shift
         '<ctrl>+r': a.on_activate_r,  # reset parameter to initial values

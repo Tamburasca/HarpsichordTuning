@@ -116,28 +116,30 @@ def peak(frequency, spectrum):
     logging.debug("Noise estimate: {0}".format(std))
 
     # find peak according to prominence and remove peaks below threshold
-    # prominences = signal.peak_prominences(x=spectrum, peaks=peaks)[0]
-    # spectrum[peaks] == prominences with zero baseline
+    # spectrum[peaks] = "prominences with baseline zero"
     peaks, properties = find_peaks(x=spectrum,
                                    # min distance between two peaks
                                    distance=parameters.DISTANCE,
                                    # sensitivity minus background
-                                   prominence=parameters.NOISE_LEVEL * std,
+                                   # prominence=parameters.NOISE_LEVEL * std,
                                    # peak width
                                    width=parameters.WIDTH)
-    # peak_height = peak_prominences(spectrum, peaks)[0]
-    # print(spectrum[peaks], peak_height)
-    # print(peaks, properties)
-    npeaks = len(peaks)
-    logging.debug("Peaks found: {0}".format(npeaks))
-#    peaks = [i for i in peaks if spectrum[i] > 5. * noise(i, 50)]
+    # print(peaks, properties['left_ips'], properties['right_ips'])
+    # avaraged background of both sides
+    left = [int(i) for i in properties['left_ips']]
+    right = [int(i + 1) for i in properties['right_ips']]
+    # subtract background
+    corrected = spectrum[peaks] - (spectrum[left] + spectrum[right]) / 2
+    logging.debug("Peaks found: {0}".format(len(peaks)))
+    listtup = list(zip(peaks, corrected))
+    # sort out peaks below threshold and consider NMAX highest,
+    # sort key = amplitude descending
+    listtup = [item for item in listtup if
+               item[1] > parameters.NOISE_LEVEL * std]
+    listtup.sort(key=lambda x: x[1], reverse=True)
+    del listtup[parameters.NMAX:]
 
-    # consider NMAX highest, sort key = amplitude descending
-    if npeaks != 0:
-        listtup = list(zip(peaks, spectrum[peaks]))
-        listtup.sort(key=lambda x: x[1], reverse=True)
-        del listtup[parameters.NMAX:]
-
+    if len(listtup) != 0:
         # run Gaussfits to the lines found in different processes
         opt = ThreadedOpt(freq=frequency,
                           amp=spectrum,
@@ -146,10 +148,10 @@ def peak(frequency, spectrum):
         sortedf = sorted(listf, key=lambda x: x[0])
         for line in sortedf:
             logging.debug(
-                "Position: {0:e} Hz, "
-                "Height (arb. Units): {1:e}, "
-                "FWHM: {2:e} Hz".format(line[0], line[1], 2.354 * line[2]))
-    logging.debug("Peaks considered: " + str(len(listf)))
+                "Position: {0:10.4f} Hz, "
+                "Height (arb. Units): {1:.2e}, "
+                "FWHM: {2:5.2f} Hz".format(line[0], line[1], 2.354 * line[2]))
+    logging.debug("Peaks considered: {}".format(len(listf)))
 
     return listf
 
@@ -186,9 +188,9 @@ def bisection(vector, value):
         return jl
 
 
-def l1_fit(x0, fo):
+def l1_cost(x0, fo):
     """
-    returns the cost function for a Lasso regression
+    returns the cost function for a Lasso regression (L1 norm)
     :param x0: array - [f0, b] such that f = i * x0[0] * sqrt(1. + x0[1] * i**2)
     :param fo: array - measured resonance frequencies as from FFT
     :return: float - l1 cost function
@@ -229,9 +231,9 @@ def harmonics(peaks):
     list (float)
         positions of first NPARTIAL partials
     """
-
     initial = list()
     l1 = dict()
+    f_n = list()
 
     # sort by frequency ascending
     peaks.sort(key=lambda x: x[0])
@@ -254,76 +256,70 @@ def harmonics(peaks):
                                      "discarded value in harmonics finding")
                         continue
                     if -0.0001 < b < parameters.INHARM:
-                        # allow also negative b value > -0.0001 for uncertainty
-                        # in the line fitting
+                        # allow also negative b value > -0.0001 for
+                        # uncertainties in the line fitting
                         f_fundamental = ind[i] / (m * sqrt(1. + b * m ** 2))
                         logging.debug(
                             "partial: {0:2d} {1:2d} "
-                            "lower: {2:9.4f} upper: {3:9.4f} "
-                            "b: {4: .1e} fundamental: {5:9.4f}"
+                            "lower: {2:10.4f} upper: {3:10.4f} "
+                            "b: {4: .1e} fundamental: {5:10.4f}"
                             .format(m, k, ind[i], ind[j], b, f_fundamental))
                         # always b >= 0
                         initial.append(
                             [m, k, ind[i], ind[j], max(b, 0.), f_fundamental]
                         )
+                        # two partials with no common divisor
                         if gcd(m, k) == 1:
                             if m not in l1:
-                                # create keys in dict with empty list values
+                                # create dict keys with empty list values
                                 l1[m] = list()
                         break
                 break
-
     """
-    ToDo: this section needs some modification 
     disregard fundamentals for records, where both partials have a common 
     divisor (gcd). Consider all fundamentals with no common divisor only.
     """
-    f_n = list()
     if initial:
-        f0, b = list(), list()
+        av = array([])
         if len(l1) > 1:
-            # if more than one lower partial with gcd=1
+            # if more than one lower partials with gcd=1
             for key in l1:
                 for dat in filter(lambda x: x[0] == key, initial):
-                    # Add l1 values for same lower partial
-                    l1[key].append(l1_fit([dat[5], dat[4]], ind))
-            # when at least one combination with gcd = 1
-            for key in l1:
-                # l1 being averaged for each lower partial
+                    # Add all l1 values to list for same lower partial
+                    l1[key].append(l1_cost([dat[5], dat[4]], ind))
+                # l1 cost function averaged for equal lower partials
                 l1[key] = mean(l1[key])
-            # find lower partial with min l1
-            for dat in list(
-                    filter(lambda x: x[0] == min(l1, key=l1.get), initial)):
-                f0.append(dat[5])
-                b.append(dat[4])
+            # identify lower partial with min l1
+            av = array(list(
+                filter(lambda x: x[0] == min(l1, key=l1.get), initial))
+            ).mean(axis=0)
         elif len(l1) == 1:
             # if only one lower partial with gcd=1
-            for dat in list(
-                    filter(lambda x: x[0] == list(l1.keys())[0], initial)):
-                f0.append(dat[5])
-                b.append(dat[4])
-        if not f0:
+            av = array(list(
+                filter(lambda x: x[0] == list(l1.keys())[0], initial))
+            ).mean(axis=0)
+        if av.size == 0:
             # if no gcd=1 found, take first entry for the lowest partial
-            for dat in list(filter(lambda x: x[0] == initial[0][0], initial)):
-                f0.append(dat[5])
-                b.append(dat[4])
-        # disregard f0<26.5 Hz = A0
-        if average(f0) > 26.5:
+            av = array(list(
+                filter(lambda x: x[0] == initial[0][0], initial))
+            ).mean(axis=0)
+        if av[5] > parameters.FREQUENCY_LIMIT:
             for n in range(1, parameters.NPARTIAL):
-                f_n = append(f_n, average(f0) * n * sqrt(
-                    1. + average(b) * n ** 2))
+                f_n = append(f_n,
+                             av[5] * n * sqrt(1. + av[4] * n ** 2))
             logging.info(
                 "Best result: f_1 = {0:.2f} Hz, B = {1:.1e}".format(
-                        f_n[0], average(b)))
+                        f_n[0], av[4])
+            )
     elif not initial and len(ind) > 0:
         # if fundamental could not be calculated through at least two lines,
-        # give it a shot with the strongest peak being found
+        # give it a shot with the strongest peak found
         peaks.sort(key=lambda x: x[1], reverse=True)  # sort by amplitude desc
         f1 = list(map(itemgetter(0), peaks))[0]
-        # disregard f0 < 26.5 Hz = A0
-        if f1 > 26.5:
+        if f1 > parameters.FREQUENCY_LIMIT:
             f_n.append(f1)
-            logging.info("Best result: f_1 = {0:.2f} Hz, B = {1:.1e}".format(
-                f1, 0.))
+            logging.info(
+                "Best result: f_1 = {0:.2f} Hz, B = {1:.1e}".format(f1, 0.)
+            )
 
     return f_n

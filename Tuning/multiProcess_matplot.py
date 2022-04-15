@@ -50,6 +50,7 @@ class MPmatplot(Process):
     def __init__(self, queue, **kwargs):
         super().__init__(daemon=True)
         self.__firstplot = True
+        # factor accounts for the apodization, Henning ~ 1.5
         self.__resolution = parameters.RATE / parameters.SLICE_LENGTH * 1.5
         self.__t1 = rfftfreq(parameters.SLICE_LENGTH,
                              1./parameters.RATE)
@@ -57,7 +58,7 @@ class MPmatplot(Process):
         self.__tuning = kwargs.get('tuning')
         self.__a1 = kwargs.get('a1')
         logging.debug(
-            "Resolution incl. Hanning apodization (Hz/channel) ~ {0}"
+            "Resolution incl. Hamming apodization (Hz/channel) ~ {0}"
             .format(self.__resolution))
 
     @staticmethod
@@ -144,6 +145,7 @@ class MPmatplot(Process):
         :return:
         """
         plt.ion()  # Stop matplotlib windows from blocking
+        plt.rcParams['keymap.quit'].remove('q')  # disable q from closing the window
         fig = plt.gcf()
         fig.set_size_inches(12, 6)
         fig.canvas.set_window_title(
@@ -167,6 +169,7 @@ class MPmatplot(Process):
         while True:
             # fetch parameter from queue, block till message is available
             dic = self.__queue.get(block=True)
+            _start = default_timer()
             # check if there are already some messages more than those picked
             qsize = self.__queue.qsize()
             if qsize > 0:
@@ -185,8 +188,6 @@ class MPmatplot(Process):
                             dic.get('step'),
                             self.__resolution)
             info_color = 'red' if dic.get('slices').shape[0] > 3 else 'black'
-
-            _start = default_timer()
             if self.__firstplot:
                 # Setup line, define plot, text, and copy background once
                 ln1, = ax1.plot(self.__t1, yfft)

@@ -27,9 +27,10 @@ where n is the n<em>th</em> partial.
 The ear hears the fundamental frequency most prominently, 
 but the overall sound is also colored by the presence of various overtones 
 (frequencies greater than the fundamental frequency).
-
-However, a real string behaves more like a stiff bar. Its partials can be 
-approximated by
+However, a real string behaves closer to a stiff bar according to a forth-order 
+differential equation 
+<img src="https://render.githubusercontent.com/render/math?math=\ddot y \propto {-y}\!\!''''">
+with a quadratic dispersion. Its partials can be approximated by
 
 **(2) <em>f<sub>n</sub> = n * f<sub>0</sub> * sqrt(1 + B * n<sup>2</sup>)</em>**
 
@@ -77,14 +78,20 @@ resume, respectively. 'Ctrl-j' and 'ctrl-k' shorten and lengthen the shift
 between the audio slices, whereas 'ctrl-n' ('alt-n') and 'ctrl-m' ('alt-m') 
 diminish and increase the max (min) frequency displayed. 'ctrl-r' resets 
 parameter to initial values.
+ 
+Run the program with: <em>python3 -m Tuning</em>
 
-On certain Linux distributions, a package named python-tk (or similar) needs 
+Caveat 
+1) When tuning you may consider preventing the display from blanking, locking 
+and the monitor's DPMS (on UNIX) energy saver from kicking in. To date I haven't 
+found a decent solution yet that works for all OS flavors equally well. 
+Suggestions welcome.
+
+2) On certain Linux distributions, a package named python-tk (or similar) needs 
 to be installed, when running in virtual environments.
 
-Also note that the module pynput utilized here may encounter 
+3) Also note that the module pynput utilized here may encounter 
 [plattform limitations](https://pynput.readthedocs.io/en/latest/limitations.html#)
-
-Run the program with: <em>python3 -m Tuning</em>
 
 References:
 
