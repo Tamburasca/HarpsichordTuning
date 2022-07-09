@@ -8,14 +8,8 @@ from scipy import sparse
 from timeit import default_timer
 import logging
 
-from .FFTaux import mytimer
+from Tuning.FFTaux import mytimer
 from Tuning import parameters
-
-logging.basicConfig(format=parameters.myformat,
-                    level=logging.INFO,
-                    datefmt="%H:%M:%S")
-if parameters.DEBUG:
-    logging.getLogger().setLevel(logging.DEBUG)
 
 
 @mytimer("baseline calculation")
@@ -50,8 +44,8 @@ class MPmatplot(Process):
     def __init__(self, queue, **kwargs):
         super().__init__(daemon=True)
         self.__firstplot = True
-        # factor accounts for the apodization, Henning ~ 1.5
-        self.__resolution = parameters.RATE / parameters.SLICE_LENGTH * 1.5
+        # factor accounts for the apodization, Henning ~ 2.0, Hamming ~ 1.81
+        self.__resolution = parameters.RATE / parameters.SLICE_LENGTH * 1.81
         self.__t1 = rfftfreq(parameters.SLICE_LENGTH,
                              1./parameters.RATE)
         self.__queue = queue
@@ -181,7 +175,7 @@ class MPmatplot(Process):
             ymax = max(yfft)
             fmin = dic.get('fmin')
             fmax = dic.get('fmax')
-            info_text = "Resolution: {2:3.1f} Hz/channel\n" \
+            info_text = "Resolution: {2:3.1f} Hz (-6 dB Main Lobe Width)\n" \
                         "Audio shape: {0} [slices, samples]\n" \
                         "Slice shift: {1:d} samples".format(
                             dic.get('slices').shape,

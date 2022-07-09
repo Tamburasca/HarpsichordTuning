@@ -12,7 +12,7 @@ SLICE_LENGTH: int = 32768 * FACTOR
 """no of samples (initial value) by which each slice is shifted with regard 
 to its previous, can be adjusted by +/-1024 samples through hotkeys crtl-j/k.
 Corrected for the sample size."""
-SLICE_SHIFT: int = 16384 * FACTOR
+SLICE_SHIFT: int = 16384
 
 """F_FILT: high pass cutoff frequency [Hz]"""
 F_FILT: float = 100.
@@ -63,3 +63,5 @@ DEBUG: bool = False
 
 """logging format"""
 myformat = "%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s"
+
+FINAL_FIT: bool = True

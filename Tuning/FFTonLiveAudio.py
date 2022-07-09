@@ -39,10 +39,11 @@ from operator import itemgetter
 from multiprocessing import Queue
 import logging
 
-from .tuningTable import tuningtable
-from .FFTroutines import fft, peak, harmonics
-from .multiProcess_matplot import MPmatplot
-from .FFTaux import mytimer
+from Tuning.tuningTable import tuningtable
+from Tuning.FFTroutines import fft, peak
+from Tuning.FFTharmonics import harmonics
+from Tuning.multiProcess_matplot import MPmatplot
+from Tuning.FFTaux import mytimer
 from Tuning import parameters
 
 """
@@ -79,13 +80,21 @@ from Tuning import parameters
     utilizing the average interpolated positions of left and right intersection 
     points of a horizontal line at the respective evaluation height.
     * modified global hot keys, such as q is disabled.
+2022/07/09 - Ralf A. Timmermann
+- version 3.1.0 (productive)
+    * logging.basicConfig defined only in FFTonLiveAudio
+    * slice shift is fixed value in parameters
+    * import absolute paths
+    * final L1 minimization on difference between measured and calculated 
+    partials utilizing scipy.optimize.minimize through Nelder-Mead method
+    to determine base-frequency and inharmonicity
 """
 
 __author__ = "Dr. Ralf Antonius Timmermann"
 __copyright__ = "Copyright (C) Dr. Ralf Antonius Timmermann"
 __credits__ = ""
 __license__ = "GPLv3"
-__version__ = "3.0"
+__version__ = "3.1.0"
 __maintainer__ = "Dr. Ralf A. Timmermann"
 __email__ = "rtimmermann@astro.uni-bonn.de"
 __status__ = "Prod"

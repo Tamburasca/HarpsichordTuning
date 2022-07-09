@@ -1,8 +1,8 @@
 # Harpsichord Tuning
 
+### Introduction
 An automatic tuning tool for string instruments, such as harpsichords and 
-pianos. Tests are still needed with pianos, owing to their larger inharmonicity 
-factor.
+pianos.
 
 The current application collects a mono audio signal from the input stream,
 splits it into smaller, overlapping slices, and applies the Fourier transform to
@@ -55,6 +55,8 @@ The maximum inharmonicity coefficient needs to be adjusted in
 depending on the instrument to be tuned, B < 0.001 and < 0.05 for 
 harpsichords and pianos, respectively.
 
+### Features
+
 The frequency of the first partial f<sub>1</sub> (fundamental) is 
 compared to a value derived from the pitch level and a tuning table 
 [tuningTable.py](https://github.com/Tamburasca/HarpsichordTuning/blob/master/Tuning/tuningTable.py), 
@@ -81,7 +83,8 @@ parameter to initial values.
  
 Run the program with: <em>python3 -m Tuning</em>
 
-Caveat 
+### Caveat
+
 1) When tuning you may consider preventing the display from blanking, locking 
 and the monitor's DPMS (on UNIX) energy saver from kicking in. To date I haven't 
 found a decent solution yet that works for all OS flavors equally well. 
@@ -93,7 +96,14 @@ to be installed, when running in virtual environments.
 3) Also note that the module pynput utilized here may encounter 
 [plattform limitations](https://pynput.readthedocs.io/en/latest/limitations.html#)
 
-References:
+### Results
+
+We received, in preliminary results, accuracies of about 
+0.21Hz@415Hz, which translates to about 0.09 cent and a reletive error of 
+about 4x10<sup>-4</sup> in the inharmonicity factor. Stay tuned for detailed 
+results.
+
+### References
 
 1) HARVEY FLETCHER, THE JOURNAL OF THE ACOUSTICAL SOCIETY OF AMERICA VOLUME 36,
 NUMBER 1 JANUARY 1964
@@ -101,3 +111,7 @@ NUMBER 1 JANUARY 1964
 2301 (2012)
 3) JOONAS TUOVINEN, SIGNAL PROCESSING IN A SEMI-AUTOMATIC PIANO TUNING SYSTEM
 (MA OF SCIENCE), AALTO UNIVERSITY, SCHOOL OF ELECTRICAL ENGINEERING (2019)
+
+#### Contact
+
+Ralf Antonius Timmermann, Email: rtimmermann@astro.uni-bonn.de

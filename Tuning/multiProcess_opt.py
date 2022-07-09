@@ -4,14 +4,8 @@ from numpy import exp, zeros_like
 from operator import itemgetter
 import logging
 
-from .FFTaux import mytimer
+from Tuning.FFTaux import mytimer
 from Tuning import parameters
-
-logging.basicConfig(format=parameters.myformat,
-                    level=logging.INFO,
-                    datefmt="%H:%M:%S")
-if parameters.DEBUG:
-    logging.getLogger().setLevel(logging.DEBUG)
 
 
 class ThreadedOpt(object):
