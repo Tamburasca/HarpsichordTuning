@@ -35,7 +35,7 @@ but the overall sound is also colored by the presence of various overtones
 However, a real string behaves closer to a stiff bar according to a forth-order 
 differential equation 
 <img src="https://render.githubusercontent.com/render/math?math=\ddot y \propto {-y}\!\!''''">
-with a quadratic dispersion. Its partials can be approximated by
+with a quadratic dispersion. Hence, its partials can be approximated by
 
 **(2) <em>f<sub>n</sub> = n * f<sub>0</sub> * sqrt(1 + B * n<sup>2</sup>)</em>**
 

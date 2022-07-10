@@ -44,8 +44,8 @@ class ThreadedOpt(object):
             # Make the threads and start them off
             _process = Process(target=self.fitting,
                                args=(queue, thread_id,))
-            processes.append(_process)
             _process.start()
+            processes.append(_process)
 
         for _process in processes:
             _process.join(timeout=.05)  # resume after timeout, cleanup later

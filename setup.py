@@ -21,8 +21,8 @@ setuptools.setup(
     python_requires='>=3.8',
     install_requires=['pynput       >=1.7.1',
                       'PyAudio      >=0.2.11',
-                      'numpy        >=1.21.2',
+                      'numpy        >=1.23.1',
                       'scipy        >=1.7.3',
                       'matplotlib   >=3.5.1',
-                      'scikit-image >=0.17.2'],
+                      'scikit-image >=0.19.2'],
 )
