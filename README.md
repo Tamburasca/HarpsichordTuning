@@ -1,21 +1,26 @@
-# Harpsichord Tuning
+# Harpsichord & Piano Tuning
 
 ### Introduction
 An automatic tuning tool for string instruments, such as harpsichords and 
 pianos.
 
-The current application collects a mono audio signal from the input stream,
+The current application collects a mono audio signal from the computer's
+input stream,
 splits it into smaller, overlapping slices, and applies the Fourier transform to
 each (known as short time Fourier transform: STFT). The slices have sizes of
 2<sup>N</sup> samples, where N=15 or 16 (sampling period = 0.74 or 1.49 s, 
-respectively), and overlap by multiples of 1024 samples. Each slice is apodized 
-utilizing Hanning windowing. Adopting a reduction in resolution of 1.5 with 
-Hanning, the resulting frequency resolution becomes 2.0 and 1.0 Hz for 
+respectively), which overlap by multiples of 1024 samples. Each slice is 
+apodized utilizing Hamming or Hann windowing, the full widths of their main 
+lobes being 1.81 and 2.0 bins @ -6dB.
+
+Adopting a reduction in resolution of 1.81 with 
+Hamming, the resulting frequency resolution becomes 2.4 and 1,2 Hz for 
 a sampling period = 0.74 and 1.49 s, respectively. Subsequently, in the
 frequency domain, Butterworth high-pass filtering is applied to suppress noise
 at the bottom, before the fundamental and overtone frequencies are sought.
 In order to achieve higher accuracy in their positions, we fit Gaussians to the
-NMAX strongest peaks found. Their centroids are utilized in the derivation 
+NMAX strongest peaks found, with 5 data points on either side of the peak.
+Their centroids are utilized in the derivation 
 of the fundamental frequency and the inharmonicity factor.
 
 For an ideal string the frequencies of higher partials are just multiples
@@ -57,12 +62,13 @@ harpsichords and pianos, respectively.
 
 ### Features
 
-The frequency of the first partial f<sub>1</sub> (fundamental) is 
+The frequency of the first partial f<sub>1</sub> is 
 compared to a value derived from the pitch level and a tuning table 
 [tuningTable.py](https://github.com/Tamburasca/HarpsichordTuning/blob/master/Tuning/tuningTable.py), 
 currently comprising Werkmeister III, 1/4 Comma Meantone, and Equal Temperament 
 (feel free to edit/enhance it for yourself). We have not yet considered 
-enharmonic equivalency, hence, one would have to enable/disable certain keys, 
+enharmonic equivalency in meantone, hence, one would have to enable/disable 
+certain keys, 
 such as A♭ vs. G#. The key in the center of the pie shows what key was 
 pressed and its deviation, in units of cent, for the specified tuning and 
 pitch level: too low (in red) and too high (in green).
@@ -114,4 +120,5 @@ NUMBER 1 JANUARY 1964
 
 #### Contact
 
-Ralf Antonius Timmermann, Email: rtimmermann@astro.uni-bonn.de
+Ralf Antonius Timmermann, Email: rtimmermann@astro.uni-bonn.de, 
+Argelander Institute for Astronomy (AIfA), University Bonn, Germany

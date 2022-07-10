@@ -362,8 +362,8 @@ def main():
         '<ctrl>+m': a.on_activate_m,  # increase max freq
         '<ctrl>+n': a.on_activate_n,  # decrease max freq
         '<alt>+m': a.on_activate_ma,  # increase min freq
-        '<alt>+n': a.on_activate_na   # decrease min freq
-        })
+        '<alt>+n': a.on_activate_na  # decrease min freq
+    })
     h.start()
 
     a.animate()

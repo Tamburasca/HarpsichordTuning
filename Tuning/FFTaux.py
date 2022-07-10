@@ -47,10 +47,10 @@ def l1_minimum(x0, *args):
     :param args: array - measured resonance frequencies as from FFT
     :return: float - l1 cost function
     """
+    freq = list()
     x0 = list(x0)  # x0 comes in as ndarray if invoked from the scipy minimizer
     if not args or not x0:
         return 0.
-    freq = list()
     fo = [i for i in args]
     fmax = max(fo)
     for i in range(1, 640):
