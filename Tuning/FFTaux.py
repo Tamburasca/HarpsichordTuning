@@ -4,7 +4,8 @@ auxiliary functions
 
 from timeit import default_timer
 from functools import wraps
-from numpy import sqrt
+from numpy import sqrt, array
+from numdifftools import Jacobian, Hessian
 import logging
 
 
@@ -40,37 +41,74 @@ def bisection(vector, value):
         return jl
 
 
-def l1_minimum(x0, *args):
-    """
-    returns the cost function for a Lasso regression (L1 norm)
-    :param x0: array - [f0, b] such that f = i * x0[0] * sqrt(1. + x0[1] * i**2)
-    :param args: array - measured resonance frequencies as from FFT
-    :return: float - l1 cost function
-    """
-    freq = list()
-    x0 = list(x0)  # x0 comes in as ndarray if invoked from the scipy minimizer
-    if not args or not x0:
-        return 0.
-    fo = [i for i in args]
-    fmax = max(fo)
-    for i in range(1, 640):
-        f = i * x0[0] * sqrt(1. + x0[1] * i * i)
-        freq.append(f)
-        if f > fmax:
-            break  # exit if superseded max. frequency measured to save time
-    num_freq = len(freq)
-    l1 = 0.  # l1 cost function
-    for found in fo:
-        idx = bisection(freq, found)
-        # L1 norm
-        if idx == -1:
-            l1 += abs(found - freq[0])  # <min frequency
-        elif idx == num_freq:
-            l1 += abs(found - freq[num_freq - 1])  # >max frequency
-        else:
-            # consider the closest candidate of neighbors
-            l1 += min(abs(found - freq[idx]), abs(found - freq[idx + 1]))
-    return l1
+class L1(object):
+    def __init__(self, *args):
+        """
+        :param args: array - measured resonance frequencies as from peaks (FFT)
+        """
+        self.fo = [i for i in args]
+        self.fmax = max(self.fo)
+        self.l1_first = None
+        self.l1_last = None
+        self.jacobi = array([0., 0.])
+
+    def l1_minimum(self, x0, jac: bool = False):
+        """
+        returns the cost function for a Lasso regression (L1 norm)
+        :param x0: array - [f0, b] such that
+            f = i * x0[0] * sqrt(1. + x0[1] * i**2)
+        :param jac: bool - if jacobi is to be calculated
+        :return: float - l1 cost function
+        """
+        freq = list()
+        x0 = list(x0)  # x0 comes as ndarray if invoked from the scipy minimizer
+        self.jacobi = array([0., 0.])
+        for i in range(1, 640):
+            f = i * x0[0] * sqrt(1. + x0[1] * i * i)
+            freq.append(f)
+            if jac:
+                self.jacobi += self.derivative(x0=x0, i=i)
+            if f > self.fmax:
+                break  # exit if superseded max. frequency measured to save time
+        num_freq = len(freq)
+        l1 = 0.  # l1 cost function
+        for found in self.fo:
+            # loop over peaks found
+            idx = bisection(freq, found)
+            # L1 norm
+            if idx == -1:
+                l1 += abs(found - freq[0])  # <min frequency
+            elif idx == num_freq:
+                l1 += abs(found - freq[num_freq - 1])  # >max frequency
+            else:
+                # consider the closest candidate of neighbors
+                l1 += min(abs(found - freq[idx]), abs(found - freq[idx + 1]))
+        if self.l1_first is None:
+            self.l1_first = l1
+        self.l1_last = l1
+        # print(x0, l1)
+        return l1
+
+    def l1_minimum_jac(self, x0):
+        return Jacobian(lambda x0: self.l1_minimum(x0))(x0).ravel()
+
+    def l1_minimum_hess(self, x0):
+        return Hessian(lambda x0: self.l1_minimum(x0))(x0)
+
+    def l1_minimum_der(self, x0):
+        # Jacobian is second parameter derived from derivations
+        return self.l1_minimum(x0, jac=True), self.jacobi
+
+    def compare_l1(self):
+        return self.l1_last, self.l1_first
+
+    @staticmethod
+    def derivative(x0, i):
+        if x0[1] < 0.:
+            x0[1] = 0.
+        deriv_f0 = i * sqrt(1. + x0[1] * i * i)
+        deriv_b = 0.5 * i ** 3 * x0[0] / sqrt(1. + x0[1] * i * i)
+        return array([deriv_f0, deriv_b])
 
 
 def mytimer(supersede=None):
@@ -80,7 +118,6 @@ def mytimer(supersede=None):
     mytimer("<supersede function name>")
     :param supersede: string (default=None)
     """
-
     def _decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):

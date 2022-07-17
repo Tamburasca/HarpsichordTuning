@@ -1,27 +1,34 @@
 # Harpsichord & Piano Tuning
 
 ### Introduction
-An automatic tuning tool for string instruments, such as harpsichords and 
-pianos.
 
-The current application collects a mono audio signal from the computer's
-input stream,
+An automatic tuning tool for string instruments, such as harpsichords and pianos.
+
+The current application (exclusively written in Python) 
+collects a mono audio signal from the computer's input stream,
 splits it into smaller, overlapping slices, and applies the Fourier transform to
 each (known as short time Fourier transform: STFT). The slices have sizes of
-2<sup>N</sup> samples, where N=15 or 16 (sampling period = 0.74 or 1.49 s, 
-respectively), which overlap by multiples of 1024 samples. Each slice is 
-apodized utilizing Hamming or Hann windowing, the full widths of their main 
-lobes being 1.81 and 2.0 bins @ -6dB.
+L = 2<sup>N</sup> samples, where N=15 or 16 (sampling period = 0.74 or 1.49 s,
+respectively), which overlap by multiples of 1024 samples. The sampling frequency
+is f<sub>s</sub> = 44,100 s<sup>-1</sup>
 
-Adopting a reduction in resolution of 1.81 with 
-Hamming, the resulting frequency resolution becomes 2.4 and 1,2 Hz for 
-a sampling period = 0.74 and 1.49 s, respectively. Subsequently, in the
+Each slice is apodized utilizing Gaussian windowing, where L = 
+7<img src="https://render.githubusercontent.com/render/math?math=$\sigma$">, 
+resulting in a FWHM (@-6dB) = 2.62 bins and a full width of the main lobe of 
+10.46 bins. This translates to 3.53 or 1.76 Hz and 14.1 or 7.1 Hz for N = 15 and 
+16, respectively. The highest side lobe is -71 dB. Worth mentioning, the 
+Gaussian L = 
+7<img src="https://render.githubusercontent.com/render/math?math=$\sigma$">
+is similar to a Blackman-Harris-Nuttall window.
+
+Subsequently, in the
 frequency domain, Butterworth high-pass filtering is applied to suppress noise
-at the bottom, before the fundamental and overtone frequencies are sought.
-In order to achieve higher accuracy in their positions, we fit Gaussians to the
-NMAX strongest peaks found, with 5 data points on either side of the peak.
-Their centroids are utilized in the derivation 
-of the fundamental frequency and the inharmonicity factor.
+at the bottom side, before fundamental and overtone frequencies are sought.
+In order to achieve the highest accuracy in their positions, we fit a 
+parabola - by three-node interpolation - to the
+logarithm of the Gaussian in the Fourier space, for the
+strongest NMAX peaks found. The parabola centroids are utilized to derive 
+the frequency f<sub>0</sub> and the inharmonicity factor B.
 
 For an ideal string the frequencies of higher partials are just multiples
 of the fundamental frequency
@@ -39,12 +46,10 @@ with a quadratic dispersion. Hence, its partials can be approximated by
 
 **(2) <em>f<sub>n</sub> = n * f<sub>0</sub> * sqrt(1 + B * n<sup>2</sup>)</em>**
 
-B and f<sub>0</sub> being the inharmonicity coefficient and base frequency, 
-respectively. 
-
 All peak positions are correlated to each other, such that they 
 can be identifed as higher partials to one common base frequency f<sub>0</sub>. 
-By rewriting (2), we get for two frequencies from all peak permutations
+By rewriting (2), we get for two frequencies that can be 
+applied to all permutations of peaks
 
 **(3) <em>B = (C - 1) / (j<sup>2</sup> - C * i<sup>2</sup>)</em>**, 
 where 
@@ -58,7 +63,11 @@ The measured frequencies of the partials are denoted
 The maximum inharmonicity coefficient needs to be adjusted in
 [parameters.py](https://github.com/Tamburasca/HarpsichordTuning/blob/master/Tuning/parameters.py), 
 depending on the instrument to be tuned, B < 0.001 and < 0.05 for 
-harpsichords and pianos, respectively.
+harpsichords and pianos, respectively. Finally, an artificial spectrum 
+is calculated from f<sub>0</sub> and B and compared to the measured 
+spectrum by minimizating the L1-norm of the coefficient vector. For the moment
+I employ the module [scipy.optimize.brute](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.brute.html),
+it'll catch the minimum, darn sure.
 
 ### Features
 
@@ -103,11 +112,18 @@ to be installed, when running in virtual environments.
 [plattform limitations](https://pynput.readthedocs.io/en/latest/limitations.html#)
 
 ### Results
-
-We received, in preliminary results, accuracies of about 
-0.21Hz@415Hz, which translates to about 0.09 cent and a reletive error of 
-about 4x10<sup>-4</sup> in the inharmonicity factor. Stay tuned for detailed 
-results.
+Owing to the lack of reliable data to date, I refer to results of ref. 4. The 
+authors achieve a relative error of a Gaussian interpolation of 0.052% per bin 
+for the center frequency of the parabola. This converts to 0.07% for N = 15, 
+resulting in an error of 0.29 Hz @ 415 Hz (1.2 cent). Given the fact, though, 
+that in the current application the frequency of the first partial is 
+derived from a combination of all partials measured, 
+its frequency is anticipated to be more precise.
+This is achieved through comparparing the measuremed spectrum which that 
+calculated from f<sub>0</sub> and B by minimizing the L1-norm, such as in 
+Compressed Sensing. In a preliminary test with about 40 measurements
+the max. relative frequency error turned out to be 
++/-0.014% and +/-0.7% on B @415Hz. Thus, stay tuned ...
 
 ### References
 
@@ -117,8 +133,11 @@ NUMBER 1 JANUARY 1964
 2301 (2012)
 3) JOONAS TUOVINEN, SIGNAL PROCESSING IN A SEMI-AUTOMATIC PIANO TUNING SYSTEM
 (MA OF SCIENCE), AALTO UNIVERSITY, SCHOOL OF ELECTRICAL ENGINEERING (2019)
+4) M. GASIOR, J.L. GONZALEZ, IMPROVING FFT FREQUENCY MEASUREMENT RESOLUTION
+BY PARABOLIC AND GAUSSIAN INTERPOLATION, EUROPEAN ORGANIZATION FOR NUCLEAR RESEARCH/
+ORGANISATION EUROPEENNE POUR LA RECHERCHE NUCLEAIRE, AB-Note-2004-021 BDI (2004)
 
 #### Contact
 
 Ralf Antonius Timmermann, Email: rtimmermann@astro.uni-bonn.de, 
-Argelander Institute for Astronomy (AIfA), University Bonn, Germany
+Argelander Institute for Astronomy (AIfA), University Bonn, Germany.

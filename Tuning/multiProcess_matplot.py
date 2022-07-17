@@ -9,7 +9,7 @@ from timeit import default_timer
 import logging
 
 from Tuning.FFTaux import mytimer
-from Tuning import parameters
+from Tuning import parameters as P
 
 
 @mytimer("baseline calculation")
@@ -44,15 +44,15 @@ class MPmatplot(Process):
     def __init__(self, queue, **kwargs):
         super().__init__(daemon=True)
         self.__firstplot = True
-        # factor accounts for the apodization, Henning ~ 2.0, Hamming ~ 1.81
-        self.__resolution = parameters.RATE / parameters.SLICE_LENGTH * 1.81
-        self.__t1 = rfftfreq(parameters.SLICE_LENGTH,
-                             1./parameters.RATE)
+        # factor accounts for the Gaussian apodization
+        self.__resolution = P.RATE / P.SLICE_LENGTH * 2.62
+        self.__t1 = rfftfreq(P.SLICE_LENGTH,
+                             1./P.RATE)
         self.__queue = queue
         self.__tuning = kwargs.get('tuning')
         self.__a1 = kwargs.get('a1')
         logging.debug(
-            "Resolution incl. Hamming apodization (Hz/channel) ~ {0}"
+            "Resolution incl. Gaussian apodization (Hz/channel) ~ {0}"
             .format(self.__resolution))
 
     @staticmethod
@@ -104,7 +104,7 @@ class MPmatplot(Process):
         while axes.collections:
             axes.collections.pop()
         y_axis0, y_axis1 = axes.get_ylim()
-        if parameters.DEBUG:
+        if P.DEBUG:
             yevents = EventCollection(
                 positions=peak_list,
                 color='tab:orange',
@@ -139,7 +139,7 @@ class MPmatplot(Process):
         :return:
         """
         plt.ion()  # Stop matplotlib windows from blocking
-        plt.rcParams['keymap.quit'].remove('q')  # disable q from closing the window
+        plt.rcParams['keymap.quit'].remove('q')  # disable key q from closing the window
         fig = plt.gcf()
         fig.set_size_inches(12, 6)
         fig.canvas.set_window_title(
@@ -202,8 +202,8 @@ class MPmatplot(Process):
             else:
                 ln1.set_xdata(self.__t1)
                 ln1.set_ydata(yfft)
-#                ln2.set_xdata(self.__t1)
-#                ln2.set_ydata(baseline)
+                # ln2.set_xdata(self.__t1)
+                # ln2.set_ydata(baseline)
             # set attributes of subplot
             ax1.set_xlim([fmin, fmax])
             # permit some percentages of margin to the x-axes

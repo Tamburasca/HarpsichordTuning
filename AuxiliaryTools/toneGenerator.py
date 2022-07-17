@@ -23,7 +23,7 @@ alls = list()
 
 for partial in range(1, partials + 1):
     f = f0 * partial * np.sqrt(1. + inharmonicity * partial ** 2)
-    print(f)
+    print(f, (np.sqrt(1. + inharmonicity * partial ** 2) - 1.) / partial)
     alls.append(
         # reduce volume of higher partials
         (np.cos(2. * np.pi * np.arange(fs * duration) * f / fs)) / partial**2

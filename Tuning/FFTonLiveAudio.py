@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-FFTonLiveAudio Copyright (C) 2020-21, Dr. Ralf Antonius Timmermann
+FFTonLiveAudio Copyright (C) 2020-22, Dr. Ralf Antonius Timmermann
 
 A graphical tuning tool for string instruments, such as harpsichords and pianos.
 
@@ -40,11 +40,12 @@ from multiprocessing import Queue
 import logging
 
 from Tuning.tuningTable import tuningtable
-from Tuning.FFTroutines import fft, peak
+from Tuning.FFTroutines import fft
+from Tuning.FFTpeaks import peak
 from Tuning.FFTharmonics import harmonics
 from Tuning.multiProcess_matplot import MPmatplot
 from Tuning.FFTaux import mytimer
-from Tuning import parameters
+from Tuning import parameters as P
 
 """
 2021/08/14 - Ralf A. Timmermann
@@ -80,14 +81,13 @@ from Tuning import parameters
     utilizing the average interpolated positions of left and right intersection 
     points of a horizontal line at the respective evaluation height.
     * modified global hot keys, such as q is disabled.
-2022/07/09 - Ralf A. Timmermann
+2022/07/17 - Ralf A. Timmermann
 - version 3.1.0 (productive)
-    * logging.basicConfig defined only in FFTonLiveAudio
-    * slice shift is fixed value in parameters
+    * slice shift is fixed value in parameter file
     * import absolute paths
     * final L1 minimization on difference between measured and calculated 
-    partials utilizing scipy.optimize.minimize through Nelder-Mead method
-    to determine base-frequency and inharmonicity
+    partials utilizing scipy.optimize.minimize through brute
+    to determine base-frequency and inharmonicity (toggled in parameters)
 """
 
 __author__ = "Dr. Ralf Antonius Timmermann"
@@ -101,10 +101,10 @@ __status__ = "Prod"
 
 print(__doc__)
 
-logging.basicConfig(format=parameters.myformat,
+logging.basicConfig(format=P.myformat,
                     level=logging.INFO,
                     datefmt="%H:%M:%S")
-if parameters.DEBUG:
+if P.DEBUG:
     logging.getLogger().setLevel(logging.DEBUG)
 
 
@@ -116,8 +116,8 @@ class Tuner:
         :param tuning: string
             tuning temperament
         """
-        self.step: int = parameters.SLICE_SHIFT
-        self.fmax: int = parameters.FREQUENCY_MAX
+        self.step: int = P.SLICE_SHIFT
+        self.fmax: int = P.FREQUENCY_MAX
         self.fmin: int = 0
         self.a1: float = kwargs.get('a1')
         self.tuning: float = kwargs.get('tuning')  # see tuningTable.py
@@ -128,7 +128,7 @@ class Tuner:
         audio = pyaudio.PyAudio()
         self.stream = audio.open(format=pyaudio.paInt16,
                                  channels=1,
-                                 rate=parameters.RATE,
+                                 rate=P.RATE,
                                  output=False,
                                  input=True,
                                  stream_callback=self.callback)
@@ -162,14 +162,14 @@ class Tuner:
         # reset parameters to initial values
         print("reseting parameters...")
         self.fmin = 0
-        self.fmax = parameters.FREQUENCY_MAX
-        self.step = parameters.SLICE_SHIFT
+        self.fmax = P.FREQUENCY_MAX
+        self.step = P.SLICE_SHIFT
 
     def on_activate_k(self):
         # increases the shift by which the slices progress
         self.step += 1024
-        if self.step > parameters.SLICE_LENGTH:
-            self.step = parameters.SLICE_LENGTH
+        if self.step > P.SLICE_LENGTH:
+            self.step = P.SLICE_LENGTH
         print("Slice shift: {0:d} samples".format(self.step))
 
     def on_activate_j(self):
@@ -181,32 +181,32 @@ class Tuner:
 
     def on_activate_na(self):
         # decreases the min. frequency plotted
-        self.fmin -= parameters.FREQUENCY_STEP if self.fmin > 1500 else 100
+        self.fmin -= P.FREQUENCY_STEP if self.fmin > 1500 else 100
         if self.fmin < 0:
             self.fmin = 0
         print("Min frequency displayed: {0:1.0f} Hz".format(self.fmin))
 
     def on_activate_ma(self):
         # increases the min. frequency plotted
-        self.fmin += parameters.FREQUENCY_STEP if self.fmin >= 1500 else 100
+        self.fmin += P.FREQUENCY_STEP if self.fmin >= 1500 else 100
         if self.fmin > 14500:
             self.fmin = 14500
         print("Min frequency displayed: {0:1.0f} Hz".format(self.fmin))
-        if self.fmax - self.fmin < parameters.FREQUENCY_WIDTH_MIN:
+        if self.fmax - self.fmin < P.FREQUENCY_WIDTH_MIN:
             self.on_activate_m()
 
     def on_activate_n(self):
         # decreases the max. frequency plotted
-        self.fmax -= parameters.FREQUENCY_STEP if self.fmax > 2000 else 100
+        self.fmax -= P.FREQUENCY_STEP if self.fmax > 2000 else 100
         if self.fmax < 500:
             self.fmax = 500
         print("Max frequency displayed: {0:1.0f} Hz".format(self.fmax))
-        if self.fmax - self.fmin < parameters.FREQUENCY_WIDTH_MIN:
+        if self.fmax - self.fmin < P.FREQUENCY_WIDTH_MIN:
             self.on_activate_na()
 
     def on_activate_m(self):
         # increases the max. frequency plotted
-        self.fmax += parameters.FREQUENCY_STEP if self.fmax >= 2000 else 100
+        self.fmax += P.FREQUENCY_STEP if self.fmax >= 2000 else 100
         if self.fmax > 15000:
             self.fmax = 15000
         print("Max frequency displayed: {0:1.0f} Hz".format(self.fmax))
@@ -265,13 +265,13 @@ class Tuner:
         logging.debug("=== new audio cycle: filling buffer ===")
         # wait until buffer filled by at least one FFT slice, where
         # length is in units of buffer = 1024
-        while len(self.callback_output) < parameters.SLICE_LENGTH // 1024:
+        while len(self.callback_output) < P.SLICE_LENGTH // 1024:
             sleep(0.02)
         # Convert the list of numpy-arrays into a 1D array (column-wise)
         amp = hstack(self.callback_output)
         slices = util.view_as_windows(amp,
                                       window_shape=(
-                                          parameters.SLICE_LENGTH,),
+                                          P.SLICE_LENGTH,),
                                       step=self.step)
         logging.debug("Audio shape: {0}, Sliced audio shape: {1}"
                       .format(amp.shape,

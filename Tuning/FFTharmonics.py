@@ -1,14 +1,66 @@
-from numpy import sqrt, append, array, mean
+from numpy import sqrt, append, mean, array, asarray, random
 from math import gcd
 import logging
 from operator import itemgetter
-from scipy.optimize import minimize
+from scipy.optimize import minimize, basinhopping, brute, fmin
 
-from Tuning.FFTaux import mytimer, l1_minimum
-from Tuning import parameters
+from Tuning.FFTaux import mytimer, L1
+from Tuning import parameters as P
+
+"""
+note: these little auxiliary tools may be needed with various minimizers. They
+are disabled until needed:
+
+def bounds(f0, b):
+    return (.995 * f0, 1.005 * f0), (max(0, .1 * b), min(10 * b, P.INHARM))
 
 
-@mytimer("Lasso Regression")
+def constraints(f0, b):
+    # since some methods do not accept boundaries,
+    # we convert them to constraints, harhar
+    bnds = asarray(bounds(f0, b))
+    constraint = []
+    for index in range(len(bnds)):
+        lower, upper = bnds[index]
+        # lower constraint first, upper second
+        constraint.append(
+            {'type': 'ineq', 'fun': lambda x, lb=lower, i=index: x[i] - lb})
+        constraint.append(
+            {'type': 'ineq', 'fun': lambda x, ub=upper, i=index: ub - x[i]})
+    return constraint
+
+
+class MyBounds(object):
+    def __init__(self, f0):
+        self.xmax = array([1.005 * f0, P.INHARM])
+        self.xmin = array([0.995 * f0, 0.])
+
+    def __call__(self, **kwargs):
+        x = kwargs["x_new"]
+        tmax = bool(all(x <= self.xmax))
+        tmin = bool(all(x >= self.xmin))
+        return tmax and tmin
+
+
+class MyTakeStep:
+    def __init__(self, stepsize=0.5):
+        self.stepsize = stepsize
+        self.rng = random.default_rng()
+
+    def __call__(self, x):
+        s = self.stepsize
+        x[0] += self.rng.uniform(-1. * s, 1. * s)
+        x[1] += self.rng.uniform(-1.e-5 * s, 1.e-5 * s)
+        return x
+"""
+
+
+def myslice(x0):
+    return slice(0.998 * x0[0], 1.003 * x0[0], 0.001 * x0[0]), \
+           slice(0.8 * x0[1], 1.2 * x0[1], 0.1 * x0[1])
+
+
+@mytimer("L1 Minimization")
 def final_fit(av, ind):
     """
     fits the base frequency, inharmonicity by minimizing the L1 cost function
@@ -20,36 +72,56 @@ def final_fit(av, ind):
     :param ind: array - measured resonance frequencies as from FFT
     :return: float, float - base frequency, inharmonicity (if success: fit
     result, else returns input values
+    note:
+    https://stackoverflow.com/questions/41137092/jacobian-and-hessian-inputs-in-scipy-optimize-minimize
     """
     guess = [av[5], av[4]]
-    boundaries = [
-        (av[5] * .995, av[5] * 1.005),
-        (0., parameters.INHARM)
-    ]
+    l1_min = L1(*ind)
+    l1_min.l1_minimum(guess)
     try:
-        res = minimize(fun=l1_minimum,
+        '''
+        res = minimize(fun=l1_min.l1_minimum,
                        x0=guess,
-                       bounds=boundaries,
-                       args=(*ind,),
-                       method='Nelder-Mead'  # ToDo: this is prelim.
+                       bounds=bounds(f0=av[5], b=av[4]),
+                       # constraints=constraints(f0=av[5], b=av[4]),
+                       method='Nelder-Mead',  # ToDo. find a better one
+                       options={'return_all': False}
+                       # jac=True
+                       # jac=l1_min.l1_minimum_jac,
+                       # hess=l1_min.l1_minimum_hess
                        )
-        logging.debug(
-            "Minimizer: Success: {0}, number of iterations: {1}, "
-            "fit result: base freq. = {2:.4f} Hz, B = {3:.3e}".format(
-                res.success,
-                res.nit,
-                res.x[0],
-                res.x[1]))
-        if res.success:
-            return res.x[0], res.x[1]
+        '''
+        res = brute(func=l1_min.l1_minimum,
+                    ranges=myslice(guess),
+                    finish=fmin,
+                    full_output=True)
+
+        if res[1] <= l1_min.l1_first:
+            logging.debug(
+                "Minimizer: Success: {0}\n"
+                "L1 initial value: {1}, last value: {2}\n"
+                "fit result: base freq. = {3:.4f} Hz, B = {4:.3e}".format(
+                    True,
+                    l1_min.l1_first, res[1],
+                    res[0][0], res[0][1]))
+            return res[0][0], res[0][1]
         else:
+            # if L1 min final is worse than that with its initial values,
+            # resume with the unchanged values
+            logging.debug(
+                "Minimizer: Success: {0}\n"
+                "L1 initial value: {1}, last value: {2}\n"
+                "fit result: base freq. = {3:.4f} Hz, B = {4:.3e}".format(
+                    False,
+                    l1_min.l1_first, res[1],
+                    res[0][0], res[0][1]))
             return av[5], av[4]
     except Exception as e:
         logging.warning(str(e))
         return av[5], av[4]
 
 
-@mytimer
+@mytimer("harmonics (subtract time for L1 minimization)")
 def harmonics(peaks):
     """
     finds harmonics between each two frequencies by applying the inharmonicity
@@ -72,8 +144,8 @@ def harmonics(peaks):
     logging.debug("height: " + str(height))
 
     # loop through the combination of partials up to NPARTIAL
-    for m in range(1, parameters.NPARTIAL):
-        for k in range(m + 1, parameters.NPARTIAL):
+    for m in range(1, P.NPARTIAL):
+        for k in range(m + 1, P.NPARTIAL):
             # loop through all peaks found (ascending, neested loops)
             for i in range(0, len(ind)):
                 for j in range(i + 1, len(ind)):
@@ -84,7 +156,7 @@ def harmonics(peaks):
                         logging.info("devideByZero: "
                                      "discarded value in harmonics finding")
                         continue
-                    if -0.0001 < b < parameters.INHARM:
+                    if -0.0001 < b < P.INHARM:
                         # allow also negative b value > -0.0001 for
                         # uncertainties in the line fitting
                         f_fundamental = ind[i] / (m * sqrt(1. + b * m ** 2))
@@ -110,12 +182,13 @@ def harmonics(peaks):
     """
     if initial:
         av = array([])
+        l1_min = L1(*ind)
         if len(l1) > 1:
             # if more than one lower partials with gcd=1
             for key in l1:
                 for dat in filter(lambda x: x[0] == key, initial):
                     # Add all l1 values to list for same lower partial
-                    l1[key].append(l1_minimum([dat[5], dat[4]], *ind))
+                    l1[key].append(l1_min.l1_minimum([dat[5], dat[4]]))
                 # l1 cost function averaged for equal lower partials
                 l1[key] = mean(l1[key])
             # identify lower partial with min l1
@@ -132,13 +205,12 @@ def harmonics(peaks):
             av = array(list(
                 filter(lambda x: x[0] == initial[0][0], initial))
             ).mean(axis=0)
-
         base_frequency = av[5]
         inharmonicity = av[4]
-        if base_frequency > parameters.FREQUENCY_LIMIT:
-            if parameters.FINAL_FIT:
+        if base_frequency > P.FREQUENCY_LIMIT:
+            if P.FINAL_FIT:
                 base_frequency, inharmonicity = final_fit(av, ind)
-            for n in range(1, parameters.NPARTIAL):
+            for n in range(1, P.NPARTIAL):
                 f_n = append(f_n,
                              base_frequency * n * sqrt(
                                  1. + inharmonicity * n ** 2))
@@ -151,7 +223,7 @@ def harmonics(peaks):
         # give it a shot with the strongest peak found
         peaks.sort(key=lambda x: x[1], reverse=True)  # sort by amplitude desc
         f1 = list(map(itemgetter(0), peaks))[0]
-        if f1 > parameters.FREQUENCY_LIMIT:
+        if f1 > P.FREQUENCY_LIMIT:
             f_n.append(f1)
             logging.info(
                 "Best result: f_1 = {0:.2f} Hz, B = {1:.1e}".format(f1, 0.)

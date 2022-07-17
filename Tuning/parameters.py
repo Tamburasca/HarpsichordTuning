@@ -35,8 +35,12 @@ for the sample size."""
 WIDTH: tuple = (1 * FACTOR, 8 * FACTOR)
 
 """window for Gauss fits: no of channels on either side. Corrected for the 
-sample size."""
-FIT_WINDOW: int = 5 * FACTOR
+sample size. (obsolete?)"""
+# FIT_WINDOW: int = 4
+
+"""Sigma of the Gauss apodization window, where the length of slice
+L = APODIZATION_GAUSS_SIGMA * sigma"""
+APODIZATION_GAUSS_SIGMA: float = 7.
 
 """max. inharmonicity of strings considered (harpsichord, piano, ...)"""
 INHARM: float = 0.001
@@ -59,9 +63,10 @@ FREQUENCY_WIDTH_MIN: int = 500
 FREQUENCY_STEP: int = 500
 
 """debug flag"""
-DEBUG: bool = False
+DEBUG: bool = True
 
 """logging format"""
 myformat = "%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s"
 
+"""Final fit through brute minimizer can be toggled"""
 FINAL_FIT: bool = True
