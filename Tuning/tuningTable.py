@@ -17,7 +17,7 @@ tuningtable = {
         'C': 0,
         'C#': 76.05,
         'D': 193.16,
-        # enharmonic equivalent: enable/disable keys to your tuning preference
+        # Enharmonic equivalent: enable/disable keys to your tuning preference
         # 'D#': 269.21,
         'E♭': 310.26,
         'E': 386.31,
@@ -30,7 +30,66 @@ tuningtable = {
         'B♭': 1006.84,
         'B': 1082.89
         },
-    'Equal Temperament': {
+    'A. Schlick (1511)': {
+        'C': 0,
+        'C#': 81,
+        'D': 195,
+        # Enharmonic equivalent: enable/disable keys to your tuning preference
+        # 'D#': xxx,
+        'E♭': 309,
+        'E': 390,
+        'F': 504,
+        'F#': 585,
+        'G': 699,
+        # 'A♭': xxx,
+        'G#': 813,
+        'A': 894,
+        'B♭': 1008,
+        'B': 1089
+    },
+    'Rameau': {
+        'C': 0,
+        'C#': 84,
+        'D': 192,
+        'E♭': 288,
+        'E': 384,
+        'F': 504,
+        'F#': 582,
+        'G': 696,
+        'G#': 786,
+        'A': 888,
+        'B♭': 996,
+        'B': 1080
+    },
+    'Kirnberger III (1779) Original': {
+        'C': 0,
+        'C#': 90,
+        'D': 193,
+        'D#': 294,
+        'E': 386,
+        'F': 498,
+        'F#': 590,
+        'G': 696,
+        'G#': 792,
+        'A': 890,
+        'B': 996,
+        'H': 1088
+    },
+    'Neinhardt (1729)': {
+        'C': 0,
+        'C#': 96,
+        'D': 196,
+        'D#': 298,
+        'E': 394,
+        'F': 500,
+        'F#': 596,
+        'G': 698,
+        'G#': 796,
+        'A': 894,
+        'B': 1000,
+        'H': 1096
+    },
+    'Equal': {
         'C': 0,
         'C#': 100,
         'D': 200,

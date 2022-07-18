@@ -1,8 +1,11 @@
+"""logging format"""
+myformat = "%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s"
+
 """audio sampling rate in kHz derived from driver -> hardware & sound
 do not modify!"""
 RATE: int = 44100
 
-"""Factor multiplied with the slice length: [1|2]"""
+"""Factor to multiply with the slice length: [1|2]"""
 FACTOR: int = 1
 
 """size of FFT slice: 32768 samples/slice: => 0.743 sec sampling time/slice.
@@ -39,7 +42,8 @@ sample size. (obsolete?)"""
 # FIT_WINDOW: int = 4
 
 """Sigma of the Gauss apodization window, where the length of slice
-L = APODIZATION_GAUSS_SIGMA * sigma"""
+L = APODIZATION_GAUSS_SIGMA * sigma
+do not modify"""
 APODIZATION_GAUSS_SIGMA: float = 7.
 
 """max. inharmonicity of strings considered (harpsichord, piano, ...)"""
@@ -65,8 +69,5 @@ FREQUENCY_STEP: int = 500
 """debug flag"""
 DEBUG: bool = True
 
-"""logging format"""
-myformat = "%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s"
-
-"""Final fit through brute minimizer can be toggled"""
+"""Final fit through brute force minimizer can be toggled off"""
 FINAL_FIT: bool = True

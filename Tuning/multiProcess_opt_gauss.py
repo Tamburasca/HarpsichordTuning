@@ -23,7 +23,7 @@ class ThreadedOpt(object):
         self.__x = list(map(itemgetter(0), initial))
         self.__y = list(map(itemgetter(1), initial))
 
-    @mytimer("Parabola fits")
+    @mytimer("Parabola interpolation")
     def __call__(self):
         """Run the optimization. Make the threads (subsequently) here."""
         peaks = list()

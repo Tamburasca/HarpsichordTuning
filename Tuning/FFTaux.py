@@ -44,7 +44,7 @@ def bisection(vector, value):
 class L1(object):
     def __init__(self, ind):
         """
-        :param args: array - measured resonance frequencies as from peaks (FFT)
+        :param ind: array - measured resonance frequencies as from peaks (FFT)
         """
         self.fo = ind
         self.fmax = max(self.fo)
@@ -54,7 +54,8 @@ class L1(object):
 
     def l1_minimum(self, x0, jac: bool = False):
         """
-        returns the cost function for a Lasso regression (L1 norm)
+        returns the cost function for a regression on the L1 norm
+        l1 = sum( abs(f_i(measured) - f_i(calculated) ) )
         :param x0: array - [f0, b] such that
             f = i * x0[0] * sqrt(1. + x0[1] * i**2)
         :param jac: bool - if jacobi is to be calculated

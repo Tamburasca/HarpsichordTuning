@@ -56,6 +56,7 @@ class MyTakeStep:
 
 
 def myslice(x0):
+    # ToDo slice dimensions
     return slice(0.998 * x0[0], 1.003 * x0[0], 0.001 * x0[0]), \
            slice(0.8 * x0[1], 1.2 * x0[1], 0.1 * x0[1])
 
