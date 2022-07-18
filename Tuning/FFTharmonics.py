@@ -2,13 +2,13 @@ from numpy import sqrt, append, mean, array, asarray, random
 from math import gcd
 import logging
 from operator import itemgetter
-from scipy.optimize import minimize, basinhopping, brute, fmin
+from scipy.optimize import minimize, brute, fmin
 
 from Tuning.FFTaux import mytimer, L1
 from Tuning import parameters as P
 
 """
-note: these little auxiliary tools may be needed with various minimizers. They
+note: these little auxiliary tools work with various minimizers. They
 are disabled until needed:
 
 def bounds(f0, b):
@@ -76,7 +76,7 @@ def final_fit(av, ind):
     https://stackoverflow.com/questions/41137092/jacobian-and-hessian-inputs-in-scipy-optimize-minimize
     """
     guess = [av[5], av[4]]
-    l1_min = L1(*ind)
+    l1_min = L1(ind)
     l1_min.l1_minimum(guess)
     try:
         '''
@@ -91,16 +91,17 @@ def final_fit(av, ind):
                        # hess=l1_min.l1_minimum_hess
                        )
         '''
+        if av[4] == 0:
+            return av[5], av[4]
+        # do NOT use workers, muliprocessing's oeverhead slows it down
         res = brute(func=l1_min.l1_minimum,
                     ranges=myslice(guess),
                     finish=fmin,
                     full_output=True)
-
+        msg = "Minimizer: Success: {0} L1 initial value: {1}, last value: {2}"
+        "fit result: base freq. = {3:.4f} Hz, B = {4:.3e}"
         if res[1] <= l1_min.l1_first:
-            logging.debug(
-                "Minimizer: Success: {0}\n"
-                "L1 initial value: {1}, last value: {2}\n"
-                "fit result: base freq. = {3:.4f} Hz, B = {4:.3e}".format(
+            logging.debug(msg.format(
                     True,
                     l1_min.l1_first, res[1],
                     res[0][0], res[0][1]))
@@ -108,10 +109,7 @@ def final_fit(av, ind):
         else:
             # if L1 min final is worse than that with its initial values,
             # resume with the unchanged values
-            logging.debug(
-                "Minimizer: Success: {0}\n"
-                "L1 initial value: {1}, last value: {2}\n"
-                "fit result: base freq. = {3:.4f} Hz, B = {4:.3e}".format(
+            logging.warning(msg.format(
                     False,
                     l1_min.l1_first, res[1],
                     res[0][0], res[0][1]))
@@ -182,7 +180,7 @@ def harmonics(peaks):
     """
     if initial:
         av = array([])
-        l1_min = L1(*ind)
+        l1_min = L1(ind)
         if len(l1) > 1:
             # if more than one lower partials with gcd=1
             for key in l1:

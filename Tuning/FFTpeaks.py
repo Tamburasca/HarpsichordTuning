@@ -96,7 +96,7 @@ def peak(frequency, spectrum):
             logging.debug(
                 "Position: {0:10.4f} Hz, "
                 "Height (arb. units): {1:.2e}, "
-                "FWHM: {2:5.2f} Hz".format(line[0], line[1], 2.354 * line[2]))
+                "FWHM: {2:5.2f} Hz".format(line[0], line[1], line[2]))
     logging.debug("Peaks considered: {}".format(len(listf)))
 
     return listf

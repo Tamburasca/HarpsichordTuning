@@ -7,14 +7,7 @@ import Tuning.parameters as P
 
 
 class ThreadedOpt(object):
-    """
-    driver for multiprocessing:
-    called by peak finding to locate exact peak positions through minimizing
-    a Gauss fit to each individual peak found. Each minimization call is
-    performed by a discrete process (multiprocessing).
-    """
 
-    # initializations
     def __init__(self, freq, amp, initial):
         """
         :param freq: list of floats
@@ -78,7 +71,7 @@ class ThreadedOpt(object):
                 2. * a[1] - a[0] - a[2]) * P.RATE / P.SLICE_LENGTH
         ctr = f[1] + offset
         dilation = (a[0] - a[1]) / ((f[0] - ctr) ** 2 - (f[1] - ctr) ** 2)
-        fwhm = 2. * sqrt(-.6931 / dilation) / 2.354  # divide for the time being
+        fwhm = 2. * sqrt(-.6931 / dilation)
         height = exp(a[0] - dilation * (f[0] - ctr) ** 2)
-        # print(ctr, height, fwhm)
+
         return [ctr, height, fwhm]

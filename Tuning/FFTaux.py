@@ -42,11 +42,11 @@ def bisection(vector, value):
 
 
 class L1(object):
-    def __init__(self, *args):
+    def __init__(self, ind):
         """
         :param args: array - measured resonance frequencies as from peaks (FFT)
         """
-        self.fo = [i for i in args]
+        self.fo = ind
         self.fmax = max(self.fo)
         self.l1_first = None
         self.l1_last = None
@@ -86,7 +86,7 @@ class L1(object):
         if self.l1_first is None:
             self.l1_first = l1
         self.l1_last = l1
-        # print(x0, l1)
+
         return l1
 
     def l1_minimum_jac(self, x0):
@@ -99,8 +99,8 @@ class L1(object):
         # Jacobian is second parameter derived from derivations
         return self.l1_minimum(x0, jac=True), self.jacobi
 
-    def compare_l1(self):
-        return self.l1_last, self.l1_first
+    def compare_l1(self) -> bool:
+        return self.l1_last < self.l1_first
 
     @staticmethod
     def derivative(x0, i):
