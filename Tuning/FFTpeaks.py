@@ -44,13 +44,15 @@ class Noise:
 
 
 @mytimer("peak finding (subtract time consumed for Parabola fits)")
-def peak(frequency, spectrum):
+def peak(frequency, spectrum, noise_level):
     """
     find peaks in frequency spectrum
     :param frequency: list
         frequencies from FFT
     :param spectrum: list
         spectrum amplitudes from FFT
+    :param noise_level: float
+        noise level as threshold for peak detection
     :return:
         list (float) of tuples with peak frequencies and corresponding heights
         (no baseline subtracted)
@@ -80,8 +82,7 @@ def peak(frequency, spectrum):
     listtup = list(zip(peaks, corrected))
     # sort out peaks below threshold and consider NMAX highest,
     # sort key = amplitude descending
-    listtup = [item for item in listtup if
-               item[1] > P.NOISE_LEVEL * std]
+    listtup = [item for item in listtup if item[1] > noise_level * std]
     listtup.sort(key=lambda x: x[1], reverse=True)
     del listtup[P.NMAX:]
 

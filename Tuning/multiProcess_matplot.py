@@ -169,9 +169,9 @@ class MPmatplot(Process):
             if qsize > 0:
                 logging.warning("{0} messages in MP queue".format(qsize))
             yfft = dic.get('yfft')
-#            baseline = baseline_als_optimized(yfft, lam=3.e4, p=.01, niter=1)
-#            yfft = yfft - baseline
-#            yfft = where(yfft < 0., 0., yfft)
+            # baseline = baseline_als_optimized(yfft, lam=3.e4, p=.01, niter=1)
+            # yfft = yfft - baseline
+            # yfft = where(yfft < 0., 0., yfft)
             ymax = max(yfft)
             fmin = dic.get('fmin')
             fmax = dic.get('fmax')
@@ -185,7 +185,7 @@ class MPmatplot(Process):
             if self.__firstplot:
                 # Setup line, define plot, text, and copy background once
                 ln1, = ax1.plot(self.__t1, yfft)
-#                ln2, = ax1.plot(self.__t1, baseline)
+                # ln2, = ax1.plot(self.__t1, baseline)
                 text = ax1.text(fmax, ymax, '',
                                 verticalalignment='top',
                                 horizontalalignment='right',

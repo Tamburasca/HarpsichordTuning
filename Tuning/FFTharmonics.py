@@ -2,7 +2,7 @@ from numpy import sqrt, append, mean, array, asarray, random
 from math import gcd
 import logging
 from operator import itemgetter
-from scipy.optimize import minimize, brute, fmin
+from scipy.optimize import brute, fmin
 
 from Tuning.FFTaux import mytimer, L1
 from Tuning import parameters as P
@@ -120,7 +120,7 @@ def final_fit(av, ind):
         return av[5], av[4]
 
 
-@mytimer("harmonics (subtract time for L1 minimization)")
+@mytimer("harmonics (subtract time for L1 minimization, if called)")
 def harmonics(peaks):
     """
     finds harmonics between each two frequencies by applying the inharmonicity
@@ -182,6 +182,8 @@ def harmonics(peaks):
     if initial:
         av = array([])
         l1_min = L1(ind)
+        no_of_peak_combi = 0
+
         if len(l1) > 1:
             # if more than one lower partials with gcd=1
             for key in l1:
@@ -190,24 +192,33 @@ def harmonics(peaks):
                     l1[key].append(l1_min.l1_minimum([dat[5], dat[4]]))
                 # l1 cost function averaged for equal lower partials
                 l1[key] = mean(l1[key])
-            # identify lower partial with min l1
-            av = array(list(
-                filter(lambda x: x[0] == min(l1, key=l1.get), initial))
-            ).mean(axis=0)
+            # identify lower partial with minimum l1
+            selected = array(
+                list(
+                    filter(lambda x: x[0] == min(l1, key=l1.get), initial))
+            )
+            av = selected.mean(axis=0)
+            no_of_peak_combi = selected.shape[0]
+
         elif len(l1) == 1:
             # if only one lower partial with gcd=1
-            av = array(list(
-                filter(lambda x: x[0] == list(l1.keys())[0], initial))
-            ).mean(axis=0)
+            selected = array(
+                list(
+                    filter(lambda x: x[0] == list(l1.keys())[0], initial))
+            )
+            av = selected.mean(axis=0)
+            no_of_peak_combi = selected.shape[0]
+
         if av.size == 0:
             # if no gcd=1 found, take first entry for the lowest partial
             av = array(list(
                 filter(lambda x: x[0] == initial[0][0], initial))
             ).mean(axis=0)
+
         base_frequency = av[5]
         inharmonicity = av[4]
         if base_frequency > P.FREQUENCY_LIMIT:
-            if P.FINAL_FIT:
+            if no_of_peak_combi > 1 and P.FINAL_FIT:
                 base_frequency, inharmonicity = final_fit(av, ind)
             for n in range(1, P.NPARTIAL):
                 f_n = append(f_n,

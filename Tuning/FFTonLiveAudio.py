@@ -88,13 +88,18 @@ from Tuning import parameters as P
     * final L1 minimization on difference between measured and calculated 
     partials utilizing scipy.optimize.minimize through brute
     to determine base-frequency and inharmonicity (toggled in parameters)
+2022/07/19 - Ralf A. Timmermann
+- version 3.1.1 (productive)
+    * Noise level can be adjusted through global hot keys
+    * L1 minimization called only if more than 2 measured peaks
+    * catching if erroneous input from the keyboard
 """
 
 __author__ = "Dr. Ralf Antonius Timmermann"
 __copyright__ = "Copyright (C) Dr. Ralf Antonius Timmermann"
 __credits__ = ""
 __license__ = "GPLv3"
-__version__ = "3.1.0"
+__version__ = "3.1.1"
 __maintainer__ = "Dr. Ralf A. Timmermann"
 __email__ = "rtimmermann@astro.uni-bonn.de"
 __status__ = "Prod"
@@ -119,6 +124,7 @@ class Tuner:
         self.step: int = P.SLICE_SHIFT
         self.fmax: int = P.FREQUENCY_MAX
         self.fmin: int = 0
+        self.noise_level = P.NOISE_LEVEL
         self.a1: float = kwargs.get('a1')
         self.tuning: float = kwargs.get('tuning')  # see tuningTable.py
         self.x: bool = True
@@ -164,6 +170,7 @@ class Tuner:
         self.fmin = 0
         self.fmax = P.FREQUENCY_MAX
         self.step = P.SLICE_SHIFT
+        self.noise_level = P.NOISE_LEVEL
 
     def on_activate_k(self):
         # increases the shift by which the slices progress
@@ -210,6 +217,16 @@ class Tuner:
         if self.fmax > 15000:
             self.fmax = 15000
         print("Max frequency displayed: {0:1.0f} Hz".format(self.fmax))
+
+    def on_activate_noise_up(self):
+        # increase noise level by 10%
+        self.noise_level *= 1.1
+        print("Noise level increased to {0:1.1f}".format(self.noise_level))
+
+    def on_activate_noise_down(self):
+        # decrease noise level by 9.09%
+        self.noise_level /= 1.1
+        print("Noise level decreased to {0:1.1f}".format(self.noise_level))
 
     @mytimer("peak finding")
     def find(self, f_measured):
@@ -315,7 +332,8 @@ class Tuner:
                 t1, yfft = fft(amp=sl)
                 # call peakfinding
                 peaks = peak(frequency=t1,
-                             spectrum=yfft)
+                             spectrum=yfft,
+                             noise_level=self.noise_level)
                 peaklist = list(map(itemgetter(0), peaks))
                 # call harmonics
                 if peaks is not None:
@@ -344,29 +362,48 @@ class Tuner:
 
 
 def main():
+
+    def input_pitch():
+        pitch = float(input("A4 pitch frequency [Hz]?: "))
+        assert 392 < pitch < 494
+        return pitch
+
     for tune in tuningtable.keys():
         print("Temperament ({1:d}) {0:s}".format(tune,
                                                  list(tuningtable).index(tune)))
-    a = Tuner(
-        tuning=list(tuningtable.keys())[int(input("Temperament [no]?: "))],
-        a1=float(input("A4 pitch frequency [Hz]?: "))
-    )
+    a = None
+    while a is None:
+        try:
+            a = Tuner(
+                tuning=list(tuningtable.keys())[int(
+                    input("Temperament [no.]?: "))],
+                a1=input_pitch()
+            )
+        except (IndexError, ValueError):
+            print("Error: Chosen number not in list of provided temperaments")
+            pass
+        except AssertionError:
+            print("Error: A4 pitch in the range from 392 to 494 Hz")
+            pass
+        except KeyboardInterrupt:
+            return 1
 
     h = keyboard.GlobalHotKeys({
         '<ctrl>+y': a.on_activate_y,  # exit
         '<ctrl>+w': a.on_activate_y,  # exit
         '<ctrl>+x': a.on_activate_x,  # toggle halt/resume
-        '<ctrl>+j': a.on_activate_j,  # decrease slices shift
-        '<ctrl>+k': a.on_activate_k,  # increase slices shift
+        '<ctrl>+j': a.on_activate_j,  # decrease slice shift
+        '<ctrl>+k': a.on_activate_k,  # increase slice shift
         '<ctrl>+r': a.on_activate_r,  # reset parameter to initial values
         '<ctrl>+m': a.on_activate_m,  # increase max freq
         '<ctrl>+n': a.on_activate_n,  # decrease max freq
         '<alt>+m': a.on_activate_ma,  # increase min freq
-        '<alt>+n': a.on_activate_na  # decrease min freq
+        '<alt>+n': a.on_activate_na,  # decrease min freq
+        '<ctrl>+<alt>+1': a.on_activate_noise_down,  # decrease noise level
+        '<ctrl>+<alt>+2': a.on_activate_noise_up  # increase noise level
     })
     h.start()
-
     a.animate()
-    plt.close('all')
 
+    plt.close('all')
     return 0

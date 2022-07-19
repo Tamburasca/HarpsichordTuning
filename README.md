@@ -26,7 +26,7 @@ frequency domain, Butterworth high-pass filtering is applied to suppress noise
 at the bottom side, before fundamental and overtone frequencies are sought.
 In order to achieve the highest accuracy in their positions, we fit a 
 parabola - by three-node interpolation - to the
-logarithm of the Gaussian in the Fourier space, for the
+logarithm of the Gaussian in Fourier space, for the
 strongest NMAX peaks found. The parabola centroids are utilized to derive 
 the frequency f<sub>0</sub> and the inharmonicity factor B.
 
