@@ -4,7 +4,7 @@ auxiliary functions
 
 from timeit import default_timer
 from functools import wraps
-from numpy import sqrt, array
+from numpy import sqrt, array, sign
 from numdifftools import Jacobian, Hessian
 import logging
 
@@ -64,7 +64,7 @@ class L1(object):
         freq = list()
         x0 = list(x0)  # x0 comes as ndarray if invoked from the scipy minimizer
         self.jacobi = array([0., 0.])
-        
+
         for i in range(1, 640):
             f = i * x0[0] * sqrt(1. + x0[1] * i * i)
             freq.append(f)
@@ -81,13 +81,13 @@ class L1(object):
                 l1 += abs(diff)  # <min frequency
                 if jac:
                     self.jacobi += \
-                        self.__derivative(x0=x0, i=idx) * diff / abs(diff)
+                        self.__derivative(x0=x0, i=idx) * sign(diff)
             elif idx == num_freq:
                 diff = found - freq[num_freq - 1]
                 l1 += abs(diff)  # >max frequency
                 if jac:
                     self.jacobi += \
-                        self.__derivative(x0=x0, i=idx) * diff / abs(diff)
+                        self.__derivative(x0=x0, i=idx) * sign(diff)
             else:
                 # consider the closest candidate of neighbors
                 l1 += min(abs(found - freq[idx]), abs(found - freq[idx + 1]))
@@ -95,12 +95,12 @@ class L1(object):
                     if abs(found - freq[idx]) < abs(found - freq[idx + 1]):
                         diff = found - freq[idx]
                         self.jacobi += \
-                            self.__derivative(x0=x0, i=idx) * diff / abs(diff)
+                            self.__derivative(x0=x0, i=idx) * sign(diff)
                     else:
                         diff = found - freq[idx + 1]
                         self.jacobi += \
-                            self.__derivative(x0=x0, i=idx+1) * diff / abs(diff)
-                        
+                            self.__derivative(x0=x0, i=idx + 1) * sign(diff)
+
         if self.l1_first is None:
             self.l1_first = l1
         self.l1_last = l1

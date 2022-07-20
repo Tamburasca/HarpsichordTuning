@@ -21,13 +21,15 @@ p = pyaudio.PyAudio()
 f0 = f1 / np.sqrt(1. + inharmonicity)
 alls = list()
 
+l = []
 for partial in range(1, partials + 1):
     f = f0 * partial * np.sqrt(1. + inharmonicity * partial ** 2)
-    print(f, (np.sqrt(1. + inharmonicity * partial ** 2) - 1.) / partial)
+    l.append(f)
     alls.append(
         # reduce volume of higher partials
         (np.cos(2. * np.pi * np.arange(fs * duration) * f / fs)) / partial**2
     )
+print(l)
 fade = np.exp(-np.arange(fs * duration) * 1. / fs)
 samples = np.sum(alls, axis=0) * fade
 max_volume = np.max(samples)
