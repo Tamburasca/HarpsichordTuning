@@ -64,11 +64,10 @@ class L1(object):
         freq = list()
         x0 = list(x0)  # x0 comes as ndarray if invoked from the scipy minimizer
         self.jacobi = array([0., 0.])
+        
         for i in range(1, 640):
             f = i * x0[0] * sqrt(1. + x0[1] * i * i)
             freq.append(f)
-            if jac:
-                self.jacobi += self.derivative(x0=x0, i=i)
             if f > self.fmax:
                 break  # exit if superseded max. frequency measured to save time
         num_freq = len(freq)
@@ -78,12 +77,30 @@ class L1(object):
             idx = bisection(freq, found)
             # L1 norm
             if idx == -1:
-                l1 += abs(found - freq[0])  # <min frequency
+                diff = found - freq[0]
+                l1 += abs(diff)  # <min frequency
+                if jac:
+                    self.jacobi += \
+                        self.__derivative(x0=x0, i=idx) * diff / abs(diff)
             elif idx == num_freq:
-                l1 += abs(found - freq[num_freq - 1])  # >max frequency
+                diff = found - freq[num_freq - 1]
+                l1 += abs(diff)  # >max frequency
+                if jac:
+                    self.jacobi += \
+                        self.__derivative(x0=x0, i=idx) * diff / abs(diff)
             else:
                 # consider the closest candidate of neighbors
                 l1 += min(abs(found - freq[idx]), abs(found - freq[idx + 1]))
+                if jac:
+                    if abs(found - freq[idx]) < abs(found - freq[idx + 1]):
+                        diff = found - freq[idx]
+                        self.jacobi += \
+                            self.__derivative(x0=x0, i=idx) * diff / abs(diff)
+                    else:
+                        diff = found - freq[idx + 1]
+                        self.jacobi += \
+                            self.__derivative(x0=x0, i=idx+1) * diff / abs(diff)
+                        
         if self.l1_first is None:
             self.l1_first = l1
         self.l1_last = l1
@@ -104,7 +121,7 @@ class L1(object):
         return self.l1_last < self.l1_first
 
     @staticmethod
-    def derivative(x0, i):
+    def __derivative(x0, i):
         if x0[1] < 0.:
             x0[1] = 0.
         deriv_f0 = i * sqrt(1. + x0[1] * i * i)

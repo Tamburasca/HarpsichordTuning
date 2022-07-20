@@ -1,8 +1,8 @@
-from numpy import sqrt, append, mean, array, asarray, random
+from numpy import sqrt, append, mean, array
 from math import gcd
 import logging
 from operator import itemgetter
-from scipy.optimize import brute, fmin
+from scipy.optimize import brute, fmin, minimize
 
 from Tuning.FFTaux import mytimer, L1
 from Tuning import parameters as P
@@ -11,8 +11,9 @@ from Tuning import parameters as P
 note: these little auxiliary tools work with various minimizers. They
 are disabled until needed:
 
+
 def bounds(f0, b):
-    return (.995 * f0, 1.005 * f0), (max(0, .1 * b), min(10 * b, P.INHARM))
+    return (.996 * f0, 1.004 * f0), (max(0, .1 * b), min(2. * b, P.INHARM))
 
 
 def constraints(f0, b):
@@ -56,9 +57,15 @@ class MyTakeStep:
 
 
 def myslice(x0):
-    # ToDo slice dimensions
-    return slice(0.998 * x0[0], 1.003 * x0[0], 0.001 * x0[0]), \
-           slice(0.8 * x0[1], 1.2 * x0[1], 0.1 * x0[1])
+    f0 = x0[0]
+    b = max(0., x0[1])
+    return slice(0.996 * f0,
+                 1.0041 * f0,
+                 0.002 * f0), slice(0.1 * b,
+                                    min(2.11 * b, P.INHARM),
+                                    0.5 * b) if b != 0 else slice(0.,
+                                                                  P.INHARM / 10.,
+                                                                  P.INHARM / 50.)
 
 
 @mytimer("L1 Minimization")
@@ -81,24 +88,30 @@ def final_fit(av, ind):
     l1_min.l1_minimum(guess)
     try:
         '''
-        res = minimize(fun=l1_min.l1_minimum,
+        res = minimize(fun=l1_min.l1_minimum_der,
                        x0=guess,
                        bounds=bounds(f0=av[5], b=av[4]),
                        # constraints=constraints(f0=av[5], b=av[4]),
-                       method='Nelder-Mead',  # ToDo. find a better one
-                       options={'return_all': False}
-                       # jac=True
+                       method='BFGS',
+                       options={'return_all': False},
+                       jac=True
                        # jac=l1_min.l1_minimum_jac,
                        # hess=l1_min.l1_minimum_hess
                        )
         '''
-        if av[4] == 0:
+        if av[4] <= 0:
             return av[5], av[4]
+        logging.debug("Brute force grids: f0={0}, B={1}".format(
+            myslice(guess)[0],
+            myslice(guess)[1])
+        )
         # do NOT use workers, muliprocessing's oeverhead slows it down
         res = brute(func=l1_min.l1_minimum,
                     ranges=myslice(guess),
                     finish=fmin,
-                    full_output=True)
+                    full_output=True,
+                    )  # workers=4)
+
         msg = "Minimizer: Success: {0} L1 initial value: {1}, last value: {2}"
         "fit result: base freq. = {3:.4f} Hz, B = {4:.3e}"
         if res[1] <= l1_min.l1_first:
