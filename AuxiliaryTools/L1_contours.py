@@ -148,13 +148,16 @@ l1_min = L1(founds)
 initial = [205.006, 4.121e-05]
 final = [205.111, 1.347e-05]
 # define grid
-x = np.arange(0.998*initial[0],
-              1.002*initial[0],
-              .0025)
-y = np.arange(
-    -5.5,
-    -4.5,
-    .00125)
+# lower, upper limit f0
+xm_l, xm_u = 0.998, 1.002
+x = initial[0] * np.arange(xm_l,
+                           xm_u,
+                           (xm_u - xm_l) / 500.)
+# lower, upper limit B
+ym_l, ym_u = -5.5, -4.5
+y = np.arange(ym_l,
+              ym_u,
+              (ym_u - ym_l) / 500.)
 xgrid, ygrid = np.meshgrid(x, y)
 xy = np.stack([xgrid, ygrid])
 
