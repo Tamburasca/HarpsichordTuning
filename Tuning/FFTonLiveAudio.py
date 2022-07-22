@@ -93,13 +93,18 @@ from Tuning import parameters as P
     * Noise level can be adjusted through global hot keys
     * L1 minimization called only if more than 2 measured peaks
     * catching if erroneous input from the keyboard
+2022/07/2 - Ralf A. Timmermann
+- version 3.1.2 (productive)
+    * error correction: Jacobian sign of derivative toggled
+    * L1_contours.py added to demonstrate L1 cost function and its Jacobian (
+    not needed with brute force) 
 """
 
 __author__ = "Dr. Ralf Antonius Timmermann"
 __copyright__ = "Copyright (C) Dr. Ralf Antonius Timmermann"
 __credits__ = ""
 __license__ = "GPLv3"
-__version__ = "3.1.1"
+__version__ = "3.1.2"
 __maintainer__ = "Dr. Ralf A. Timmermann"
 __email__ = "rtimmermann@astro.uni-bonn.de"
 __status__ = "Prod"

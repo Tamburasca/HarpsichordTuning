@@ -81,13 +81,13 @@ class L1(object):
                 l1 += abs(diff)  # <min frequency
                 if jac:
                     self.jacobi += \
-                        self.__derivative(x0=x0, i=idx) * sign(diff)
+                        self.__derivative(x0=x0, i=idx) * sign(-diff)
             elif idx == num_freq:
                 diff = found - freq[num_freq - 1]
                 l1 += abs(diff)  # >max frequency
                 if jac:
                     self.jacobi += \
-                        self.__derivative(x0=x0, i=idx) * sign(diff)
+                        self.__derivative(x0=x0, i=idx) * sign(-diff)
             else:
                 # consider the closest candidate of neighbors
                 l1 += min(abs(found - freq[idx]), abs(found - freq[idx + 1]))
@@ -95,11 +95,11 @@ class L1(object):
                     if abs(found - freq[idx]) < abs(found - freq[idx + 1]):
                         diff = found - freq[idx]
                         self.jacobi += \
-                            self.__derivative(x0=x0, i=idx) * sign(diff)
+                            self.__derivative(x0=x0, i=idx) * sign(-diff)
                     else:
                         diff = found - freq[idx + 1]
                         self.jacobi += \
-                            self.__derivative(x0=x0, i=idx + 1) * sign(diff)
+                            self.__derivative(x0=x0, i=idx + 1) * sign(-diff)
 
         if self.l1_first is None:
             self.l1_first = l1

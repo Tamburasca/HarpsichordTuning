@@ -233,6 +233,9 @@ def harmonics(peaks):
         if base_frequency > P.FREQUENCY_LIMIT:
             if no_of_peak_combi > 1 and P.FINAL_FIT:
                 base_frequency, inharmonicity = final_fit(av, ind)
+                logging.debug("Initial: f_0 = {0:.3f} Hz, B = {1:.3e} "
+                              "Final: f_0 = {2:.3f} Hz, B = {3:.3e}".format(
+                    av[5], av[4], base_frequency, inharmonicity))
             for n in range(1, P.NPARTIAL):
                 f_n = append(f_n,
                              base_frequency * n * sqrt(
