@@ -93,11 +93,15 @@ from Tuning import parameters as P
     * Noise level can be adjusted through global hot keys
     * L1 minimization called only if more than 2 measured peaks
     * catching if erroneous input from the keyboard
-2022/07/2 - Ralf A. Timmermann
+2022/07/20 - Ralf A. Timmermann
 - version 3.1.2 (productive)
     * error correction: Jacobian sign of derivative toggled
     * L1_contours.py added to demonstrate L1 cost function and its Jacobian (
     not needed with brute force) 
+2022/07/26 - Ralf A. Timmermann
+- version 3.1.3 (productive)
+    * slice for inharmonicity factor b is on log10 scale for equidistant grids
+    for brute force minimizer
 """
 
 __author__ = "Dr. Ralf Antonius Timmermann"

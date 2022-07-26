@@ -1,15 +1,16 @@
-from numpy import sqrt, append, mean, array
+from numpy import sqrt, append, mean, array, log10
 from math import gcd
 import logging
 from operator import itemgetter
-from scipy.optimize import brute, fmin, minimize
+from scipy.optimize import brute, fmin
 
-from Tuning.FFTaux import mytimer, L1
+from Tuning.FFTaux import mytimer
+from Tuning.FFT_L1minimizer import L1
 from Tuning import parameters as P
 
 """
 note: these little auxiliary tools work with various minimizers. They
-are disabled until needed:
+are disabled until needed and subject to being modified accordingly.
 
 
 def bounds(f0, b):
@@ -63,9 +64,18 @@ def myslice(x0):
                  1.0041 * f0,
                  0.002 * f0), slice(0.1 * b,
                                     min(2.11 * b, P.INHARM),
-                                    0.5 * b) if b != 0 else slice(0.,
-                                                                  P.INHARM / 10.,
-                                                                  P.INHARM / 50.)
+                                    0.5 * b)
+
+
+def myslicelog(x0):
+    f0 = x0[0]
+    b = max(1.e-6, x0[1])
+    return slice(0.997 * f0,
+                 1.0031 * f0,
+                 0.002 * f0), \
+           slice(log10(b) - 1.0,
+                 min(log10(b) + .51, log10(P.INHARM)),
+                 0.25)
 
 
 @mytimer("L1 Minimization")
@@ -74,7 +84,10 @@ def final_fit(av, ind):
     fits the base frequency, inharmonicity by minimizing the L1 cost function
     as the deviation from the measured resonance frequencies to the
     calculated frequencies f = i * res.x0[0] * sqrt(1. + res.x0[1] * i**2),
-    where i is the partial
+    where i is the partial.
+    We note that the minimizing of the L1 norm is achieved by converting the
+    inharmonicity b into its log10 before being called, such that the grid
+    for the brute force minimizer is equidistant in log space.
     :param av: array - [lower, upper partials, lower, upper frequencies,
     inharmonicity, and base frequency]
     :param ind: array - measured resonance frequencies as from FFT
@@ -83,9 +96,11 @@ def final_fit(av, ind):
     note:
     https://stackoverflow.com/questions/41137092/jacobian-and-hessian-inputs-in-scipy-optimize-minimize
     """
-    guess = [av[5], av[4]]
+    if av[4] <= 0:
+        return av[5], av[4]
+    guess = [av[5], log10(av[4])]
     l1_min = L1(ind)
-    l1_min.l1_minimum(guess)
+    l1_min.l1_minimum_log_b(guess)
     try:
         '''
         res = minimize(fun=l1_min.l1_minimum_der,
@@ -99,18 +114,16 @@ def final_fit(av, ind):
                        # hess=l1_min.l1_minimum_hess
                        )
         '''
-        if av[4] <= 0:
-            return av[5], av[4]
         logging.debug("Brute force grids: f0={0}, B={1}".format(
-            myslice(guess)[0],
-            myslice(guess)[1])
+            myslicelog(guess)[0],
+            myslicelog(guess)[1])
         )
-        # do NOT use workers, muliprocessing's oeverhead slows it down
-        res = brute(func=l1_min.l1_minimum,
-                    ranges=myslice(guess),
+        # do NOT use workers, muliprocessing's overhead slows it down
+        res = brute(func=l1_min.l1_minimum_log_b,
+                    ranges=myslicelog(guess),
                     finish=fmin,
                     full_output=True,
-                    )  # workers=4)
+                    )
 
         msg = "Minimizer: Success: {0} L1 initial value: {1}, last value: {2}"
         "fit result: base freq. = {3:.4f} Hz, B = {4:.3e}"
@@ -118,15 +131,15 @@ def final_fit(av, ind):
             logging.debug(msg.format(
                     True,
                     l1_min.l1_first, res[1],
-                    res[0][0], res[0][1]))
-            return res[0][0], res[0][1]
+                    res[0][0], 10**res[0][1]))
+            return res[0][0], 10**res[0][1]
         else:
             # if L1 min final is worse than that with its initial values,
             # resume with the unchanged values
             logging.warning(msg.format(
                     False,
                     l1_min.l1_first, res[1],
-                    res[0][0], res[0][1]))
+                    res[0][0], 10**res[0][1]))
             return av[5], av[4]
     except Exception as e:
         logging.warning(str(e))
@@ -233,9 +246,11 @@ def harmonics(peaks):
         if base_frequency > P.FREQUENCY_LIMIT:
             if no_of_peak_combi > 1 and P.FINAL_FIT:
                 base_frequency, inharmonicity = final_fit(av, ind)
-                logging.debug("Initial: f_0 = {0:.3f} Hz, B = {1:.3e} "
-                              "Final: f_0 = {2:.3f} Hz, B = {3:.3e}".format(
-                    av[5], av[4], base_frequency, inharmonicity))
+                logging.debug(
+                    "Initial: f_0 = {0:.3f} Hz, B = {1:.3e} "
+                    "Final: f_0 = {2:.3f} Hz, B = {3:.3e}".format(
+                        av[5], av[4], base_frequency, inharmonicity)
+                )
             for n in range(1, P.NPARTIAL):
                 f_n = append(f_n,
                              base_frequency * n * sqrt(

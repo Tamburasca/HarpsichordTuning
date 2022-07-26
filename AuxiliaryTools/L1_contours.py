@@ -128,33 +128,40 @@ class L1(object):
         return np.array([deriv_f0, deriv_b])
 
 
+path = np.array([
+[2.04520669e+02, 1.85577549e-05],
+[2.04535895e+02, 2.14097715e-05],
+[2.04529211e+02, 1.99643410e-05],
+[2.04530458e+02, 2.00524107e-05],
+[2.04530490e+02, 2.00546686e-05],
+[2.04530490e+02, 2.00546701e-05]
+])
+
 
 # exact to b=.0001
 # founds = [415.0, 830.124478217012, 1245.4978506647046, 1661.2444090805334,
 #          2077.488259113232, 2494.353258899385, 2911.9629581560675,
 #          3330.4405379142177, 3749.908751014604, 4170.489863484847]
 
-founds = [410.04215516269574, 615.0121045459148, 820.5319323791974,
-          1025.8776214323211, 1641.5581842569156, 1847.2528326482418,
-          2052.875537825593, 2258.691350329363, 2463.506321941871,
-          2875.1564428260713, 3082.953419636512, 3288.791207301226,
-          3493.3723146015595, 4941.389842345284, 6190.50897725149,
-          6400.746636886079]
+founds = [615.0481409893521, 820.4512091738674, 1026.879427654998, 1641.78215659094, 1847.596855260639,
+          2053.4431551396756, 2258.9758514365844, 2464.1865632659956, 3082.7108975077795, 3289.2409443619063,
+          3493.6331557151525, 3701.4304308332466, 4940.0492268193475, 6191.0412565196, 6400.224082812946,
+          6608.724981547117]
 
 # founds = [400., 802., 1204., 1607., 2011.]
 
 l1_min = L1(founds)
 
-initial = [205.006, 4.121e-05]
-final = [205.111, 1.347e-05]
+initial = [204.931, 9.279e-05, 313.037490708979]
+final = [204.530, 2.005e-05, 74.05086539913816]
 # define grid
 # lower, upper limit f0
-xm_l, xm_u = 0.998, 1.002
+xm_l, xm_u = 0.997, 1.002
 x = initial[0] * np.arange(xm_l,
                            xm_u,
                            (xm_u - xm_l) / 500.)
 # lower, upper limit B
-ym_l, ym_u = -5.5, -4.5
+ym_l, ym_u = -5.3, -4.0
 y = np.arange(ym_l,
               ym_u,
               (ym_u - ym_l) / 500.)
@@ -191,6 +198,7 @@ plt.xlabel("f0/Hz")
 plt.ylabel("B (log)")
 plt.scatter(initial[0], np.log10(initial[1]), label="initial")
 plt.scatter(final[0], np.log10(final[1]), label="final")
+plt.scatter(path.T[0], np.log10(path.T[1]), label="path")
 plt.legend()
 
 fig = plt.figure(2)
@@ -201,6 +209,7 @@ plt.xlabel("f0/Hz")
 plt.ylabel("B (log)")
 plt.scatter(initial[0], np.log10(initial[1]), label="initial")
 plt.scatter(final[0], np.log10(final[1]), label="final")
+plt.scatter(path.T[0], np.log10(path.T[1]), label="path")
 plt.legend()
 
 fig = plt.figure(3)
@@ -211,6 +220,7 @@ plt.xlabel("f0/Hz")
 plt.ylabel("B (log)")
 plt.scatter(initial[0], np.log10(initial[1]), label="initial")
 plt.scatter(final[0], np.log10(final[1]), label="final")
+plt.scatter(path.T[0], np.log10(path.T[1]), label="path")
 plt.legend()
 
 plt.show()

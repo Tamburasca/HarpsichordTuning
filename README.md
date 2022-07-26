@@ -67,7 +67,8 @@ harpsichords and pianos, respectively. Finally, an artificial spectrum
 is calculated from f<sub>0</sub> and B and compared to the measured 
 spectrum by minimizating the L1-norm of the coefficient vector. For the moment
 I employ the module [scipy.optimize.brute](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.brute.html),
-it'll catch the minimum, darn sure.
+it'll catch the minimum, darn sure. The L-BFGS-B minimizer is equally fast, but
+doesn't converge sometime owing to local minima.
 
 ### Features
 
