@@ -123,8 +123,8 @@ its frequency is anticipated to be more precise.
 This is achieved through comparparing the measuremed spectrum which that 
 calculated from f<sub>0</sub> and B by minimizing the L1-norm, such as in 
 Compressed Sensing. In a preliminary test with about 40 measurements
-the max. relative frequency error turned out to be 
-+/-0.014% and +/-0.7% on B @415Hz. Thus, stay tuned ...
+the max. relative frequency error turned out to be around
+1.4 * 10<sup>-4</sup> and 7 * 10<sup>-3</sup> on B @415Hz.
 
 ### References
 
