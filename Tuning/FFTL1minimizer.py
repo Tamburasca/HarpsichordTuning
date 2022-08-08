@@ -2,11 +2,13 @@
 minimizer for L1 norm
 """
 
-from numpy import sqrt, array, sign, log10
+from __future__ import annotations
+from numpy import sqrt, array, sign, ndarray
 from numdifftools import Jacobian, Hessian
+from typing import List, Tuple
 
 
-def bisection(vector, value):
+def bisection(vector: List, value: float) -> int:
     """
     For <vector> and <value>, returns an index j such that <value> is between
     vector[j] and vector[j+1]. Values in <vector> must increase
@@ -39,7 +41,7 @@ def bisection(vector, value):
 
 
 class L1(object):
-    def __init__(self, ind):
+    def __init__(self, ind: List):
         """
         :param ind: array - measured resonance frequencies as from peaks (FFT)
         """
@@ -49,7 +51,7 @@ class L1(object):
         self.l1_last = None
         self.jacobi = array([0., 0.])
 
-    def l1_minimum(self, x0, jac: bool = False):
+    def l1_minimum(self, x0: List, jac: bool = False) -> float:
         """
         returns the cost function for a regression on the L1 norm
         l1 = sum( abs(f_i(measured) - f_i(calculated) ) )
@@ -104,22 +106,22 @@ class L1(object):
 
         return l1
 
-    def l1_minimum_log_b(self, x0, jac: bool = False):
-        # b is coming in on log10 scale
+    def l1_minimum_log_b(self, x0: List, jac: bool = False) -> float:
+        # b is coming in as log10(b)
         x0[1] = 10 ** x0[1]
         return self.l1_minimum(x0, jac)
 
-    def l1_minimum_jac(self, x0):
+    def l1_minimum_jac(self, x0: List) -> ndarray:
         return Jacobian(lambda x0: self.l1_minimum(x0))(x0).ravel()
 
-    def l1_minimum_jac_direct(self, x0):
+    def l1_minimum_jac_direct(self, x0: List) -> ndarray:
         self.l1_minimum(x0, jac=True)
         return self.jacobi
 
-    def l1_minimum_hess(self, x0):
+    def l1_minimum_hess(self, x0: List) -> ndarray:
         return Hessian(lambda x0: self.l1_minimum(x0))(x0)
 
-    def l1_minimum_der(self, x0):
+    def l1_minimum_der(self, x0: List) -> Tuple[float, ndarray]:
         return self.l1_minimum(x0, jac=True), self.jacobi
 
     def compare_l1(self) -> bool:
@@ -129,6 +131,7 @@ class L1(object):
     def __derivative(x0, i):
         if x0[1] < 0.:
             x0[1] = 0.
-        deriv_f0 = i * sqrt(1. + x0[1] * i * i)
-        deriv_b = 0.5 * i ** 3 * x0[0] / sqrt(1. + x0[1] * i * i)
+        tmp = sqrt(1. + x0[1] * i * i)
+        deriv_f0 = i * tmp
+        deriv_b = 0.5 * i ** 3 * x0[0] / tmp
         return array([deriv_f0, deriv_b])

@@ -67,7 +67,7 @@ FREQUENCY_WIDTH_MIN: int = 500
 FREQUENCY_STEP: int = 500
 
 """debug flag"""
-DEBUG: bool = False
+DEBUG: bool = True
 
 """Final fit through brute force minimizer can be toggled off"""
 FINAL_FIT: bool = True

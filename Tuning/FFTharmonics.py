@@ -1,15 +1,18 @@
-from numpy import sqrt, append, mean, array, log10
+from numpy import sqrt, append, mean, array, log10, ndarray
 from math import gcd
 import logging
 from operator import itemgetter
 from scipy.optimize import brute, fmin
-
+from typing import List, Tuple, TypeVar, Sequence
+# internal
 from Tuning.FFTaux import mytimer
-from Tuning.FFT_L1minimizer import L1
+from Tuning.FFTL1minimizer import L1
 from Tuning import parameters as P
 
+_T = TypeVar('_T', bound=Sequence)
+
 """
-note: these little auxiliary tools work with various minimizers. They
+note: these little auxiliary tools go with various minimizers. They
 are disabled until needed and subject to being modified accordingly.
 
 
@@ -57,7 +60,7 @@ class MyTakeStep:
 """
 
 
-def myslice(x0):
+def myslice(x0: List) -> Tuple[_T, _T]:
     f0 = x0[0]
     b = max(0., x0[1])
     return slice(0.996 * f0,
@@ -67,7 +70,7 @@ def myslice(x0):
                                     0.5 * b)
 
 
-def myslicelog(x0):
+def myslicelog(x0: List) -> Tuple[_T, _T]:
     f0 = x0[0]
     b = max(1.e-6, x0[1])
     return slice(0.997 * f0,
@@ -79,7 +82,7 @@ def myslicelog(x0):
 
 
 @mytimer("L1 Minimization")
-def final_fit(av, ind):
+def final_fit(av: ndarray, ind: List) -> Tuple[float, float]:
     """
     fits the base frequency, inharmonicity by minimizing the L1 cost function
     as the deviation from the measured resonance frequencies to the
@@ -147,7 +150,7 @@ def final_fit(av, ind):
 
 
 @mytimer("harmonics (subtract time for L1 minimization, if called)")
-def harmonics(peaks):
+def harmonics(peaks: List[Tuple]) -> List:
     """
     finds harmonics between each two frequencies by applying the inharmonicity
     formula by a neested loop through all the peaks

@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="Tuning",
-    version="2.3",
+    version="3.2",
     author="Ralf Antonius Timmermann",
     author_email="rtimmermann@astro.uni-bonn.de",
     description="Harpsichord/Piano Tuning",
@@ -18,11 +18,12 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    python_requires='>=3.8',
-    install_requires=['pynput       >=1.7.1',
+    python_requires='=3.9',
+    install_requires=['pynput       >=1.7.3',
                       'PyAudio      >=0.2.11',
-                      'numpy        >=1.23.1',
+                      'numpy        >=1.22.3',
                       'scipy        >=1.7.3',
                       'matplotlib   >=3.5.1',
-                      'scikit-image >=0.19.2'],
+                      'scikit-image >=0.19.2',
+                      'numdifftools >=0.9.39'],
 )

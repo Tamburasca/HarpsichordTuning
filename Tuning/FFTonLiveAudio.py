@@ -30,7 +30,7 @@ certain conditions.
 """
 
 import pyaudio
-from numpy import frombuffer, int16, hstack, log2
+from numpy import frombuffer, int16, hstack, log2, ndarray
 import matplotlib.pyplot as plt
 from skimage import util
 from time import sleep
@@ -38,7 +38,8 @@ from pynput import keyboard
 from operator import itemgetter
 from multiprocessing import Queue
 import logging
-
+from typing import Tuple
+# internal
 from Tuning.tuningTable import tuningtable
 from Tuning.FFTroutines import fft
 from Tuning.FFTpeaks import peak
@@ -100,15 +101,19 @@ from Tuning import parameters as P
     not needed with brute force) 
 2022/07/26 - Ralf A. Timmermann
 - version 3.1.3 (productive)
-    * slice for inharmonicity factor b is on log10 scale for equidistant grids
+    * slice of inharmonicity factor b is on log10 scale for equidistant grids
     for brute force minimizer
+2022/08/07 - Ralf A. Timmermann
+- version 3.2 (productive)
+    * updated for Python v3.9
+    * typing
 """
 
 __author__ = "Dr. Ralf Antonius Timmermann"
 __copyright__ = "Copyright (C) Dr. Ralf Antonius Timmermann"
 __credits__ = ""
 __license__ = "GPLv3"
-__version__ = "3.1.2"
+__version__ = "3.2"
 __maintainer__ = "Dr. Ralf A. Timmermann"
 __email__ = "rtimmermann@astro.uni-bonn.de"
 __status__ = "Prod"
@@ -148,7 +153,7 @@ class Tuner:
                                  input=True,
                                  stream_callback=self.callback)
 
-    def callback(self, in_data, frame_count, time_info, flag):
+    def callback(self, in_data, frame_count, time_info, flag) -> Tuple[None, int]:
         """
         :param in_data:
         :param frame_count:
@@ -161,19 +166,19 @@ class Tuner:
 
         return None, pyaudio.paContinue
 
-    def on_activate_x(self):
+    def on_activate_x(self) -> None:
         # toggle between suspending the audio stram and freezing the plat and
         # resuming: ON: True, OFF: False
         if self.x:
-            print("resume with 'x' or quit with 'ctrl-y'")
+            print("Resume with 'ctrl-x' or with 'ctrl-y' to quit.")
         self.x = not self.x
 
-    def on_activate_y(self):
+    def on_activate_y(self) -> None:
         # exits the program
         print("quitting...")
         self.rc = 'y'
 
-    def on_activate_r(self):
+    def on_activate_r(self) -> None:
         # reset parameters to initial values
         print("reseting parameters...")
         self.fmin = 0
@@ -181,28 +186,28 @@ class Tuner:
         self.step = P.SLICE_SHIFT
         self.noise_level = P.NOISE_LEVEL
 
-    def on_activate_k(self):
+    def on_activate_k(self) -> None:
         # increases the shift by which the slices progress
         self.step += 1024
         if self.step > P.SLICE_LENGTH:
             self.step = P.SLICE_LENGTH
         print("Slice shift: {0:d} samples".format(self.step))
 
-    def on_activate_j(self):
+    def on_activate_j(self) -> None:
         # decreases the shift by which the slices progress
         self.step -= 1024
         if self.step < 4096:
             self.step = 4096
         print("Slice shift: {0:d} samples".format(self.step))
 
-    def on_activate_na(self):
+    def on_activate_na(self) -> None:
         # decreases the min. frequency plotted
         self.fmin -= P.FREQUENCY_STEP if self.fmin > 1500 else 100
         if self.fmin < 0:
             self.fmin = 0
         print("Min frequency displayed: {0:1.0f} Hz".format(self.fmin))
 
-    def on_activate_ma(self):
+    def on_activate_ma(self) -> None:
         # increases the min. frequency plotted
         self.fmin += P.FREQUENCY_STEP if self.fmin >= 1500 else 100
         if self.fmin > 14500:
@@ -211,7 +216,7 @@ class Tuner:
         if self.fmax - self.fmin < P.FREQUENCY_WIDTH_MIN:
             self.on_activate_m()
 
-    def on_activate_n(self):
+    def on_activate_n(self) -> None:
         # decreases the max. frequency plotted
         self.fmax -= P.FREQUENCY_STEP if self.fmax > 2000 else 100
         if self.fmax < 500:
@@ -220,25 +225,25 @@ class Tuner:
         if self.fmax - self.fmin < P.FREQUENCY_WIDTH_MIN:
             self.on_activate_na()
 
-    def on_activate_m(self):
+    def on_activate_m(self) -> None:
         # increases the max. frequency plotted
         self.fmax += P.FREQUENCY_STEP if self.fmax >= 2000 else 100
         if self.fmax > 15000:
             self.fmax = 15000
         print("Max frequency displayed: {0:1.0f} Hz".format(self.fmax))
 
-    def on_activate_noise_up(self):
+    def on_activate_noise_up(self) -> None:
         # increase noise level by 10%
         self.noise_level *= 1.1
         print("Noise level increased to {0:1.1f}".format(self.noise_level))
 
-    def on_activate_noise_down(self):
+    def on_activate_noise_down(self) -> None:
         # decrease noise level by 9.09%
         self.noise_level /= 1.1
         print("Noise level decreased to {0:1.1f}".format(self.noise_level))
 
     @mytimer("peak finding")
-    def find(self, f_measured):
+    def find(self, f_measured: float) -> Tuple[str, float]:
         """
         finds key and its offset from true key for given a temperament
         :param f_measured: float
@@ -264,10 +269,10 @@ class Tuner:
 
                     return key, displaced
 
-        return '', 0
+        return '', 0.
 
     @mytimer("audio")
-    def slice(self):
+    def slice(self) -> ndarray:
         """
         collects the audio data and arranges it into slices of length
         SLICES_LENGTH shifted by SLICES_SHIFT
@@ -305,7 +310,7 @@ class Tuner:
 
         return slices
 
-    def animate(self):
+    def animate(self) -> str:
         """
         calling routine for audio, FFT, peak and partials and key finding,
         and plotting. Listens for events in plot window
@@ -370,9 +375,9 @@ class Tuner:
         return self.rc
 
 
-def main():
+def main() -> int:
 
-    def input_pitch():
+    def input_pitch() -> float:
         pitch = float(input("A4 pitch frequency [Hz]?: "))
         assert 392 < pitch < 494
         return pitch

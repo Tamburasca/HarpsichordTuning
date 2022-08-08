@@ -1,7 +1,8 @@
-from numpy import hanning, hamming, abs
+from numpy import hanning, hamming, abs, ndarray
 from numpy.fft import rfft, rfftfreq
 from scipy.signal import butter, freqs, windows
-
+from typing import Tuple
+# internal
 from Tuning.FFTaux import mytimer
 from Tuning import parameters as P
 
@@ -15,7 +16,7 @@ t1 = rfftfreq(P.SLICE_LENGTH, 1. / P.RATE)
 
 
 @mytimer
-def fft(amp):
+def fft(amp: ndarray) -> Tuple[ndarray, ndarray]:
     """
     performs FFT on a Hanning apodized time series. High pass filter performed
     on frequency domain.

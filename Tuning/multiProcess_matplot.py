@@ -1,13 +1,16 @@
 from multiprocessing import Process
 import matplotlib.pyplot as plt
 from matplotlib.collections import EventCollection
+from matplotlib.axes import Axes
 from numpy.fft import rfftfreq
-from numpy import ones, array
+from numpy import ones, array, ndarray
 from scipy.sparse.linalg import spsolve
 from scipy import sparse
 from timeit import default_timer
 import logging
-
+from typing import List
+from queue import Queue
+# internal
 from Tuning.FFTaux import mytimer
 from Tuning import parameters as P
 
@@ -41,7 +44,7 @@ def baseline_als_optimized(y, lam, p, niter=10):
 
 
 class MPmatplot(Process):
-    def __init__(self, queue, **kwargs):
+    def __init__(self, queue: Queue, **kwargs):
         super().__init__(daemon=True)
         self.__firstplot = True
         # factor accounts for the Gaussian apodization
@@ -56,7 +59,7 @@ class MPmatplot(Process):
             .format(self.__resolution))
 
     @staticmethod
-    def pie(axes, displaced, key_pressed):
+    def pie(axes: Axes, displaced: float, key_pressed: str) -> None:
         """
         matplotlib subroutine for pie inlet
         """
@@ -96,7 +99,7 @@ class MPmatplot(Process):
         return
 
     @staticmethod
-    def eventcollection(axes, peak_list, f_meas):
+    def eventcollection(axes: Axes, peak_list: List, f_meas: ndarray) -> None:
         """
         vertical bar subroutine
         """
@@ -131,7 +134,7 @@ class MPmatplot(Process):
 
         return
 
-    def run(self):
+    def run(self) -> None:
         """
         Matplotlib commands swapped to a proprietary process. Run in an
         endless loop. Variables (in dict) are passed from animate through a

@@ -1,7 +1,8 @@
-from numpy import abs, average, median, append, array, insert
+from numpy import abs, average, median, append, insert, ndarray
 from scipy.signal import find_peaks
 import logging
-
+from typing import List
+# internal
 from Tuning.multiProcess_opt_gauss import ThreadedOpt
 from Tuning.FFTaux import mytimer
 from Tuning import parameters as P
@@ -26,7 +27,7 @@ class Noise:
 
     Comment: __call__ not utilized, as windows can be used
     """
-    def __init__(self, flux: array):
+    def __init__(self, flux: ndarray):
         i = len(flux)
         self.__flux = abs(2. * flux[2:i - 2] - flux[0:i - 4] - flux[4:i])
         # padding two value to prepend and two to append
@@ -34,17 +35,17 @@ class Noise:
         self.__b = append(self.__b, [self.__flux[-1]]*2)
         self.__l = len(self.__b)
 
-    def __call__(self, value: int, width: int = 50):
+    def __call__(self, value: int, width: int = 50) -> float:
         low = value - width if value - width >= 0 else 0
         high = value + width if value + width < self.__l else self.__l - 1
         return average(self.__b[low:high])
 
-    def total(self):
+    def total(self) -> float:
         return 0.6052697 * median(self.__flux)
 
 
 @mytimer("peak finding (subtract time consumed for Parabola fits)")
-def peak(frequency, spectrum, noise_level):
+def peak(frequency: ndarray, spectrum: ndarray, noise_level: float) -> List[List]:
     """
     find peaks in frequency spectrum
     :param frequency: list
