@@ -83,10 +83,10 @@ class L1(object):
                 # consider the closest candidate of neighbors
                 ids = idx if abs(found - freq[idx]) < abs(found - freq[idx + 1]) else idx + 1
             diff = freq[ids] - found
-            l1 += abs(diff)  # L1 norm
+            l1 += abs(diff) / found  # L1 norm normalized to the frequency, as L1 increases from bass to discant
             if jac:
                 # n-th partial is index + 1
-                self.jacobi += self.__derivative(x0=x0, i=ids + 1) * sign(diff)
+                self.jacobi += self.__derivative(x0=x0, i=ids + 1, trova=found) * sign(diff)
 
         if self.l1_first is None:
             self.l1_first = l1
@@ -116,11 +116,11 @@ class L1(object):
         return self.l1_last < self.l1_first
 
     @staticmethod
-    def __derivative(x0: List, i: int) -> ndarray:
+    def __derivative(x0: List, i: int, trova: float) -> ndarray:
         if x0[1] < 0.:
             x0[1] = 0.
         tmp = sqrt(1. + x0[1] * i * i)
-        deriv_f0 = i * tmp
-        deriv_b = 0.5 * i ** 3 * x0[0] / tmp
+        deriv_f0 = i * tmp / trova
+        deriv_b = 0.5 * i ** 3 * x0[0] / tmp / trova
 
         return array([deriv_f0, deriv_b])
