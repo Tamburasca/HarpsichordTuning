@@ -122,9 +122,8 @@ derived from a combination of all partials measured,
 its frequency is anticipated to be more precise.
 This is achieved through comparparing the measuremed spectrum which that 
 calculated from f<sub>0</sub> and B by minimizing the L1-norm, such as in 
-Compressed Sensing. In a preliminary test with about 40 measurements
-the max. relative frequency error turned out to be around
-1.4 * 10<sup>-4</sup> and 7 * 10<sup>-3</sup> on B @415Hz.
+Compressed Sensing. In a preliminary test the max. relative frequency error
+turned out to be around 1.4 * 10<sup>-4</sup> and 7 * 10<sup>-3</sup> on B @415Hz.
 
 ### References
 
