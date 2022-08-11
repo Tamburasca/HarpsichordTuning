@@ -54,11 +54,14 @@ class L1(object):
     def l1_minimum(self, x0: List, jac: bool = False) -> float:
         """
         returns the cost function for a regression on the L1 norm
-        l1 = sum( abs(f_i(measured) - f_i(calculated) ) )
+        l1 = sum( abs( f_i(measured) - f_i(calculated) ) / f_i(measured) )
         :param x0: array - [f0, b] such that
             f = i * x0[0] * sqrt(1. + x0[1] * i**2)
         :param jac: bool - if jacobi is to be calculated
         :return: float - l1 cost function
+        other property:
+        self.jacobi - ndarray - derivatives of dl1/df_0 and dl1/dB
+
         """
         freq = list()
         x0 = list(x0)  # x0 comes as ndarray if invoked from the scipy minimizer

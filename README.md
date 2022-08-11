@@ -64,13 +64,15 @@ The measured frequencies of the partials are denoted
 The maximum inharmonicity coefficient needs to be adjusted in
 [parameters.py](https://github.com/Tamburasca/HarpsichordTuning/blob/master/Tuning/parameters.py), 
 depending on the instrument to be tuned, B < 0.001 and < 0.05 for 
-harpsichords and pianos, respectively. Finally, an artificial spectrum 
+harpsichords and pianos, respectively. Finally, a synthetic spectrum 
 is calculated from f<sub>0</sub> and B and compared to the measured 
-spectrum by minimizating the L1-norm of the coefficient vector. I employ the module 
+one by minimizating the L1-norm of the coefficient vector, the coefficients being
+<em>abs(f<sub>i</sub><sup>measured</sup> - f<sub>i</sub><sup>calculated</sup>)</em>.
+The L2-norm was tested, but behaved inferior. I employ the module 
 [scipy.optimize.slsqp](https://docs.scipy.org/doc/scipy/reference/optimize.minimize-slsqp.html#optimize-minimize-slsqp),
 designed for least-square minimizations. Although it requires the Jacobian 
-of the L1 - imposing additional CPU-power - it seemed to be the most reliable 
-and fastest, when compared to brute-force or 'L-BFGS-B'.
+of the L1 to be computed as well - imposing additional CPU-power - it seemed to 
+be the most reliable and fastest minimizer, when compared to brute-force or 'L-BFGS-B'.
 
 ### Features
 

@@ -18,13 +18,13 @@ def bounds(x0):
     f0 = x0[0]
     b = max(0., x0[1])
     return (.998 * f0, 1.002 * f0), \
-           (.1 * b, min(2. * b, P.INHARM))
+           (.05 * b, min(3. * b, P.INHARM))
 
 
 @mytimer("L1 Minimization")
 def final_fit(av, ind):
     """
-    fits the base frequency, inharmonicity by minimizing the L1 cost function
+    fits the base frequency and inharmonicity by minimizing the L1 cost function
     as the deviation from the measured resonance frequencies to the
     calculated frequencies f = i * res.x0[0] * sqrt(1. + res.x0[1] * i**2),
     where i is the partial
@@ -40,7 +40,7 @@ def final_fit(av, ind):
         return av[5], av[4]
     guess = [av[5], av[4]]
     l1_min = L1(ind)
-    l1_min.l1_minimum(guess)
+    l1_min.l1_minimum(x0=guess)
     try:
         res = minimize(fun=l1_min.l1_minimum_der,
                        x0=guess,
@@ -152,7 +152,7 @@ def harmonics(peaks):
             for key in l1:
                 for dat in filter(lambda x: x[0] == key, initial):
                     # Add all l1 values to list for same lower partial
-                    l1[key].append(l1_min.l1_minimum([dat[5], dat[4]]))
+                    l1[key].append(l1_min.l1_minimum(x0=[dat[5], dat[4]]))
                 # l1 cost function averaged for equal lower partials
                 l1[key] = mean(l1[key])
             # identify lower partial with minimum l1
@@ -182,7 +182,7 @@ def harmonics(peaks):
         inharmonicity = av[4]
         if base_frequency > P.FREQUENCY_LIMIT:
             if no_of_peak_combi > 1 and P.FINAL_FIT:
-                base_frequency, inharmonicity = final_fit(av, ind)
+                base_frequency, inharmonicity = final_fit(av=av, ind=ind)
                 logging.debug("Initial: f_0 = {0:.3f} Hz, B = {1:.3e} "
                               "Final: f_0 = {2:.3f} Hz, B = {3:.3e}".format(
                                   av[5], av[4], base_frequency, inharmonicity)
