@@ -2,15 +2,16 @@
 
 ### Introduction
 
-An automatic tuning tool for string instruments, such as harpsichords and pianos.
+An automatic tuning tool for string instruments, e.g. harpsichords and pianos.
 
 The current application (exclusively written in Python) 
-collects a mono audio signal from the computer's input stream,
+collects a mono signal from the computer's input audio stream,
 splits it into smaller, overlapping slices, and applies the Fourier transform to
-each (known as short time Fourier transform: STFT). The slices have sizes of
-L = 2<sup>N</sup> samples, where N=15 or 16 (sampling period = 0.74 or 1.49 s,
-respectively), which overlap by multiples of 1024 samples. The sampling frequency
-is f<sub>s</sub> = 44,100 s<sup>-1</sup>
+each. This practice is known as short time Fourier transform, i.e. STFT. 
+The slices overlap by multiples of 1024 samples. They have sizes of
+L = 2<sup>N</sup> samples, where N=15 or 16, resulting in sampling 
+periods = 0.74 or 1.49 s. 
+The sampling frequency is f<sub>s</sub> = 44,100 s<sup>-1</sup>
 
 Each slice is apodized utilizing Gaussian windowing, where L = 
 7<img src="https://render.githubusercontent.com/render/math?math=$\sigma$">, 
@@ -65,10 +66,11 @@ The maximum inharmonicity coefficient needs to be adjusted in
 depending on the instrument to be tuned, B < 0.001 and < 0.05 for 
 harpsichords and pianos, respectively. Finally, an artificial spectrum 
 is calculated from f<sub>0</sub> and B and compared to the measured 
-spectrum by minimizating the L1-norm of the coefficient vector. For the moment
-I employ the module [scipy.optimize.brute](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.brute.html),
-it'll catch the minimum, darn sure. The L-BFGS-B minimizer is equally fast, but
-doesn't converge sometime owing to local minima.
+spectrum by minimizating the L1-norm of the coefficient vector. I employ the module 
+[scipy.optimize.slsqp](https://docs.scipy.org/doc/scipy/reference/optimize.minimize-slsqp.html#optimize-minimize-slsqp),
+designed for least-square minimizations. Although it requires the Jacobian 
+of the L1 - imposing additional CPU-power - it seemed to be the most reliable 
+and fastest, when compared to brute-force or 'L-BFGS-B'.
 
 ### Features
 
@@ -123,10 +125,10 @@ its frequency is anticipated to be more precise.
 This is achieved through comparparing the measuremed spectrum which that 
 calculated from f<sub>0</sub> and B by minimizing the L1-norm, such as in 
 Compressed Sensing. The vector coeficients are normalized to the frequency, 
-since partials in discant would impose a higher weight on the L1-norm 
-than those in bass. In a preliminary test the max. relative error
-turned out to be around 1.4 * 10<sup>-4</sup> and 7 * 10<sup>-3</sup> 
-on the frequency and B @415Hz, respectively.
+because higher partials impose a greater weight on the L1-norm 
+than lower partials. In a preliminary test the max. relative error
+turned out to be around 1.4 * 10<sup>-4</sup> for frequencies and 
+7 * 10<sup>-3</sup> for B @415Hz.
 
 ### References
 

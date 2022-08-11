@@ -43,7 +43,7 @@ from typing import Tuple
 from Tuning.tuningTable import tuningtable
 from Tuning.FFTroutines import fft
 from Tuning.FFTpeaks import peak
-from Tuning.FFTharmonics import harmonics
+from Tuning.FFTharmonics_SLSQP import harmonics
 from Tuning.multiProcess_matplot import MPmatplot
 from Tuning.FFTaux import mytimer
 from Tuning import parameters as P
@@ -107,13 +107,16 @@ from Tuning import parameters as P
 - version 3.2 (productive)
     * updated for Python v3.9
     * typing
+2022/08/07 - Ralf A. Timmermann
+- version 3.2.1 (productive)
+    * SLSQP minimizer
 """
 
 __author__ = "Dr. Ralf Antonius Timmermann"
 __copyright__ = "Copyright (C) Dr. Ralf Antonius Timmermann"
 __credits__ = ""
 __license__ = "GPLv3"
-__version__ = "3.2"
+__version__ = "3.2.1"
 __maintainer__ = "Dr. Ralf A. Timmermann"
 __email__ = "rtimmermann@astro.uni-bonn.de"
 __status__ = "Prod"

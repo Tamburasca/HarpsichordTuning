@@ -99,12 +99,12 @@ class L1(object):
         x0[1] = 10 ** x0[1]
         return self.l1_minimum(x0, jac)
 
-    def l1_minimum_jac(self, x0: List) -> ndarray:
-        return Jacobian(lambda x0: self.l1_minimum(x0))(x0).ravel()
-
     def l1_minimum_jac_direct(self, x0: List) -> ndarray:
         self.l1_minimum(x0, jac=True)
         return self.jacobi
+
+    def l1_minimum_jac(self, x0: List) -> ndarray:
+        return Jacobian(lambda x0: self.l1_minimum(x0))(x0).ravel()
 
     def l1_minimum_hess(self, x0: List) -> ndarray:
         return Hessian(lambda x0: self.l1_minimum(x0))(x0)

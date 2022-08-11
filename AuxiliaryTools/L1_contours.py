@@ -1,4 +1,4 @@
-from numpy import log10, arange, meshgrid, stack, array
+from numpy import log10, arange, meshgrid, stack, array, amin, amax, append
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from Tuning.FFTL1minimizer import L1
@@ -7,21 +7,14 @@ from Tuning.FFTL1minimizer import L1
 theCM = cm.get_cmap()
 
 path = array([
-    [204.7966731750672, 4.2116798259568846e-05],
-    [204.7833563582234, 3.329745185019745e-05],
-    [204.79230324922423, 2.751359512261169e-05],
-    [204.82792659445047, 2.5275328028849077e-05],
-    [205.02883815558795, 1.9116356949792753e-05],
-    [205.06643342802082, 1.796386878877137e-05],
-    [205.11458857956003, 1.332446401156638e-05],
-    [205.12997425235338, 1.286556449919784e-05],
-    [205.1306063681419, 1.2868091174278664e-05],
-    [205.12239889606863, 1.3716253325820311e-05],
-    [205.1213798848879, 1.3827502240565212e-05],
-    [205.12136811465615, 1.3830511300352465e-05],
-    [205.12136829740368, 1.383059865472359e-05],
-    [205.12136830862187, 1.383060401707784e-05],
-    [205.12136830917808, 1.3830604282951004e-05],
+    [204.9396846076, 5.566571113970522e-06],
+    [204.57877379483426, 6.068751157197189e-05],
+    [205.39872879929948, 1.1059358327778177e-05],
+    [205.1497795376707, 5.566571113970522e-06],
+    [204.5787737946469, 2.818660407525172e-05],
+    [204.57877379464693, 3.1696847825089325e-05],
+    [204.5787737946469, 1.9200116232438014e-05],
+    [204.5787737946469, 1.9193803746160753e-05],
 ])
 
 # exact to b=.0001
@@ -37,8 +30,9 @@ founds = [410.0558671479703, 615.417157658387, 820.5295023411812, 1025.944395632
 
 l1_min = L1(founds)
 
-initial = [204.997, 7.521e-05, 99.71984185974736]
-final = [205.121, 1.383e-05, 2.617694814346919]
+initial = [204.989, 5.567e-05, 0.05811943987635964]
+final = [205.114, 1.370e-05, 0.0026543294165680053]
+
 # define grid
 # lower, upper limit f0
 xm_l, xm_u = 0.997, 1.003
@@ -46,7 +40,9 @@ x = final[0] * arange(xm_l,
                       xm_u,
                       (xm_u - xm_l) / 500.)
 # lower, upper limit B
-ym_l, ym_u = -5.0, -3.7
+# ym_l, ym_u = -5.0, -3.7
+ym_u = max(log10(initial[1]), log10(final[1]), log10(amax(path, axis=0))[1]) + .1
+ym_l = min(log10(initial[1]), log10(final[1]), log10(amin(path, axis=0))[1]) - .1
 y = arange(ym_l,
            ym_u,
            (ym_u - ym_l) / 500.)
@@ -81,9 +77,14 @@ plt.clabel(cs, inline=True, fontsize=10)
 plt.title("L1 cost function")
 plt.xlabel("f0/Hz")
 plt.ylabel("B (log)")
-plt.scatter(initial[0], log10(initial[1]), label="initial")
-plt.scatter(final[0], log10(final[1]), label="final")
-plt.scatter(path.T[0], log10(path.T[1]), label="path")
+plt.scatter(initial[0], log10(initial[1]), c='orange', label="initial")
+plt.scatter(final[0], log10(final[1]), c='black', label="final")
+plt.scatter(path.T[0], log10(path.T[1]))
+#plt.plot(path.T[0], log10(path.T[1]))
+plt.plot(
+    append(append(array(initial[0]), path.T[0]), final[0]),
+    append(append(array(log10(initial[1])), log10(path.T[1])), log10(final[1]))
+)
 plt.legend()
 
 fig = plt.figure(2)
@@ -92,9 +93,14 @@ plt.clabel(cs, inline=True, fontsize=10)
 plt.title("L1 cost function - Jacobian derived to f0")
 plt.xlabel("f0/Hz")
 plt.ylabel("B (log)")
-plt.scatter(initial[0], log10(initial[1]), label="initial")
-plt.scatter(final[0], log10(final[1]), label="final")
-plt.scatter(path.T[0], log10(path.T[1]), label="path")
+plt.scatter(initial[0], log10(initial[1]), c='orange', label="initial")
+plt.scatter(final[0], log10(final[1]), c='black', label="final")
+plt.scatter(path.T[0], log10(path.T[1]))
+#plt.plot(path.T[0], log10(path.T[1]))
+plt.plot(
+    append(append(array(initial[0]), path.T[0]), final[0]),
+    append(append(array(log10(initial[1])), log10(path.T[1])), log10(final[1]))
+)
 plt.legend()
 
 fig = plt.figure(3)
@@ -103,9 +109,14 @@ plt.clabel(cs, inline=True, fontsize=10)
 plt.title("L1 cost function - Jacobian derived to B")
 plt.xlabel("f0/Hz")
 plt.ylabel("B (log)")
-plt.scatter(initial[0], log10(initial[1]), label="initial")
-plt.scatter(final[0], log10(final[1]), label="final")
-plt.scatter(path.T[0], log10(path.T[1]), label="path")
+plt.scatter(initial[0], log10(initial[1]), c='orange', label="initial")
+plt.scatter(final[0], log10(final[1]),  c='black', label="final")
+plt.scatter(path.T[0], log10(path.T[1]))
+#plt.plot(path.T[0], log10(path.T[1]))
+plt.plot(
+    append(append(array(initial[0]), path.T[0]), final[0]),
+    append(append(array(log10(initial[1])), log10(path.T[1])), log10(final[1]))
+)
 plt.legend()
 
 plt.show()
