@@ -122,7 +122,7 @@ class L2(object):
     def __derivative(x0: List, i: int, trova: float) -> ndarray:
         if x0[1] < 0.:
             x0[1] = 0.
-        tmp = sqrt(1. + x0[1] * i * i)
+        tmp = sqrt(1. + x0[1] * i ** 2)
         tmp1 = (i * x0[0] * tmp - trova) / trova
         deriv_f0 = 2. * i * tmp * tmp1
         deriv_b = i ** 3 * x0[0] / tmp * tmp1

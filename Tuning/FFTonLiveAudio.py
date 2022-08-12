@@ -248,7 +248,7 @@ class Tuner:
         self.noise_level /= 1.1
         print("Noise level decreased to {0:1.1f}".format(self.noise_level))
 
-    @mytimer("peak finding")
+    @mytimer("key finding & absolute pitch level")
     def find(self, f_measured: float) -> Tuple[str, float]:
         """
         finds key and its offset from true key for given a temperament
