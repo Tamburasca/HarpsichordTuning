@@ -48,8 +48,8 @@ class L2(object):
         """
         :param ind: array - measured resonance frequencies as from peaks (FFT)
         """
-        self.fo = ind
-        self.fmax = max(self.fo)
+        self.__fo = ind
+        self.__fmax = max(self.__fo)
         self.l1_first = None
         self.l1_last = None
         self.jacobi = array([0., 0.])
@@ -69,14 +69,14 @@ class L2(object):
         for i in range(1, 640):
             f = i * x0[0] * sqrt(1. + x0[1] * i * i)
             freq.append(f)
-            if f > self.fmax:
+            if f > self.__fmax:
                 break  # exit if superseded max. frequency measured to save time
 
         num_freq = len(freq)
         l1 = 0.  # l2 cost function
         self.jacobi = array([0., 0.])
         # loop over peaks found
-        for found in self.fo:
+        for found in self.__fo:
             idx = bisection(freq, found)
             if idx == -1:
                 ids = 0  # <min frequency
@@ -86,7 +86,7 @@ class L2(object):
                 # consider the closest candidate of neighbors
                 ids = idx if abs(found - freq[idx]) < abs(found - freq[idx + 1]) else idx + 1
             diff = freq[ids] - found
-            l1 += diff * diff / found # L2 norm normalized to frequency
+            l1 += diff * diff / found  # L2 norm normalized to frequency
             if jac:
                 # n-th partial is index + 1
                 self.jacobi += self.__derivative(x0=x0, i=ids + 1, trova=found)

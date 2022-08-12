@@ -1,28 +1,31 @@
-from numpy import sqrt, append, mean, array
+from numpy import sqrt, append, mean, array, ndarray
 from math import gcd
 import logging
 from operator import itemgetter
 from scipy.optimize import minimize
-
+from typing import List, Tuple, Sequence, Union
+# internal
 from Tuning.FFTaux import mytimer
 from Tuning.FFTL1minimizer import L1
 # from Tuning.FFTL2minimizer import L2
 from Tuning import parameters as P
 
 
-def callback(xk):
+def callback(xk: ndarray) -> bool:
     print("[{},{}],".format(xk[0], xk[1]))
 
+    return False
 
-def bounds(x0):
+
+def bounds(x0: ndarray) -> Sequence:
     f0 = x0[0]
     b = max(0., x0[1])
-    return (.998 * f0, 1.002 * f0), \
-           (.05 * b, min(3. * b, P.INHARM))
+
+    return (.998 * f0, 1.002 * f0), (.05 * b, min(3. * b, P.INHARM))
 
 
 @mytimer("L1 Minimization")
-def final_fit(av, ind):
+def final_fit(av: ndarray, ind: List) -> Tuple[float, float]:
     """
     fits the base frequency and inharmonicity by minimizing the L1 cost function
     as the deviation from the measured resonance frequencies to the
@@ -84,7 +87,7 @@ def final_fit(av, ind):
 
 
 @mytimer("harmonics (subtract time for L1 minimization, if called)")
-def harmonics(peaks):
+def harmonics(peaks: List[Tuple]) -> List:
     """
     finds harmonics between each two frequencies by applying the inharmonicity
     formula by a neested loop through all the peaks
