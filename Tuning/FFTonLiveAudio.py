@@ -110,13 +110,16 @@ from Tuning import parameters as P
 2022/08/07 - Ralf A. Timmermann
 - version 3.2.1 (productive)
     * SLSQP minimizer
+2022/08/12 - Ralf A. Timmermann
+- version 3.2.2 
+    * absoute pitch in pie
 """
 
 __author__ = "Dr. Ralf Antonius Timmermann"
 __copyright__ = "Copyright (C) Dr. Ralf Antonius Timmermann"
 __credits__ = ""
 __license__ = "GPLv3"
-__version__ = "3.2.1"
+__version__ = "3.2.2"
 __maintainer__ = "Dr. Ralf A. Timmermann"
 __email__ = "rtimmermann@astro.uni-bonn.de"
 __status__ = "Prod"
@@ -266,11 +269,10 @@ class Tuner:
                                   .format(str(i),
                                           str(key),
                                           str(value),
-                                          str(displaced +
-                                              tuningtable[self.tuning].get('A')
-                                              - value)))
+                                          str(displaced + tuningtable[self.tuning].get('A') - value)))
+                    key_pressed = "{0}$_{{{1}}}$".format(key, str(i + 4)) # matplotlib formate
 
-                    return key, displaced
+                    return key_pressed, displaced
 
         return '', 0.
 
