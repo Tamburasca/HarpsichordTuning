@@ -52,35 +52,23 @@ def final_fit(av: ndarray, ind: List) -> Tuple[float, float]:
                        jac=True,
                        # callback=callback,
                        options={})
-        # print(res)
-        msg = "Minimizer: Success: {0} L1 initial value: {1}, last value: {2}\n\t" \
-              "number of iterations/evaluation: {3}/{4}"
-        if res.success:
-            if l1_min.l1_first > res.fun:
-                logging.debug(msg.format(
-                        True,
-                        l1_min.l1_first, res.fun,
-                        res.nit, res.nfev))
-                return res.x[0], res.x[1]
-            else:
-                logging.debug(msg.format(
-                        False,
-                        l1_min.l1_first, res.fun,
-                        res.nit, res.nfev))
-                return av[5], av[4]
+
+        def debug_msg(success: bool) -> None:
+            logging.debug("Minimizer: Success: {0} L1 initial value: {1}, last value: {2}\n\t"
+                          "number of iterations/evaluation: {3}/{4}\n\t"
+                          "message: {5}".format(
+                                success,
+                                l1_min.l1_first, res.fun,
+                                res.nit, res.nfev,
+                                res.message))
+
+        if l1_min.l1_first > res.fun:
+            debug_msg(True)
+            return res.x[0], res.x[1]
         else:
-            if l1_min.l1_first > res.fun:
-                logging.warning(msg.format(
-                        True,
-                        l1_min.l1_first, res.fun,
-                        res.nit, res.nfev))
-                return res.x[0], res.x[1]
-            else:
-                logging.warning(msg.format(
-                        False,
-                        l1_min.l1_first, res.fun,
-                        res.nit, res.nfev))
-                return av[5], av[4]
+            debug_msg(False)
+            return av[5], av[4]
+
     except Exception as e:
         logging.warning(str(e))
         return av[5], av[4]
