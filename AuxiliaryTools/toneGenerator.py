@@ -15,7 +15,7 @@ f1: float = 415.0
 # inharmonicity
 inharmonicity: float = 1.e-4
 # number of partitials
-partials: int = 10
+partials: int = 20
 
 p = pyaudio.PyAudio()
 f0 = f1 / np.sqrt(1. + inharmonicity)

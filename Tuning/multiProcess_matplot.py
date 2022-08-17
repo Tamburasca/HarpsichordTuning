@@ -12,7 +12,7 @@ from typing import List
 from queue import Queue
 # internal
 from Tuning.FFTaux import mytimer
-from Tuning import parameters as P
+from Tuning import parameters
 
 
 @mytimer("baseline calculation")
@@ -48,9 +48,9 @@ class MPmatplot(Process):
         super().__init__(daemon=True)
         self.__firstplot = True
         # factor accounts for the Gaussian apodization
-        self.__resolution = P.RATE / P.SLICE_LENGTH * 2.62
-        self.__t1 = rfftfreq(P.SLICE_LENGTH,
-                             1./P.RATE)
+        self.__resolution = parameters.RATE / parameters.SLICE_LENGTH * 2.62
+        self.__t1 = rfftfreq(parameters.SLICE_LENGTH,
+                             1./parameters.RATE)
         self.__queue = queue
         self.__tuning = kwargs.get('tuning')
         self.__a1 = kwargs.get('a1')
@@ -107,7 +107,7 @@ class MPmatplot(Process):
         while axes.collections:
             axes.collections.pop()
         y_axis0, y_axis1 = axes.get_ylim()
-        if P.DEBUG:
+        if parameters.DEBUG:
             yevents = EventCollection(
                 positions=peak_list,
                 color='tab:orange',

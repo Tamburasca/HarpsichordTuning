@@ -4,15 +4,15 @@ from scipy.signal import butter, freqs, windows
 from typing import Tuple
 # internal
 from Tuning.FFTaux import mytimer
-from Tuning import parameters as P
+from Tuning import parameters
 
-hanning = hanning(P.SLICE_LENGTH)
-hamming = hamming(P.SLICE_LENGTH)
+hanning = hanning(parameters.SLICE_LENGTH)
+hamming = hamming(parameters.SLICE_LENGTH)
 gaussian = windows.gaussian(
-    M=P.SLICE_LENGTH,
-    std=P.SLICE_LENGTH / P.APODIZATION_GAUSS_SIGMA
+    M=parameters.SLICE_LENGTH,
+    std=parameters.SLICE_LENGTH / parameters.APODIZATION_GAUSS_SIGMA
 )
-t1 = rfftfreq(P.SLICE_LENGTH, 1. / P.RATE)
+t1 = rfftfreq(parameters.SLICE_LENGTH, 1. / parameters.RATE)
 
 
 @mytimer
@@ -37,8 +37,8 @@ def fft(amp: ndarray) -> Tuple[ndarray, ndarray]:
     """
     # analog high pass Butterworth filter
     # ToDo: would a digital filter be faster?
-    b, a = butter(N=P.F_ORDER,
-                  Wn=P.F_FILT,
+    b, a = butter(N=parameters.F_ORDER,
+                  Wn=parameters.F_FILT,
                   btype='high',
                   analog=True)
     _, h = freqs(b=b,

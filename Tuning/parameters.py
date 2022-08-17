@@ -37,10 +37,6 @@ DISTANCE: int = 16 * FACTOR
 for the sample size."""
 WIDTH: tuple = (1 * FACTOR, 8 * FACTOR)
 
-"""window for Gauss fits: no of channels on either side. Corrected for the 
-sample size. (obsolete?)"""
-# FIT_WINDOW: int = 4
-
 """Sigma of the Gauss apodization window, where the length of slice
 L = APODIZATION_GAUSS_SIGMA * sigma
 do not modify"""
@@ -52,8 +48,8 @@ INHARM: float = 0.001
 """max number of highest peaks"""
 NMAX: int = 16
 
-"""number of partials considered in harmonic finding"""
-NPARTIAL: int = 11
+"""number of partials = 16 considered in harmonic finding (experimental)"""
+NPARTIAL: int = 17
 
 """lower frequency limit, i.e. A0. May not need to be adjusted."""
 FREQUENCY_LIMIT = 26.5

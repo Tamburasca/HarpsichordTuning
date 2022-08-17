@@ -4,7 +4,7 @@ import logging
 from typing import List, Tuple, Union
 # internal
 from Tuning.FFTaux import mytimer
-import Tuning.parameters as P
+from Tuning import parameters
 
 
 class ThreadedOpt(object):
@@ -70,7 +70,7 @@ class ThreadedOpt(object):
         https://stackoverflow.com/questions/4039039/fastest-way-to-fit-a-parabola-to-set-of-points
         """
         offset = .5 * (a[2] - a[0]) / (
-                2. * a[1] - a[0] - a[2]) * P.RATE / P.SLICE_LENGTH
+                2. * a[1] - a[0] - a[2]) * parameters.RATE / parameters.SLICE_LENGTH
         ctr = f[1] + offset
         dilation = (a[0] - a[1]) / ((f[0] - ctr) ** 2 - (f[1] - ctr) ** 2)
         fwhm = 2. * sqrt(-.6931 / dilation)

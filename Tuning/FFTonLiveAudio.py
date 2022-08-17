@@ -43,10 +43,10 @@ from typing import Tuple
 from Tuning.tuningTable import tuningtable
 from Tuning.FFTroutines import fft
 from Tuning.FFTpeaks import peak
-from Tuning.FFTharmonics_SLSQP import harmonics
+from Tuning.FFTharmonics import harmonics
 from Tuning.multiProcess_matplot import MPmatplot
 from Tuning.FFTaux import mytimer
-from Tuning import parameters as P
+from Tuning import parameters
 
 """
 2021/08/14 - Ralf A. Timmermann
@@ -113,23 +113,29 @@ from Tuning import parameters as P
 2022/08/12 - Ralf A. Timmermann
 - version 3.2.2 
     * absoute pitch in pie
+2022/08/17 - Ralf A. Timmermann
+- version 3.3 
+    * dublicates removed from the partials list
+    * for the minimizer: list of found frequencies is now tagged with 
+    the appropriate partials, that makes l1 computation unambiguous and avoids
+    local minima
 """
 
 __author__ = "Dr. Ralf Antonius Timmermann"
 __copyright__ = "Copyright (C) Dr. Ralf Antonius Timmermann"
 __credits__ = ""
 __license__ = "GPLv3"
-__version__ = "3.2.2"
+__version__ = "3.3"
 __maintainer__ = "Dr. Ralf A. Timmermann"
 __email__ = "rtimmermann@astro.uni-bonn.de"
 __status__ = "Prod"
 
 print(__doc__)
 
-logging.basicConfig(format=P.myformat,
+logging.basicConfig(format=parameters.myformat,
                     level=logging.INFO,
                     datefmt="%H:%M:%S")
-if P.DEBUG:
+if parameters.DEBUG:
     logging.getLogger().setLevel(logging.DEBUG)
 
 
@@ -141,10 +147,10 @@ class Tuner:
         :param tuning: string
             tuning temperament
         """
-        self.step: int = P.SLICE_SHIFT
-        self.fmax: int = P.FREQUENCY_MAX
+        self.step: int = parameters.SLICE_SHIFT
+        self.fmax: int = parameters.FREQUENCY_MAX
         self.fmin: int = 0
-        self.noise_level = P.NOISE_LEVEL
+        self.noise_level = parameters.NOISE_LEVEL
         self.a1: float = kwargs.get('a1')
         self.tuning: float = kwargs.get('tuning')  # see tuningTable.py
         self.x: bool = True
@@ -154,7 +160,7 @@ class Tuner:
         audio = pyaudio.PyAudio()
         self.stream = audio.open(format=pyaudio.paInt16,
                                  channels=1,
-                                 rate=P.RATE,
+                                 rate=parameters.RATE,
                                  output=False,
                                  input=True,
                                  stream_callback=self.callback)
@@ -188,15 +194,15 @@ class Tuner:
         # reset parameters to initial values
         print("reseting parameters...")
         self.fmin = 0
-        self.fmax = P.FREQUENCY_MAX
-        self.step = P.SLICE_SHIFT
-        self.noise_level = P.NOISE_LEVEL
+        self.fmax = parameters.FREQUENCY_MAX
+        self.step = parameters.SLICE_SHIFT
+        self.noise_level = parameters.NOISE_LEVEL
 
     def on_activate_k(self) -> None:
         # increases the shift by which the slices progress
         self.step += 1024
-        if self.step > P.SLICE_LENGTH:
-            self.step = P.SLICE_LENGTH
+        if self.step > parameters.SLICE_LENGTH:
+            self.step = parameters.SLICE_LENGTH
         print("Slice shift: {0:d} samples".format(self.step))
 
     def on_activate_j(self) -> None:
@@ -208,32 +214,32 @@ class Tuner:
 
     def on_activate_na(self) -> None:
         # decreases the min. frequency plotted
-        self.fmin -= P.FREQUENCY_STEP if self.fmin > 1500 else 100
+        self.fmin -= parameters.FREQUENCY_STEP if self.fmin > 1500 else 100
         if self.fmin < 0:
             self.fmin = 0
         print("Min frequency displayed: {0:1.0f} Hz".format(self.fmin))
 
     def on_activate_ma(self) -> None:
         # increases the min. frequency plotted
-        self.fmin += P.FREQUENCY_STEP if self.fmin >= 1500 else 100
+        self.fmin += parameters.FREQUENCY_STEP if self.fmin >= 1500 else 100
         if self.fmin > 14500:
             self.fmin = 14500
         print("Min frequency displayed: {0:1.0f} Hz".format(self.fmin))
-        if self.fmax - self.fmin < P.FREQUENCY_WIDTH_MIN:
+        if self.fmax - self.fmin < parameters.FREQUENCY_WIDTH_MIN:
             self.on_activate_m()
 
     def on_activate_n(self) -> None:
         # decreases the max. frequency plotted
-        self.fmax -= P.FREQUENCY_STEP if self.fmax > 2000 else 100
+        self.fmax -= parameters.FREQUENCY_STEP if self.fmax > 2000 else 100
         if self.fmax < 500:
             self.fmax = 500
         print("Max frequency displayed: {0:1.0f} Hz".format(self.fmax))
-        if self.fmax - self.fmin < P.FREQUENCY_WIDTH_MIN:
+        if self.fmax - self.fmin < parameters.FREQUENCY_WIDTH_MIN:
             self.on_activate_na()
 
     def on_activate_m(self) -> None:
         # increases the max. frequency plotted
-        self.fmax += P.FREQUENCY_STEP if self.fmax >= 2000 else 100
+        self.fmax += parameters.FREQUENCY_STEP if self.fmax >= 2000 else 100
         if self.fmax > 15000:
             self.fmax = 15000
         print("Max frequency displayed: {0:1.0f} Hz".format(self.fmax))
@@ -301,13 +307,13 @@ class Tuner:
         logging.debug("=== new audio cycle: filling buffer ===")
         # wait until buffer filled by at least one FFT slice, where
         # length is in units of buffer = 1024
-        while len(self.callback_output) < P.SLICE_LENGTH // 1024:
+        while len(self.callback_output) < parameters.SLICE_LENGTH // 1024:
             sleep(0.02)
         # Convert the list of numpy-arrays into a 1D array (column-wise)
         amp = hstack(self.callback_output)
         slices = util.view_as_windows(amp,
                                       window_shape=(
-                                          P.SLICE_LENGTH,),
+                                          parameters.SLICE_LENGTH,),
                                       step=self.step)
         logging.debug("Audio shape: {0}, Sliced audio shape: {1}"
                       .format(amp.shape,

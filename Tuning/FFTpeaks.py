@@ -5,7 +5,7 @@ from typing import List
 # internal
 from Tuning.multiProcess_opt_gauss import ThreadedOpt
 from Tuning.FFTaux import mytimer
-from Tuning import parameters as P
+from Tuning import parameters
 
 
 class Noise:
@@ -68,11 +68,11 @@ def peak(frequency: ndarray, spectrum: ndarray, noise_level: float) -> List[List
     # spectrum[peaks] = "prominences with baseline zero"
     peaks, properties = find_peaks(x=spectrum,
                                    # min distance between two peaks
-                                   distance=P.DISTANCE,
+                                   distance=parameters.DISTANCE,
                                    # sensitivity minus background
-                                   # prominence=P.NOISE_LEVEL * std,
+                                   # prominence=parameters.NOISE_LEVEL * std,
                                    # peak width
-                                   width=P.WIDTH)
+                                   width=parameters.WIDTH)
     # print(peaks, properties['left_ips'], properties['right_ips'])
     # avaraged background of both sides
     left = [int(i) for i in properties['left_ips']]
@@ -85,7 +85,7 @@ def peak(frequency: ndarray, spectrum: ndarray, noise_level: float) -> List[List
     # sort key = amplitude descending
     listtup = [item for item in listtup if item[1] > noise_level * std]
     listtup.sort(key=lambda x: x[1], reverse=True)
-    del listtup[P.NMAX:]
+    del listtup[parameters.NMAX:]
 
     if len(listtup) != 0:
         # run Gaussfits to the lines found subsequently
