@@ -176,7 +176,7 @@ def harmonics(peaks: List[Tuple]) -> List:
             )
             av = selected.mean(axis=0)
             no_of_peak_combi = selected.shape[0]
-
+            logging.debug("L1: {}".format(l1))
         elif len(l1) == 1:
             # if only one lower partial with gcd=1
             selected = array(
