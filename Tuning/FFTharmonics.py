@@ -136,8 +136,9 @@ def harmonics(peaks: List[Tuple]) -> List:
                             break  # break two loops here
                         element = [m, k, ind[i], ind[j], max(b, 0.), f_fundamental]  # always b >= 0
                         if initial:
-                            if element[3] == initial[-1][3]:
-                                initial.pop()  # remove previous dublette on upper frequency
+                            if element[3] == initial[-1][3] and element[0] == initial[-1][0]:
+                                # remove previous dublette on upper frequency and lower partial
+                                initial.pop()
                         initial.append(element)
                         break  # break two loops here
                 break

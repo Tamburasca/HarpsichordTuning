@@ -8,9 +8,9 @@ import numpy as np
 volume = .3
 # sampling rate, Hz, must be integer
 fs: int = 44100
-# in seconds, may be float
+# in seconds
 duration: float = 5.
-# sine frequency, Hz, may be float
+# sine frequency, Hz
 f1: float = 415.0
 # inharmonicity
 inharmonicity: float = 1.e-4
@@ -21,15 +21,15 @@ p = pyaudio.PyAudio()
 f0 = f1 / np.sqrt(1. + inharmonicity)
 alls = list()
 
-l = []
+tone = list()
 for partial in range(1, partials + 1):
     f = f0 * partial * np.sqrt(1. + inharmonicity * partial ** 2)
-    l.append(f)
+    tone.append(f)
     alls.append(
         # reduce volume of higher partials
-        (np.cos(2. * np.pi * np.arange(fs * duration) * f / fs)) / partial**2
+        (np.cos(2. * np.pi * np.arange(fs * duration) * f / fs)) / partial
     )
-print(l)
+print(tone)
 fade = np.exp(-np.arange(fs * duration) * 1. / fs)
 samples = np.sum(alls, axis=0) * fade
 max_volume = np.max(samples)

@@ -26,7 +26,6 @@ class ThreadedOpt(object):
 
     @mytimer("Parabola interpolation")
     def __call__(self) -> List[List]:
-        """Run the optimization. Make the threads (subsequently) here."""
         peaks = list()
         logging.debug("Number of peaks: {0}".format(self.__num_threads))
         for thread_id in range(self.__num_threads):
@@ -46,7 +45,7 @@ class ThreadedOpt(object):
         x = self.__x[thread_id]  # frequency bin with peak
         # do not exceed the array on either side
         if (x - 1) < 0 or (x + 2) > len(self.__freq):
-            logging.warning('Fit center value out of window: peak disregarded!')
+            logging.warning("Fit center value out of window: peak disregarded!")
             return None
 
         f = self.__freq[x - 1:x + 2]  # frequencies: one neighbor on either side
@@ -54,17 +53,16 @@ class ThreadedOpt(object):
         if test[0] > test[1] or \
                 test[2] > test[1] or \
                 (test[1] * test[1]) < (test[0] * test[2]):
-            logging.warning('Fit requirement violated: peak disregarded!')
+            logging.warning("Convolution requirement violated: peak disregarded!")
             return None
 
-        a = log(self.__amp[x - 1:x + 2])  # log amplitudes
+        a = log(self.__amp[x - 1:x + 2])  # log amplitudes in Fourier space
         """
-        EUROPEAN ORGANIZATION FOR NUCLEAR RESEARCH /
-        ORGANISATION EUROPEENNE POUR LA RECHERCHE NUCLEAIRE
+        EUROPEAN ORGANIZATION FOR NUCLEAR RESEARCH / ORGANISATION EUROPEENNE POUR LA RECHERCHE NUCLEAIRE
         CERN – AB DIVISION
         AB-Note-2004-021 BDI, February 2004
         by M. Gasior, J.L. Gonzalez
-        three-node interpolation method of the logarithm of a Gaussion to a parabola
+        three-node interpolation of the logarithm of a Gaussion to a parabola
         https://mgasior.web.cern.ch/pap/FFT_resol_note.pdf
         for reference: three-node interpolation
         https://stackoverflow.com/questions/4039039/fastest-way-to-fit-a-parabola-to-set-of-points
