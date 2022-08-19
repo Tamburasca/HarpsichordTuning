@@ -114,18 +114,19 @@ from Tuning import parameters
 - version 3.2.2 
     * absoute pitch in pie
 2022/08/17 - Ralf A. Timmermann
-- version 3.3 
+- version 3.3.1 
     * dublicates removed from the partials list
     * for the minimizer: list of found frequencies is now tagged with 
     the appropriate partials, that makes l1 computation unambiguous and avoids
     local minima
+    * code cleansing
 """
 
 __author__ = "Dr. Ralf Antonius Timmermann"
 __copyright__ = "Copyright (C) Dr. Ralf Antonius Timmermann"
 __credits__ = ""
 __license__ = "GPLv3"
-__version__ = "3.3"
+__version__ = "3.3.1"
 __maintainer__ = "Dr. Ralf A. Timmermann"
 __email__ = "rtimmermann@astro.uni-bonn.de"
 __status__ = "Prod"
