@@ -4,7 +4,6 @@ from operator import itemgetter
 import logging
 from typing import List, Tuple, Union
 # internal
-# from Tuning.multiProcess_convolution import ThreadedOpt, gaussian_convolution
 from Tuning.FFTaux import mytimer
 from Tuning import parameters
 
