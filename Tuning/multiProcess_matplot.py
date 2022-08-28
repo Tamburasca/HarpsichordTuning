@@ -165,6 +165,7 @@ class MPmatplot(Process):
         # run eternally
         while True:
             # fetch parameter from queue, block till message is available
+            # time consumed from putting to the queue till getting <.6 ms
             dic = self.__queue.get(block=True)
             _start = default_timer()
             # check if there are already some messages more than those picked

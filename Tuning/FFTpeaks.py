@@ -44,6 +44,7 @@ class Noise:
         return 0.6052697 * median(self.__flux)
 
 
+@mytimer("Gaussian Convolution")
 def gaussian_convolution(freq: List, amp: List, initial: List[Tuple]):
     """
     :param freq: list of floats
@@ -106,7 +107,7 @@ def gaussian_convolution(freq: List, amp: List, initial: List[Tuple]):
     return peaks
 
 
-@mytimer("peak finding (subtract time consumed for Parabola fits)")
+@mytimer("peak finding (subtract time consumed for Gaussian Convolution)")
 def peak(frequency: ndarray, spectrum: ndarray, noise_level: float) -> List[List]:
     """
     find peaks in frequency spectrum
