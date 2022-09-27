@@ -2,6 +2,9 @@
 auxiliary functions
 """
 
+from scipy.sparse.linalg import spsolve
+from scipy.sparse import diags, spdiags
+from numpy import ones, array
 from timeit import default_timer
 from functools import wraps
 import logging
@@ -52,3 +55,31 @@ def log10_b(func: Callable) -> Callable:
         return func(self, *args, **kwargs)
 
     return wrapper
+
+
+@mytimer("baseline calculation")
+def baseline_als_optimized(y, lam, p, niter=10):
+    """
+    https://stackoverflow.com/questions/29156532/python-baseline-correction-library
+    ToDo: consumes between 80 and 110 ms, hence is disregarded!
+    """
+    z = array([])
+    z_last = array([])
+    lth = len(y)
+    d = diags([1, -2, 1], [0, -1, -2], shape=(lth, lth-2))
+    # Precompute this term since it does not depend on `w`
+    d = lam * d.dot(d.transpose())
+    w = ones(lth)
+    wo = spdiags(w, 0, lth, lth)
+    for i in range(niter):
+        wo.setdiag(w)  # Do not create a new matrix, just update diagonal values
+        zo = wo + d
+        z = spsolve(zo, w * y)
+        w = p * (y > z) + (1 - p) * (y < z)
+        # following early exit clause yields another 50 msec in speed
+        if i > 0:
+            if all(abs(z - z_last)) < 1.e-1:
+                break
+        z_last = z
+
+    return z

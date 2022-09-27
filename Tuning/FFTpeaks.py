@@ -108,13 +108,23 @@ def gaussian_convolution(freq: List, amp: List, initial: List[Tuple]):
 
 
 @mytimer("peak finding (subtract time consumed for Gaussian Convolution)")
-def peak(frequency: ndarray, spectrum: ndarray, noise_level: float) -> List[List]:
+def peak(frequency: ndarray,
+         spectrum: ndarray,
+         baseline: [None, ndarray],
+         std: [None, ndarray],
+         noise_level: float) -> List[List]:
     """
     find peaks in frequency spectrum
-    :param frequency: list
+    :param frequency: ndarray
         frequencies from FFT
-    :param spectrum: list
+    :param spectrum: ndarray
         spectrum amplitudes from FFT
+    :param baseline [None, ndarray]
+        baseline of the audio signal in frequency domain after being averaged
+        in silence, consider if baseline is not None
+    :param std [None, ndarray]
+        standard deviation of the baseline of the audio signal in frequency
+        domain after being averaged in silence
     :param noise_level: float
         noise level as threshold for peak detection
     :return:
@@ -124,8 +134,8 @@ def peak(frequency: ndarray, spectrum: ndarray, noise_level: float) -> List[List
     listf = list()
 
     noise = Noise(flux=spectrum)
-    std = noise.total()
-    logging.debug("Noise estimate: {0}".format(std))
+    noise_total = noise.total()
+    logging.debug("Noise estimate: {0}".format(noise_total))
 
     # find peak according to prominence and remove peaks below threshold
     # spectrum[peaks] = "prominences with baseline zero"
@@ -133,7 +143,7 @@ def peak(frequency: ndarray, spectrum: ndarray, noise_level: float) -> List[List
                                    # min distance between two peaks
                                    distance=parameters.DISTANCE,
                                    # sensitivity minus background
-                                   # prominence=parameters.NOISE_LEVEL * std,
+                                   # prominence=parameters.NOISE_LEVEL * noise_total,
                                    # peak width
                                    width=parameters.WIDTH)
     # print(peaks, properties['left_ips'], properties['right_ips'])
@@ -146,7 +156,10 @@ def peak(frequency: ndarray, spectrum: ndarray, noise_level: float) -> List[List
     listtup = list(zip(peaks, corrected))
     # sort out peaks below threshold and consider NMAX highest,
     # sort key = amplitude descending
-    listtup = [item for item in listtup if item[1] > noise_level * std]
+    if baseline is None:
+        listtup = [item for item in listtup if item[1] > noise_level * noise_total]
+    else:
+        listtup = [item for item in listtup if item[1] > 20. * std[item[0]]]
     listtup.sort(key=lambda x: x[1], reverse=True)
     del listtup[parameters.NMAX:]
 

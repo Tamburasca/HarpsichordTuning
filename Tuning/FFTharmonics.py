@@ -195,7 +195,7 @@ def harmonics(peaks: List[Tuple]) -> List:
         base_frequency = av[5]
         inharmonicity = av[4]
         if base_frequency > parameters.FREQUENCY_LIMIT:
-            if no_of_peak_combi > 1 and parameters.FINAL_FIT:
+            if no_of_peak_combi > 1:
                 identified = select_list(selected=selected)
                 base_frequency, inharmonicity = final_fit(av=av, ind=identified)
                 logging.debug(

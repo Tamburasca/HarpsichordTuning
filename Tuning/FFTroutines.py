@@ -6,20 +6,32 @@ from typing import Tuple
 from Tuning.FFTaux import mytimer
 from Tuning import parameters
 
-hanning = hanning(parameters.SLICE_LENGTH)
-hamming = hamming(parameters.SLICE_LENGTH)
-gaussian = windows.gaussian(
+hanning = hanning(M=parameters.SLICE_LENGTH)
+hamming = hamming(M=parameters.SLICE_LENGTH)
+apodization_gaussian = windows.gaussian(
     M=parameters.SLICE_LENGTH,
     std=parameters.SLICE_LENGTH / parameters.APODIZATION_GAUSS_SIGMA
 )
-t1 = rfftfreq(parameters.SLICE_LENGTH, 1. / parameters.RATE)
+t1 = rfftfreq(
+    n=parameters.SLICE_LENGTH,
+    d=1. / parameters.RATE
+)
+b, a = butter(
+    N=parameters.F_ORDER,
+    Wn=parameters.F_FILT,
+    btype='highpass',
+    analog=True)
+_, h = freqs(
+    b=b,
+    a=a,
+    worN=t1)
 
 
 @mytimer
 def fft(amp: ndarray) -> Tuple[ndarray, ndarray]:
     """
-    performs FFT on a Hanning apodized time series. High pass filter performed
-    on frequency domain.
+    performs FFT on a Gaussian apodized time series, where L = 7 sigma.
+    High pass filter performed on frequency domain.
     :param amp: list float
         time series
     :return:
@@ -28,22 +40,9 @@ def fft(amp: ndarray) -> Tuple[ndarray, ndarray]:
     list float
         intensities
     """
-    y_raw = rfft(gaussian * amp)
-    """
-    convolve with a Gaussian of width SIGMA
-    y_raw = convolve(in1=abs(y_raw),
-                     in2=gaussian(M=11, std=1),
-                     mode='same')
-    """
-    # analog high pass Butterworth filter
-    # ToDo: would a digital filter be faster?
-    b, a = butter(N=parameters.F_ORDER,
-                  Wn=parameters.F_FILT,
-                  btype='high',
-                  analog=True)
-    _, h = freqs(b=b,
-                 a=a,
-                 worN=t1)
+    # apply apodization
+    y_raw = rfft(apodization_gaussian * amp)
+    # apply analog high pass Butterworth filter
     y_final = abs(h * y_raw)
     """
     if PSD then: 

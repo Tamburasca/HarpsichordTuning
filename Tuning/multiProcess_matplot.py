@@ -3,44 +3,13 @@ import matplotlib.pyplot as plt
 from matplotlib.collections import EventCollection
 from matplotlib.axes import Axes
 from numpy.fft import rfftfreq
-from numpy import ones, array, ndarray
-from scipy.sparse.linalg import spsolve
-from scipy import sparse
+from numpy import ndarray
 from timeit import default_timer
 import logging
 from typing import List
 from queue import Queue
 # internal
-from Tuning.FFTaux import mytimer
 from Tuning import parameters
-
-
-@mytimer("baseline calculation")
-def baseline_als_optimized(y, lam, p, niter=10):
-    """
-    https://stackoverflow.com/questions/29156532/python-baseline-correction-library
-    ToDo: consumes between 80 and 110 ms, hence is disregarded!
-    """
-    z = array([])
-    z_last = array([])
-    lth = len(y)
-    d = sparse.diags([1, -2, 1], [0, -1, -2], shape=(lth, lth-2))
-    # Precompute this term since it does not depend on `w`
-    d = lam * d.dot(d.transpose())
-    w = ones(lth)
-    wo = sparse.spdiags(w, 0, lth, lth)
-    for i in range(niter):
-        wo.setdiag(w)  # Do not create a new matrix, just update diagonal values
-        zo = wo + d
-        z = spsolve(zo, w * y)
-        w = p * (y > z) + (1 - p) * (y < z)
-        # following early exit clause yields another 50 msec in speed
-        if i > 0:
-            if all(abs(z - z_last)) < 1.e-1:
-                break
-        z_last = z
-
-    return z
 
 
 class MPmatplot(Process):
@@ -141,6 +110,7 @@ class MPmatplot(Process):
         queue.
         :return:
         """
+        ln1 = ln2 = text = text1 = ax1background = None
         plt.ion()  # Stop matplotlib windows from blocking
         plt.rcParams['keymap.quit'].remove('q')  # disable key q from closing the window
         fig = plt.gcf()
@@ -172,19 +142,20 @@ class MPmatplot(Process):
             qsize = self.__queue.qsize()
             if qsize > 0:
                 logging.warning("{0} messages in MP queue".format(qsize))
-            yfft = dic.get('yfft')
-            # baseline = baseline_als_optimized(yfft, lam=3.e4, p=.01, niter=1)
-            # yfft = yfft - baseline
-            # yfft = where(yfft < 0., 0., yfft)
+            baseline = dic.get('baseline')
+            noise_toggle = dic.get('noise_toggle')
+            yfft = dic.get('yfft') if not noise_toggle or baseline is None else baseline
             ymax = max(yfft)
             fmin = dic.get('fmin')
             fmax = dic.get('fmax')
             info_text = "Resolution: {2:3.1f} Hz (-6 dB Main Lobe Width)\n" \
                         "Audio shape: {0} [slices, samples]\n" \
-                        "Slice shift: {1:d} samples".format(
+                        "Slice shift: {1:d} samples\n" \
+                        "{3}".format(
                             dic.get('slices').shape,
                             dic.get('step'),
-                            self.__resolution)
+                            self.__resolution,
+                            "" if baseline is None else "Noise threshold: Yes")
             info_color = 'red' if dic.get('slices').shape[0] > 3 else 'black'
             if self.__firstplot:
                 # Setup line, define plot, text, and copy background once
@@ -212,6 +183,10 @@ class MPmatplot(Process):
             ax1.set_xlim([fmin, fmax])
             # permit some percentages of margin to the x-axes
             ax1.set_ylim([-0.04 * ymax, 1.025 * ymax])
+            if noise_toggle:
+                ln1.set_color('orange')
+            elif not noise_toggle and ln1.get_color() == 'orange':
+                ln1.set_color('#1f77b4')
             text.set_x(fmax)
             text.set_y(ymax)
             # call nested pie inset

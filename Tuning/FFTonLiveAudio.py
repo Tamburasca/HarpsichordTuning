@@ -30,7 +30,8 @@ certain conditions.
 """
 
 import pyaudio
-from numpy import frombuffer, int16, hstack, log2, ndarray
+from numpy import frombuffer, int16, hstack, log2, ndarray, zeros_like, sqrt
+from scipy.signal import butter, sosfilt
 import matplotlib.pyplot as plt
 from skimage import util
 from time import sleep
@@ -45,7 +46,7 @@ from Tuning.FFTroutines import fft
 from Tuning.FFTpeaks import peak
 from Tuning.FFTharmonics import harmonics
 from Tuning.multiProcess_matplot import MPmatplot
-from Tuning.FFTaux import mytimer
+from Tuning.FFTaux import mytimer, baseline_als_optimized
 from Tuning import parameters
 
 """
@@ -120,13 +121,19 @@ from Tuning import parameters
     the appropriate partials, that makes l1 computation unambiguous and avoids
     local minima
     * code cleansing
+2022/09/27 - Ralf A. Timmermann
+- version 3.4.1
+    * highpass filter parameters outsourced as global parameters
+    * Noise measurement with no audio signal (silence) comprising mean and 
+    standard deviation per bin - need to be toggled on/off per global hotkey
+    (in experimental stage) 
 """
 
 __author__ = "Dr. Ralf Antonius Timmermann"
 __copyright__ = "Copyright (C) Dr. Ralf Antonius Timmermann"
 __credits__ = ""
 __license__ = "GPLv3"
-__version__ = "3.3.1"
+__version__ = "3.4.1"
 __maintainer__ = "Dr. Ralf A. Timmermann"
 __email__ = "rtimmermann@astro.uni-bonn.de"
 __status__ = "Prod"
@@ -156,6 +163,10 @@ class Tuner:
         self.tuning: float = kwargs.get('tuning')  # see tuningTable.py
         self.x: bool = True
         self.rc: str = None
+        self.noise_toggle = False
+        self.__n: int = 0
+        self.baseline = None
+        self.std = None
 
         self.callback_output = list()
         audio = pyaudio.PyAudio()
@@ -198,6 +209,10 @@ class Tuner:
         self.fmax = parameters.FREQUENCY_MAX
         self.step = parameters.SLICE_SHIFT
         self.noise_level = parameters.NOISE_LEVEL
+        self.noise_toggle = False
+        self.__n = 0
+        self.baseline = None
+        self.std = None
 
     def on_activate_k(self) -> None:
         # increases the shift by which the slices progress
@@ -254,6 +269,38 @@ class Tuner:
         # decrease noise level by 9.09%
         self.noise_level /= 1.1
         print("Noise level decreased to {0:1.1f}".format(self.noise_level))
+
+    def on_activate_measure_noise(self) -> None:
+        self.noise_toggle = not self.noise_toggle
+        if self.noise_toggle: print("Measuring Noise Level. Please keep quiet!")
+
+    @mytimer
+    def noise_threshold(self, yfft: ndarray) -> Tuple[ndarray, ndarray]:
+        """
+        yfft averared and standard deviation per bin by adding new dataset on previous
+        Welford’s method is a usable single-pass method for computing the variance.
+        https://jonisalonen.com/2013/deriving-welfords-method-for-computing-variance/
+        https://math.stackexchange.com/questions/775391/can-i-calculate-the-new-standard-deviation-when-adding-a-value-without-knowing-t
+        :param yfft: ndarray
+        :return: ndarray, ndarray
+        """
+        self.__n += 1
+
+        if self.__n == 1:
+            self.__av = yfft
+            return None, None
+        elif self.__n == 2:
+            yfft_first = self.__av
+            self.__av = (yfft_first + yfft) / 2
+            self.__std_squared = (yfft - self.__av) ** 2 + (yfft_first - self.__av) ** 2
+        else:
+            av_previous = self.__av
+            self.__av = ((self.__n - 1) * self.__av + yfft) / self.__n
+            self.__std_squared = ((self.__n - 2) * self.__std_squared +
+                                  (yfft - self.__av) * (yfft - av_previous)) / (self.__n - 1)
+        print("Noise Measurement, Iteration No: {}".format(self.__n - 1))
+
+        return self.__av, sqrt(self.__std_squared)
 
     @mytimer("key finding & absolute pitch level")
     def find(self, f_measured: float) -> Tuple[str, float]:
@@ -330,6 +377,16 @@ class Tuner:
         string
             return code
         """
+        sos = butter(
+            N=parameters.F_ORDER,
+            Wn=parameters.F_FILT,
+            btype='highpass',
+            fs=parameters.RATE,
+            output='sos'
+        )
+        @mytimer
+        def highpass_filter(sig: ndarray) -> ndarray: return sosfilt(sos, sig)
+
         queue = Queue()
         _process = MPmatplot(queue=queue,
                              a1=self.a1,
@@ -341,7 +398,7 @@ class Tuner:
         # start Recording
         self.stream.start_stream()
         logging.info(
-            "Permit a few cycles to adjust the audio device for sound input")
+            "Permit a few cycles to adjust audio device!")
 
         # main loop while audio stream active
         while self.stream.is_active():
@@ -354,11 +411,20 @@ class Tuner:
                 logging.debug("no of slices: " + str(len(slices)))
                 # remove current slice from beginning of buffer
                 del self.callback_output[0:self.step // 1024]
+                # apply highpass filter on time series
+                #sl = highpass_filter(sl)
                 # calculate FFT
                 t1, yfft = fft(amp=sl)
+                # measure noise if toggled
+                if self.noise_toggle:
+                    self.baseline, self.std = self.noise_threshold(yfft)
+                # other option
+                # baseline = baseline_als_optimized(yfft, lam=3.e4, p=.01, niter=1)
                 # call peakfinding
                 peaks = peak(frequency=t1,
                              spectrum=yfft,
+                             baseline=self.baseline,
+                             std=self.std,
                              noise_level=self.noise_level)
                 peaklist = list(map(itemgetter(0), peaks))
                 # call harmonics
@@ -374,6 +440,8 @@ class Tuner:
                 # send params into queue for plotting
                 queue.put(
                     {'yfft': yfft,
+                     'noise_toggle': self.noise_toggle,
+                     'baseline': 20. * self.std if self.baseline is not None else None,
                      'key': key,
                      'off': off,
                      'slices': slices,
@@ -426,7 +494,8 @@ def main() -> int:
         '<alt>+m': a.on_activate_ma,  # increase min freq
         '<alt>+n': a.on_activate_na,  # decrease min freq
         '<ctrl>+<alt>+1': a.on_activate_noise_down,  # decrease noise level
-        '<ctrl>+<alt>+2': a.on_activate_noise_up  # increase noise level
+        '<ctrl>+<alt>+2': a.on_activate_noise_up,  # increase noise level
+        '<ctrl>+<alt>+3': a.on_activate_measure_noise
     })
     h.start()
     a.animate()
