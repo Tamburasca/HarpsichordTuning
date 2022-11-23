@@ -277,7 +277,7 @@ class Tuner:
     @mytimer
     def noise_threshold(self, yfft: ndarray) -> Tuple[ndarray, ndarray]:
         """
-        yfft averared and standard deviation per bin by adding new dataset on previous
+        yfft averaged and standard deviation per bin by adding new dataset on previous:
         Welford’s method is a usable single-pass method for computing the variance.
         https://jonisalonen.com/2013/deriving-welfords-method-for-computing-variance/
         https://math.stackexchange.com/questions/775391/can-i-calculate-the-new-standard-deviation-when-adding-a-value-without-knowing-t
@@ -285,7 +285,6 @@ class Tuner:
         :return: ndarray, ndarray
         """
         self.__n += 1
-
         if self.__n == 1:
             self.__av = yfft
             return None, None
@@ -298,7 +297,7 @@ class Tuner:
             self.__av = ((self.__n - 1) * self.__av + yfft) / self.__n
             self.__std_squared = ((self.__n - 2) * self.__std_squared +
                                   (yfft - self.__av) * (yfft - av_previous)) / (self.__n - 1)
-        print("Noise Measurement, Iteration No: {}".format(self.__n - 1))
+        print("Noise Measurement ..., Iteration No: {}".format(self.__n - 1))
 
         return self.__av, sqrt(self.__std_squared)
 

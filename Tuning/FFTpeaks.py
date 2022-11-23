@@ -159,6 +159,7 @@ def peak(frequency: ndarray,
     if baseline is None:
         listtup = [item for item in listtup if item[1] > noise_level * noise_total]
     else:
+        # ToDo: needs to be tested!
         listtup = [item for item in listtup if item[1] > 20. * std[item[0]]]
     listtup.sort(key=lambda x: x[1], reverse=True)
     del listtup[parameters.NMAX:]

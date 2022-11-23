@@ -110,7 +110,7 @@ class MPmatplot(Process):
         queue.
         :return:
         """
-        ln1 = ln2 = text = text1 = ax1background = None
+        ln1, ln2, text1, ax1background = None, None, None, None
         plt.ion()  # Stop matplotlib windows from blocking
         plt.rcParams['keymap.quit'].remove('q')  # disable key q from closing the window
         fig = plt.gcf()
