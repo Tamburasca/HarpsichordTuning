@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-
+#!/usr/bin/env python3
 """
 FFTonLiveAudio Copyright (C) 2020-22, Dr. Ralf Antonius Timmermann
 

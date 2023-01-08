@@ -89,7 +89,7 @@ tuningtable = {
         'B': 998,
         'H': 1096
     },
-    'Equal': {
+    'Equal Temperament': {
         'C': 0,
         'C#': 100,
         'D': 200,

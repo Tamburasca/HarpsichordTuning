@@ -159,6 +159,7 @@ def harmonics(peaks: List[Tuple]) -> List:
     """
     if initial:
         av = array([])
+        selected = array([])
         no_of_peak_combi = 0
 
         if len(l1) > 1:

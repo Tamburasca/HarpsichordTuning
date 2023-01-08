@@ -41,6 +41,7 @@ def log10_b(func: Callable) -> Callable:
     """
     wrapper converts the log10(b) of 1st parameter to b again to provide
     equidistant slices in log10 space
+    Note: currently this function is not used!
     :param func:
     :return:
     """
@@ -61,7 +62,8 @@ def log10_b(func: Callable) -> Callable:
 def baseline_als_optimized(y, lam, p, niter=10):
     """
     https://stackoverflow.com/questions/29156532/python-baseline-correction-library
-    ToDo: consumes between 80 and 110 ms, hence is disregarded!
+    Caveat: this function is disregarded for the time being since it consumes
+    between 80 and 110 ms.
     """
     z = array([])
     z_last = array([])

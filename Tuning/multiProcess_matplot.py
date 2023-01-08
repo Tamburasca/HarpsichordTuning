@@ -65,8 +65,6 @@ class MPmatplot(Process):
                  radius=.4
                  )
 
-        return
-
     @staticmethod
     def eventcollection(axes: Axes, peak_list: List, f_meas: ndarray) -> None:
         """
@@ -100,8 +98,6 @@ class MPmatplot(Process):
                                    linewidth=1.5
                                    )
         axes.add_collection(yevents1)
-
-        return
 
     def run(self) -> None:
         """
