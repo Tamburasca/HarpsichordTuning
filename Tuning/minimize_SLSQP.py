@@ -1,22 +1,22 @@
-from numpy import ndarray
 import logging
 from scipy.optimize import minimize
 from typing import List, Tuple, Sequence
+from numpy.typing import NDArray
 # internal
-from Tuning.FFTaux import mytimer
-from Tuning.L1costfunction import L1
+from FFTaux import mytimer
+from L1costfunction import L1
 # from Tuning.FFTL2minimizer import L2
-from Tuning import parameters
+import parameters
 
 
-def callback(xk: ndarray) -> bool:
+def callback(xk: NDArray) -> bool:
     # toggle for minimizer analysis -> L1_contours
     # print("[{},{}],".format(xk[0], xk[1]))
 
     return False
 
 
-def bounds(x0: ndarray) -> Sequence:
+def bounds(x0: NDArray) -> Sequence:
     f0 = x0[0]
     b = max(0., x0[1])
 
@@ -24,7 +24,7 @@ def bounds(x0: ndarray) -> Sequence:
 
 
 @mytimer("L1 Minimization")
-def final_fit(av: ndarray, ind: List) -> Tuple[float, float]:
+def final_fit(av: NDArray, ind: List) -> Tuple[float, float]:
     """
     fits the base frequency and inharmonicity by minimizing the L1 cost function
     as the deviation from the measured resonance frequencies to the

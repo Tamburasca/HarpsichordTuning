@@ -3,13 +3,13 @@ import matplotlib.pyplot as plt
 from matplotlib.collections import EventCollection
 from matplotlib.axes import Axes
 from numpy.fft import rfftfreq
-from numpy import ndarray
 from timeit import default_timer
 import logging
 from typing import List
+from numpy.typing import NDArray
 from queue import Queue
 # internal
-from Tuning import parameters
+import parameters
 
 
 class MPmatplot(Process):
@@ -59,14 +59,14 @@ class MPmatplot(Process):
                             lw=.5))
         # inner pie
         axes.pie([1],
-                 # 2 cents within the target means key is well tuned
+                 # 1 cent within the target means key is well tuned
                  # paint pie white (default) to make it opaque
-                 colors='y' if key_pressed and -2 < displaced < 2 else 'w',
+                 colors='y' if key_pressed and -1 < displaced < 1 else 'w',
                  radius=.4
                  )
 
     @staticmethod
-    def eventcollection(axes: Axes, peak_list: List, f_meas: ndarray) -> None:
+    def eventcollection(axes: Axes, peak_list: List, f_meas: NDArray) -> None:
         """
         vertical bar subroutine
         """
@@ -144,14 +144,20 @@ class MPmatplot(Process):
             ymax = max(yfft)
             fmin = dic.get('fmin')
             fmax = dic.get('fmax')
+            if noise_toggle:
+                measure_status = "Measuring"
+            elif baseline is None:
+                measure_status = "No"
+            else:
+                measure_status = "Yes"
             info_text = "Resolution: {2:3.1f} Hz (-6 dB Main Lobe Width)\n" \
                         "Audio shape: {0} [slices, samples]\n" \
                         "Slice shift: {1:d} samples\n" \
-                        "{3}".format(
+                        "Noise threshold: {3}".format(
                             dic.get('slices').shape,
                             dic.get('step'),
                             self.__resolution,
-                            "" if baseline is None else "Noise threshold: Yes")
+                            measure_status)
             info_color = 'red' if dic.get('slices').shape[0] > 3 else 'black'
             if self.__firstplot:
                 # Setup line, define plot, text, and copy background once

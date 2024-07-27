@@ -1,11 +1,13 @@
-from numpy import abs, average, median, append, insert, ndarray, log, sqrt, exp
+from __future__ import annotations
+from numpy import abs, average, median, append, insert, log, sqrt, exp
 from scipy.signal import find_peaks
 from operator import itemgetter
 import logging
-from typing import List, Tuple, Union
+from typing import List, Tuple
+from numpy.typing import NDArray
 # internal
-from Tuning.FFTaux import mytimer
-from Tuning import parameters
+from FFTaux import mytimer
+import parameters
 
 
 class Noise:
@@ -27,7 +29,7 @@ class Noise:
 
     Comment: __call__ not utilized, as windows can be used
     """
-    def __init__(self, flux: ndarray):
+    def __init__(self, flux: NDArray):
         i = len(flux)
         self.__flux = abs(2. * flux[2:i - 2] - flux[0:i - 4] - flux[4:i])
         # padding two value to prepend and two to append
@@ -57,12 +59,12 @@ def gaussian_convolution(freq: List, amp: List, initial: List[Tuple]):
     _amp = amp
     _freq = freq
     _x = list(map(itemgetter(0), initial))
-    _y = list(map(itemgetter(1), initial))  # obsolete
+    # _y = list(map(itemgetter(1), initial))  # obsolete
     num_threads = len(initial)
     peaks = list()
     logging.debug("Number of peaks: {0}".format(num_threads))
 
-    def _fitting(ids: int) -> Union[List, None]:
+    def _fitting(ids: int) -> List | None:
         """
         Each thread goes through this.
         :param ids: int, thread id = 0, 1, 2, ..., len(initial)-1
@@ -96,8 +98,8 @@ def gaussian_convolution(freq: List, amp: List, initial: List[Tuple]):
         dilation = (a[0] - a[1]) / ((f[0] - ctr) ** 2 - (f[1] - ctr) ** 2)
         fwhm = 2. * sqrt(-.6931 / dilation)
         height = exp(a[0] - dilation * (f[0] - ctr) ** 2)
-
         return list([ctr, height, fwhm])
+        # end embedded function
 
     for i in range(num_threads):
         result = _fitting(ids=i)
@@ -108,21 +110,21 @@ def gaussian_convolution(freq: List, amp: List, initial: List[Tuple]):
 
 
 @mytimer("peak finding (subtract time consumed for Gaussian Convolution)")
-def peak(frequency: ndarray,
-         spectrum: ndarray,
-         baseline: [None, ndarray],
-         std: [None, ndarray],
+def peak(frequency: NDArray,
+         spectrum: NDArray,
+         baseline: [None, NDArray],
+         std: [None, NDArray],
          noise_level: float) -> List[List]:
     """
     find peaks in frequency spectrum
-    :param frequency: ndarray
+    :param frequency: NDArray
         frequencies from FFT
-    :param spectrum: ndarray
+    :param spectrum: NDArray
         spectrum amplitudes from FFT
-    :param baseline [None, ndarray]
+    :param baseline [None, NDArray]
         baseline of the audio signal in frequency domain after being averaged
         in silence, consider if baseline is not None
-    :param std [None, ndarray]
+    :param std [None, NDArray]
         standard deviation of the baseline of the audio signal in frequency
         domain after being averaged in silence
     :param noise_level: float

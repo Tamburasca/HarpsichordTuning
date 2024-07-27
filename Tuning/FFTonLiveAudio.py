@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
+
 """
-FFTonLiveAudio Copyright (C) 2020-22, Dr. Ralf Antonius Timmermann
+FFTonLiveAudio Copyright (C) 2020-23, Dr. Ralf Antonius Timmermann
 
 A graphical tuning tool for string instruments, such as harpsichords and pianos.
 
@@ -29,7 +30,7 @@ certain conditions.
 """
 
 import pyaudio
-from numpy import frombuffer, int16, hstack, log2, ndarray, zeros_like, sqrt
+from numpy import frombuffer, int16, hstack, log2, zeros_like, sqrt
 from scipy.signal import butter, sosfilt
 import matplotlib.pyplot as plt
 from skimage import util
@@ -39,14 +40,16 @@ from operator import itemgetter
 from multiprocessing import Queue
 import logging
 from typing import Tuple
+from numpy.typing import NDArray
+import time
 # internal
-from Tuning.tuningTable import tuningtable
-from Tuning.FFTroutines import fft
-from Tuning.FFTpeaks import peak
-from Tuning.FFTharmonics import harmonics
-from Tuning.multiProcess_matplot import MPmatplot
-from Tuning.FFTaux import mytimer, baseline_als_optimized
-from Tuning import parameters
+from tuningTable import tuningtable
+from FFTroutines import fft
+from FFTpeaks import peak
+from FFTharmonics import harmonics
+from multiProcess_matplot import MPmatplot
+from FFTaux import mytimer, baseline_als_optimized
+import parameters
 
 """
 2021/08/14 - Ralf A. Timmermann
@@ -175,6 +178,8 @@ class Tuner:
                                  output=False,
                                  input=True,
                                  stream_callback=self.callback)
+        logging.debug("Audio Device info: {}".
+                      format(audio.get_default_input_device_info()))
 
     def callback(self, in_data, frame_count, time_info, flag) -> Tuple[None, int]:
         """
@@ -274,14 +279,14 @@ class Tuner:
         if self.noise_toggle: print("Measuring Noise Level. Please keep quiet!")
 
     @mytimer
-    def noise_threshold(self, yfft: ndarray) -> Tuple[ndarray, ndarray]:
+    def noise_threshold(self, yfft: NDArray) -> Tuple[NDArray, NDArray]:
         """
         yfft averaged and standard deviation per bin by adding new dataset on previous:
         Welford’s method is a usable single-pass method for computing the variance.
         https://jonisalonen.com/2013/deriving-welfords-method-for-computing-variance/
         https://math.stackexchange.com/questions/775391/can-i-calculate-the-new-standard-deviation-when-adding-a-value-without-knowing-t
-        :param yfft: ndarray
-        :return: ndarray, ndarray
+        :param yfft: NDArray
+        :return: NDArray, NDArray
         """
         self.__n += 1
         if self.__n == 1:
@@ -329,12 +334,12 @@ class Tuner:
         return '', 0.
 
     @mytimer("audio")
-    def slice(self) -> ndarray:
+    def slice(self) -> NDArray:
         """
         collects the audio data and arranges it into slices of length
         SLICES_LENGTH shifted by SLICES_SHIFT
         :return:
-        ndarray
+        NDArray
             (rolling) window view of the input array. If arr_in is
             non-contiguous, a copy is made.
         """
@@ -382,8 +387,8 @@ class Tuner:
             fs=parameters.RATE,
             output='sos'
         )
-        @mytimer
-        def highpass_filter(sig: ndarray) -> ndarray: return sosfilt(sos, sig)
+        def highpass_filter(sig: NDArray) -> NDArray:
+            return sosfilt(sos, sig)
 
         queue = Queue()
         _process = MPmatplot(queue=queue,

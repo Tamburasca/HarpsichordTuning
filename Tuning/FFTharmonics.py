@@ -4,10 +4,10 @@ import logging
 from operator import itemgetter
 from typing import List, Tuple
 # internal
-from Tuning.FFTaux import mytimer
+from FFTaux import mytimer
 # from Tuning.minimize_bruteforce import final_fit
-from Tuning.minimize_SLSQP import final_fit
-from Tuning import parameters
+from minimize_SLSQP import final_fit
+import parameters
 
 
 def bisection(vector: List, value: float) -> int:
@@ -83,7 +83,7 @@ def select_list(selected: List[List]) -> List[Tuple]:
     """
     list of resonance peaks according to harmonics - remove dublettes with same
     upper frequency tagged with upper partial
-    :param selected: selection list
+    :param selected: list of selected peaks
     :return: list of tuples (resonance peaks, upper partial)
     """
     identified = dict({(selected[0][2],): selected[0][0]})

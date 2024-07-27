@@ -1,5 +1,5 @@
 tuningtable = {
-    'Werkmeister I(III)': {
+    'Werkmeister III': {
         'C': 0,
         'C#': 90,
         'D': 192,

@@ -2,20 +2,24 @@
 auxiliary functions
 """
 
+from __future__ import annotations
 from scipy.sparse.linalg import spsolve
 from scipy.sparse import diags, spdiags
 from numpy import ones, array
 from timeit import default_timer
 from functools import wraps
 import logging
-from typing import Callable, Union
+from typing import Callable
+from numpy.typing import NDArray, ArrayLike
 
 
-def mytimer(supersede: Union[Callable, str] = None) -> Callable:
+def mytimer(supersede: Callable | str = None) -> Callable:
     """
-    wrapper around function for which the consumed time is measured in
-    DEBUG mode. Call either via mytimer, mytimer(), or
-    mytimer("<supersede function name>")
+    wrapper around function for which the consumed time is to be measured in
+    DEBUG mode. Call either via
+    1) mytimer,
+    2) mytimer(), or
+    3) mytimer("<supersede function name>")
     :param supersede: string (default=None)
     """
 
@@ -59,14 +63,17 @@ def log10_b(func: Callable) -> Callable:
 
 
 @mytimer("baseline calculation")
-def baseline_als_optimized(y, lam, p, niter=10):
+def baseline_als_optimized(y: ArrayLike,
+                           lam: float,
+                           p: float,
+                           niter: int = 10
+                           ) -> NDArray:
     """
     https://stackoverflow.com/questions/29156532/python-baseline-correction-library
     Caveat: this function is disregarded for the time being since it consumes
     between 80 and 110 ms.
     """
-    z = array([])
-    z_last = array([])
+    z, z_last = array([]), array([])
     lth = len(y)
     d = diags([1, -2, 1], [0, -1, -2], shape=(lth, lth-2))
     # Precompute this term since it does not depend on `w`
