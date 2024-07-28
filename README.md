@@ -38,9 +38,7 @@ The ear hears the fundamental frequency most prominently,
 but the overall sound is also colored by the presence of various overtones 
 (frequencies greater than the fundamental frequency).
 However, a real string behaves closer to a stiff bar according to a forth-order 
-differential equation
-
-$$\ddot{y} \propto {-y}\!\!''''$$
+differential equation $$\ddot{y} \propto {-y}''''$$
 
 with a quadratic dispersion. Hence, its partials can be approximated by
 
