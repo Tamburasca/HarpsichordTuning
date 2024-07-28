@@ -13,7 +13,10 @@ from numpy.typing import NDArray
 
 
 class L2(object):
-    def __init__(self, ind: List[Tuple]):
+    def __init__(
+            self,
+            ind: List[Tuple]
+    ):
         """
         :param ind: array - measured resonance frequencies as from peaks (FFT)
         """
@@ -22,7 +25,11 @@ class L2(object):
         self.l1_last: float = None
         self.jacobi: NDArray = array([0., 0.])
 
-    def l1_minimum(self, x0: NDArray, jac: bool = False) -> float:
+    def l1_minimum(
+            self,
+            x0: NDArray,
+            jac: bool = False
+    ) -> float:
         """
         returns the cost function for a regression on the L2 norm
         l2 = sum( (f_i(measured) - f_i(calculated) ) ** 2 )
@@ -50,29 +57,49 @@ class L2(object):
 
         return l1
 
-    def l1_minimum_log_b(self, x0: NDArray, jac: bool = False) -> float:
+    def l1_minimum_log_b(
+            self,
+            x0: NDArray,
+            jac: bool = False
+    ) -> float:
         # b is coming in as log10(b)
         x0[1] = 10 ** x0[1]
         return self.l1_minimum(x0, jac)
 
-    def l1_minimum_jac_direct(self, x0: NDArray) -> NDArray:
+    def l1_minimum_jac_direct(
+            self,
+            x0: NDArray
+    ) -> NDArray:
         self.l1_minimum(x0, jac=True)
         return self.jacobi
 
-    def l1_minimum_jac(self, x0: NDArray) -> NDArray:
-        return Jacobian(lambda x0: self.l1_minimum(x0))(x0).ravel()
+    def l1_minimum_jac(
+            self,
+            x0: NDArray
+    ) -> NDArray:
+        return Jacobian(self.l1_minimum(x0))(x0).ravel()
 
-    def l1_minimum_hess(self, x0: NDArray) -> NDArray:
-        return Hessian(lambda x0: self.l1_minimum(x0))(x0)
+    def l1_minimum_hess(
+            self,
+            x0: NDArray
+    ) -> NDArray:
+        return Hessian(self.l1_minimum(x0))(x0)
 
-    def l1_minimum_der(self, x0: NDArray) -> Tuple[float, NDArray]:
+    def l1_minimum_der(
+            self,
+            x0: NDArray
+    ) -> Tuple[float, NDArray]:
         return self.l1_minimum(x0, jac=True), self.jacobi
 
     def compare_l1(self) -> bool:
         return self.l1_last < self.l1_first
 
     @staticmethod
-    def __derivative(x0: NDArray, i: int, trova: float) -> NDArray:
+    def __derivative(
+            x0: NDArray,
+            i: int,
+            trova: float
+    ) -> NDArray:
         x0[1] = max(0., x0[1])
         tmp = sqrt(1. + x0[1] * i ** 2)
         tmp1 = (i * x0[0] * tmp - trova) / trova

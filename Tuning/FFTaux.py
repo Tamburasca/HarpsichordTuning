@@ -63,11 +63,12 @@ def log10_b(func: Callable) -> Callable:
 
 
 @mytimer("baseline calculation")
-def baseline_als_optimized(y: ArrayLike,
-                           lam: float,
-                           p: float,
-                           niter: int = 10
-                           ) -> NDArray:
+def baseline_als_optimized(
+        y: ArrayLike,
+        lam: float,
+        p: float,
+        niter: int = 10
+) -> NDArray:
     """
     https://stackoverflow.com/questions/29156532/python-baseline-correction-library
     Caveat: this function is disregarded for the time being since it consumes

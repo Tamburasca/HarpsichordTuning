@@ -2,7 +2,7 @@ from numpy import sqrt, append, mean, array
 from math import gcd
 import logging
 from operator import itemgetter
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 # internal
 from FFTaux import mytimer
 # from Tuning.minimize_bruteforce import final_fit
@@ -10,7 +10,10 @@ from minimize_SLSQP import final_fit
 import parameters
 
 
-def bisection(vector: List, value: float) -> int:
+def bisection(
+        vector: List,
+        value: float
+) -> int:
     """
     For <vector> and <value>, returns an index j such that <value> is between
     vector[j] and vector[j+1]. Values in <vector> must increase
@@ -42,7 +45,10 @@ def bisection(vector: List, value: float) -> int:
         return jl
 
 
-def l1min(ind: List, x0: List) -> float:
+def l1min(
+        ind: List,
+        x0: List
+) -> float:
     """
     returns the cost function for a regression on the L1 norm
     l1 = sum( abs( f_i(measured) - f_i(calculated) ) / f_i(measured) )
@@ -71,7 +77,9 @@ def l1min(ind: List, x0: List) -> float:
             ids = num_freq_calc - 1
         else:
             # consider the closest candidate of neighbors
-            ids = idx if abs(found - freq[idx]) < abs(found - freq[idx + 1]) else idx + 1
+            ids = idx \
+                if abs(found - freq[idx]) < abs(found - freq[idx + 1]) \
+                else idx + 1
         diff = freq[ids] - found
         # L1 norm normalized to the frequency, as L1 increases from bass to discant
         l1 += abs(diff) / found
@@ -105,9 +113,9 @@ def harmonics(peaks: List[Tuple]) -> List:
     list (float)
         positions of first NPARTIAL partials
     """
-    initial = list()
-    l1 = dict()
-    f_n = list()
+    initial: List = []
+    l1: Dict[int, List] = {}
+    f_n: List = []
 
     # sort by frequency ascending
     peaks.sort(key=lambda x: x[0])
@@ -126,7 +134,9 @@ def harmonics(peaks: List[Tuple]) -> List:
                     try:
                         b = (tmp - 1.) / (k ** 2 - tmp * m ** 2)
                     except ZeroDivisionError:
-                        logging.info("devideByZero: discarded value in harmonics finding")
+                        logging.info(
+                            "devideByZero: discarded value in harmonics finding"
+                        )
                         continue
                     if -0.0001 < b < parameters.INHARM:
                         # allow also negative b value > -0.0001 for
@@ -134,9 +144,12 @@ def harmonics(peaks: List[Tuple]) -> List:
                         f_fundamental = ind[i] / (m * sqrt(1. + b * m ** 2))
                         if f_fundamental < parameters.FREQUENCY_LIMIT:
                             break  # break two loops here
-                        element = [m, k, ind[i], ind[j], max(b, 0.), f_fundamental]  # always b >= 0
+                        element = [
+                            m, k, ind[i], ind[j], max(b, 0.), f_fundamental
+                        ]  # always b >= 0
                         if initial:
-                            if element[3] == initial[-1][3] and element[0] == initial[-1][0]:
+                            if (element[3] == initial[-1][3]
+                                    and element[0] == initial[-1][0]):
                                 # remove previous dublette on upper frequency and lower partial
                                 initial.pop()
                         initial.append(element)
@@ -198,7 +211,10 @@ def harmonics(peaks: List[Tuple]) -> List:
         if base_frequency > parameters.FREQUENCY_LIMIT:
             if no_of_peak_combi > 1:
                 identified = select_list(selected=selected)
-                base_frequency, inharmonicity = final_fit(av=av, ind=identified)
+                base_frequency, inharmonicity = final_fit(
+                    av=av,
+                    ind=identified
+                )
                 logging.debug(
                     "Initial: f_0 = {0:.3f} Hz, B = {1:.3e} "
                     "Final: f_0 = {2:.3f} Hz, B = {3:.3e}".format(

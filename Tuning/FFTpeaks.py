@@ -37,7 +37,11 @@ class Noise:
         self.__b = append(self.__b, [self.__flux[-1]]*2)
         self.__l = len(self.__b)
 
-    def __call__(self, value: int, width: int = 50) -> float:
+    def __call__(
+            self,
+            value: int,
+            width: int = 50
+    ) -> float:
         low = value - width if value - width >= 0 else 0
         high = value + width if value + width < self.__l else self.__l - 1
         return average(self.__b[low:high])
@@ -47,7 +51,11 @@ class Noise:
 
 
 @mytimer("Gaussian Convolution")
-def gaussian_convolution(freq: List, amp: List, initial: List[Tuple]):
+def gaussian_convolution(
+        freq: List,
+        amp: List,
+        initial: List[Tuple]
+) -> List[List[float]]:
     """
     :param freq: list of floats
         frequencies of the FFT
@@ -56,12 +64,12 @@ def gaussian_convolution(freq: List, amp: List, initial: List[Tuple]):
     :param initial: list of float tuple
         frequencies and corresponding heights of peaks found
     """
-    _amp = amp
-    _freq = freq
+    _amp = amp.copy()
+    _freq = freq.copy()
     _x = list(map(itemgetter(0), initial))
     # _y = list(map(itemgetter(1), initial))  # obsolete
     num_threads = len(initial)
-    peaks = list()
+    peaks: List = []
     logging.debug("Number of peaks: {0}".format(num_threads))
 
     def _fitting(ids: int) -> List | None:
@@ -78,8 +86,11 @@ def gaussian_convolution(freq: List, amp: List, initial: List[Tuple]):
 
         f = _freq[x - 1:x + 2]  # frequencies: one neighbor on either side
         test = _amp[x - 1:x + 2]  # amplitudes
-        if test[0] > test[1] or test[2] > test[1] or (test[1] * test[1]) < (test[0] * test[2]):
-            logging.warning("Convolution requirement violated: peak disregarded!")
+        if (test[0] > test[1] or test[2] > test[1]
+                or (test[1] * test[1]) < (test[0] * test[2])):
+            logging.warning(
+                "Convolution requirement violated: peak disregarded!"
+            )
             return None
         """
         EUROPEAN ORGANIZATION FOR NUCLEAR RESEARCH / ORGANISATION EUROPEENNE POUR LA RECHERCHE NUCLEAIRE
@@ -92,12 +103,15 @@ def gaussian_convolution(freq: List, amp: List, initial: List[Tuple]):
         https://stackoverflow.com/questions/4039039/fastest-way-to-fit-a-parabola-to-set-of-points
         """
         a = log(_amp[x - 1:x + 2])  # log amplitudes in Fourier space
-        offset = .5 * (a[2] - a[0]) / (
-                2. * a[1] - a[0] - a[2]) * parameters.RATE / parameters.SLICE_LENGTH
+        offset = (
+                .5 * parameters.RATE / parameters.SLICE_LENGTH *
+                (a[2] - a[0]) / (2. * a[1] - a[0] - a[2])
+        )
         ctr = f[1] + offset
         dilation = (a[0] - a[1]) / ((f[0] - ctr) ** 2 - (f[1] - ctr) ** 2)
         fwhm = 2. * sqrt(-.6931 / dilation)
         height = exp(a[0] - dilation * (f[0] - ctr) ** 2)
+
         return list([ctr, height, fwhm])
         # end embedded function
 
@@ -110,11 +124,13 @@ def gaussian_convolution(freq: List, amp: List, initial: List[Tuple]):
 
 
 @mytimer("peak finding (subtract time consumed for Gaussian Convolution)")
-def peak(frequency: NDArray,
-         spectrum: NDArray,
-         baseline: [None, NDArray],
-         std: [None, NDArray],
-         noise_level: float) -> List[List]:
+def peak(
+        frequency: NDArray,
+        spectrum: NDArray,
+        baseline: [None, NDArray],
+        std: [None, NDArray],
+        noise_level: float
+) -> List[List[float]]:
     """
     find peaks in frequency spectrum
     :param frequency: NDArray
@@ -133,7 +149,7 @@ def peak(frequency: NDArray,
         list (float) of tuples with peak frequencies and corresponding heights
         (no baseline subtracted)
     """
-    listf = list()
+    listf: List = []
 
     noise = Noise(flux=spectrum)
     noise_total = noise.total()
@@ -141,13 +157,15 @@ def peak(frequency: NDArray,
 
     # find peak according to prominence and remove peaks below threshold
     # spectrum[peaks] = "prominences with baseline zero"
-    peaks, properties = find_peaks(x=spectrum,
-                                   # min distance between two peaks
-                                   distance=parameters.DISTANCE,
-                                   # sensitivity minus background
-                                   # prominence=parameters.NOISE_LEVEL * noise_total,
-                                   # peak width
-                                   width=parameters.WIDTH)
+    peaks, properties = find_peaks(
+        x=spectrum,
+        # min distance between two peaks
+        distance=parameters.DISTANCE,
+        # sensitivity minus background
+        # prominence=parameters.NOISE_LEVEL * noise_total,
+        # peak width
+        width=parameters.WIDTH
+    )
     # print(peaks, properties['left_ips'], properties['right_ips'])
     # avaraged background of both sides
     left = [int(i) for i in properties['left_ips']]
@@ -159,7 +177,8 @@ def peak(frequency: NDArray,
     # sort out peaks below threshold and consider NMAX highest,
     # sort key = amplitude descending
     if baseline is None:
-        listtup = [item for item in listtup if item[1] > noise_level * noise_total]
+        listtup = \
+            [item for item in listtup if item[1] > noise_level * noise_total]
     else:
         # ToDo: needs to be tested
         listtup = [item for item in listtup if item[1] > 20. * std[item[0]]]

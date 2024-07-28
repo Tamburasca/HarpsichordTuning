@@ -10,7 +10,10 @@ from numpy.typing import NDArray
 
 
 class L1(object):
-    def __init__(self, ind: List[Tuple]):
+    def __init__(
+            self,
+            ind: List[Tuple]
+    ):
         """
         :param ind: array - measured resonance frequencies as from peaks (FFT)
         """
@@ -19,7 +22,11 @@ class L1(object):
         self.l1_last: float = None
         self.jacobi: NDArray = array([0., 0.])
 
-    def l1_minimum(self, x0: NDArray, jac: bool = False) -> float:
+    def l1_minimum(
+            self,
+            x0: NDArray,
+            jac: bool = False
+    ) -> float:
         """
         returns the cost function for a regression on the L1 norm
         l1 = sum( abs( f_i(measured) - f_i(calculated) ) / f_i(measured) )
@@ -50,22 +57,38 @@ class L1(object):
 
         return l1
 
-    def l1_minimum_log_b(self, x0: NDArray, jac: bool = False) -> float:
+    def l1_minimum_log_b(
+            self,
+            x0: NDArray,
+            jac: bool = False
+    ) -> float:
         # b is coming in as log10(b)
         x0[1] = 10 ** x0[1]
         return self.l1_minimum(x0, jac)
 
-    def l1_minimum_jac_direct(self, x0: NDArray) -> NDArray:
+    def l1_minimum_jac_direct(
+            self,
+            x0: NDArray
+    ) -> NDArray:
         self.l1_minimum(x0, jac=True)
         return self.jacobi
 
-    def l1_minimum_jac(self, x0: NDArray) -> NDArray:
-        return Jacobian(lambda x0: self.l1_minimum(x0))(x0).ravel()
+    def l1_minimum_jac(
+            self,
+            x0: NDArray
+    ) -> NDArray:
+        return Jacobian(self.l1_minimum(x0))(x0).ravel()
 
-    def l1_minimum_hess(self, x0: NDArray) -> NDArray:
-        return Hessian(lambda x0: self.l1_minimum(x0))(x0)
+    def l1_minimum_hess(
+            self,
+            x0: NDArray
+    ) -> NDArray:
+        return Hessian(self.l1_minimum(x0))(x0)
 
-    def l1_minimum_der(self, x0: NDArray) -> Tuple[float, NDArray]:
+    def l1_minimum_der(
+            self,
+            x0: NDArray
+    ) -> Tuple[float, NDArray]:
         return self.l1_minimum(x0, jac=True), self.jacobi
 
     def compare_l1(self) -> bool:

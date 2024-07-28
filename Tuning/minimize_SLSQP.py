@@ -24,7 +24,10 @@ def bounds(x0: NDArray) -> Sequence:
 
 
 @mytimer("L1 Minimization")
-def final_fit(av: NDArray, ind: List) -> Tuple[float, float]:
+def final_fit(
+        av: NDArray,
+        ind: List
+) -> Tuple[float, float]:
     """
     fits the base frequency and inharmonicity by minimizing the L1 cost function
     as the deviation from the measured resonance frequencies to the
@@ -65,7 +68,8 @@ def final_fit(av: NDArray, ind: List) -> Tuple[float, float]:
                        options={})
 
         def debug_msg(success: bool) -> None:
-            logging.debug("Minimizer: Success: {0} L1 initial value: {1}, last value: {2}\n\t"
+            logging.debug("Minimizer: Success: {0} L1 initial value: {1}, "
+                          "last value: {2}\n\t"
                           "number of iterations/evaluation: {3}/{4}\n\t"
                           "message: {5}".format(
                                 success,

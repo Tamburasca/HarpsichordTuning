@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-FFTonLiveAudio Copyright (C) 2020-23, Dr. Ralf Antonius Timmermann
+FFTonLiveAudio Copyright (C) 2020-24, Dr. Ralf Antonius Timmermann
 
 A graphical tuning tool for string instruments, such as harpsichords and pianos.
 
@@ -51,93 +51,13 @@ from multiProcess_matplot import MPmatplot
 from FFTaux import mytimer, baseline_als_optimized
 import parameters
 
-"""
-2021/08/14 - Ralf A. Timmermann
-- Update to version 2.1
-    * new hotkeys to change minimum frequency in Fourier spectrum
-2021/08/26 - Ralf A. Timmermann
-- version 2.2
-    * nested pie to display deviation of key from target value, parameter.PIE
-    to toggle to previous setup
-    * hotkey to reset to initial values
-    * inner pie filled with color to indicate correct tuning
-    * DEBUG: order peak list by frequency (ascending)
-    * DEBUG: utilized time in ms
-    * INFO: best results with f_1 instead of f_0
-    * import solely modules to be used  
-2022/02/26 - Ralf A. Timmermann
-- version 2.3
-    * f0 and b are derived from combinations of partitials with no common 
-    divisor. In ambiguous cases the calculated partials' frequencies  
-    (as derived from f0 and b) are compared with those measured and the cost 
-    function (l1-norm) for a LASSO regression is minimized.
-    * hotkey 'x' to toggle between halt and resume.
-    * matplotlib commands are swapped to new superclass MPmatplot in 
-    multiProcess_matplot.py that will be started in a proprietary process, 
-    variables in dict passed through queue.
-    * new plot parameters moved to parameters.py 
-    * consumed time per module in DEBUG mode measured in wrapper mytimer
-    * FFTaux.py added
-2022/04/10 - Ralf A. Timmermann
-- version 3.0 (productive)
-    * Finding the NMAX highes peaks in the frequency spectrum: prominence 
-    for find_peaks disabled, peak heights minus background calculated by 
-    utilizing the average interpolated positions of left and right intersection 
-    points of a horizontal line at the respective evaluation height.
-    * modified global hot keys, such as q is disabled.
-2022/07/17 - Ralf A. Timmermann
-- version 3.1.0 (productive)
-    * slice shift is fixed value in parameter file
-    * import absolute paths
-    * final L1 minimization on difference between measured and calculated 
-    partials utilizing scipy.optimize.minimize through brute
-    to determine base-frequency and inharmonicity (toggled in parameters)
-2022/07/19 - Ralf A. Timmermann
-- version 3.1.1 (productive)
-    * Noise level can be adjusted through global hot keys
-    * L1 minimization called only if more than 2 measured peaks
-    * catching if erroneous input from the keyboard
-2022/07/20 - Ralf A. Timmermann
-- version 3.1.2 (productive)
-    * error correction: Jacobian sign of derivative toggled
-    * L1_contours.py added to demonstrate L1 cost function and its Jacobian (
-    not needed with brute force) 
-2022/07/26 - Ralf A. Timmermann
-- version 3.1.3 (productive)
-    * slice of inharmonicity factor b is on log10 scale for equidistant grids
-    for brute force minimizer
-2022/08/07 - Ralf A. Timmermann
-- version 3.2 (productive)
-    * updated for Python v3.9
-    * typing
-2022/08/07 - Ralf A. Timmermann
-- version 3.2.1 (productive)
-    * SLSQP minimizer
-2022/08/12 - Ralf A. Timmermann
-- version 3.2.2 
-    * absoute pitch in pie
-2022/08/17 - Ralf A. Timmermann
-- version 3.3.1 
-    * dublicates removed from the partials list
-    * for the minimizer: list of found frequencies is now tagged with 
-    the appropriate partials, that makes l1 computation unambiguous and avoids
-    local minima
-    * code cleansing
-2022/09/27 - Ralf A. Timmermann
-- version 3.4.1
-    * highpass filter parameters outsourced as global parameters
-    * Noise measurement with no audio signal (silence) comprising mean and 
-    standard deviation per bin - need to be toggled on/off per global hotkey
-    (in experimental stage) 
-"""
-
 __author__ = "Dr. Ralf Antonius Timmermann"
-__copyright__ = "Copyright (C) Dr. Ralf Antonius Timmermann"
+__copyright__ = "Copyright (c) 2020-24 Dr. Ralf Antonius Timmermann"
 __credits__ = ""
 __license__ = "GPLv3"
-__version__ = "3.4.1"
+__version__ = "3.5.0"
 __maintainer__ = "Dr. Ralf A. Timmermann"
-__email__ = "rtimmermann@astro.uni-bonn.de"
+__email__ = "ralf.timmermann@gmx.de"
 __status__ = "Prod"
 
 print(__doc__)
@@ -157,6 +77,7 @@ class Tuner:
         :param tuning: string
             tuning temperament
         """
+        CHUNKSIZE = 1024  # fixed chunk size
         self.step: int = parameters.SLICE_SHIFT
         self.fmax: int = parameters.FREQUENCY_MAX
         self.fmin: int = 0
@@ -169,19 +90,27 @@ class Tuner:
         self.__n: int = 0
         self.baseline = None
         self.std = None
+        self.callback_output: List = []
 
-        self.callback_output = list()
         audio = pyaudio.PyAudio()
-        self.stream = audio.open(format=pyaudio.paInt16,
-                                 channels=1,
-                                 rate=parameters.RATE,
-                                 output=False,
-                                 input=True,
-                                 stream_callback=self.callback)
+        self.stream = audio.open(
+            format=pyaudio.paInt16,
+            channels=1,
+            rate=parameters.RATE,
+            output=False,
+            input=True,
+            stream_callback=self.callback,
+            frames_per_buffer=CHUNKSIZE
+        )
         logging.debug("Audio Device info: {}".
                       format(audio.get_default_input_device_info()))
 
-    def callback(self, in_data, frame_count, time_info, flag) -> Tuple[None, int]:
+    def callback(
+            self,
+            in_data,
+            frame_count,
+            time_info, flag
+    ) -> Tuple[None, int]:
         """
         :param in_data:
         :param frame_count:
@@ -198,7 +127,7 @@ class Tuner:
         # toggle between suspending the audio stram and freezing the plat and
         # resuming: ON: True, OFF: False
         if self.x:
-            print("Resume with 'ctrl-x' or with 'ctrl-y' to quit.")
+            print("Resume with 'ctrl-x' or 'ctrl-y' to quit.")
         self.x = not self.x
 
     def on_activate_y(self) -> None:
@@ -295,12 +224,16 @@ class Tuner:
         elif self.__n == 2:
             yfft_first = self.__av
             self.__av = (yfft_first + yfft) / 2
-            self.__std_squared = (yfft - self.__av) ** 2 + (yfft_first - self.__av) ** 2
+            self.__std_squared = (
+                    (yfft - self.__av) ** 2 + (yfft_first - self.__av) ** 2
+            )
         else:
             av_previous = self.__av
             self.__av = ((self.__n - 1) * self.__av + yfft) / self.__n
-            self.__std_squared = ((self.__n - 2) * self.__std_squared +
-                                  (yfft - self.__av) * (yfft - av_previous)) / (self.__n - 1)
+            self.__std_squared = (
+                    ((self.__n - 2) * self.__std_squared +
+                     (yfft - self.__av) * (yfft - av_previous)) / (self.__n - 1)
+            )
         print("Noise Measurement ..., Iteration No: {}".format(self.__n - 1))
 
         return self.__av, sqrt(self.__std_squared)
@@ -322,12 +255,16 @@ class Tuner:
             for key, value in tuningtable[self.tuning].items():
                 displaced = offset + tuningtable[self.tuning].get('A') - value
                 if -60 < displaced < 60:
-                    logging.debug("{0} {1} {2} {3}"
-                                  .format(str(i),
-                                          str(key),
-                                          str(value),
-                                          str(displaced + tuningtable[self.tuning].get('A') - value)))
-                    key_pressed = "{0}$_{{{1}}}$".format(key, str(i + 4)) # matplotlib formate
+                    logging.debug("{0} {1} {2} {3}".format(
+                        str(i),
+                        str(key),
+                        str(value),
+                        str(displaced
+                            + tuningtable[self.tuning].get('A')
+                            - value))
+                    )
+                    # matplotlib formate
+                    key_pressed = "{0}$_{{{1}}}$".format(key, str(i + 4))
 
                     return key_pressed, displaced
 
@@ -364,7 +301,7 @@ class Tuner:
         amp = hstack(self.callback_output)
         slices = util.view_as_windows(amp,
                                       window_shape=(
-                                          parameters.SLICE_LENGTH,),
+                                          parameters.SLICE_LENGTH),
                                       step=self.step)
         logging.debug("Audio shape: {0}, Sliced audio shape: {1}"
                       .format(amp.shape,
@@ -444,7 +381,8 @@ class Tuner:
                 queue.put(
                     {'yfft': yfft,
                      'noise_toggle': self.noise_toggle,
-                     'baseline': 20. * self.std if self.baseline is not None else None,
+                     'baseline':
+                         20. * self.std if self.baseline is not None else None,
                      'key': key,
                      'off': off,
                      'slices': slices,
@@ -466,8 +404,10 @@ def main() -> int:
         return pitch
 
     for tune in tuningtable.keys():
-        print("Temperament ({1:d}) {0:s}".format(tune,
-                                                 list(tuningtable).index(tune)))
+        print("Temperament ({1:d}) {0:s}".format(
+            tune,
+            list(tuningtable).index(tune))
+        )
     a = None
     while a is None:
         try:

@@ -13,7 +13,11 @@ import parameters
 
 
 class MPmatplot(Process):
-    def __init__(self, queue: Queue, **kwargs):
+    def __init__(
+            self,
+            queue: Queue,
+            **kwargs
+    ):
         super().__init__(daemon=True)
         self.__firstplot = True
         # factor accounts for the Gaussian apodization
@@ -28,16 +32,20 @@ class MPmatplot(Process):
             .format(self.__resolution))
 
     @staticmethod
-    def pie(axes: Axes, displaced: float, key_pressed: str) -> None:
+    def pie(
+            axes: Axes,
+            displaced: float,
+            key_pressed: str
+    ) -> None:
         """
         matplotlib subroutine for pie inlet
         """
         # print(axes.__dict__)
         # delete all patches and texts from inset_pie axes that piled up
         while axes.patches:
-            axes.patches.pop()
+            axes.patches[0].remove()
         while axes.texts:
-            axes.texts.pop()
+            axes.texts[0].remove()
         axes.text(x=0,
                   y=0,
                   s=key_pressed,
@@ -66,13 +74,17 @@ class MPmatplot(Process):
                  )
 
     @staticmethod
-    def eventcollection(axes: Axes, peak_list: List, f_meas: NDArray) -> None:
+    def eventcollection(
+            axes: Axes,
+            peak_list: List,
+            f_meas: NDArray
+    ) -> None:
         """
         vertical bar subroutine
         """
         # remove all previous collections from axes, reverse order
         while axes.collections:
-            axes.collections.pop()
+            axes.collections[0].remove()
         y_axis0, y_axis1 = axes.get_ylim()
         if parameters.DEBUG:
             yevents = EventCollection(
@@ -106,12 +118,13 @@ class MPmatplot(Process):
         queue.
         :return:
         """
-        ln1, ln2, text1, ax1background = None, None, None, None
+        ln1, ln2, text, text1, ax1background = None, None, None, None, None
+
         plt.ion()  # Stop matplotlib windows from blocking
         plt.rcParams['keymap.quit'].remove('q')  # disable key q from closing the window
         fig = plt.gcf()
         fig.set_size_inches(12, 6)
-        fig.canvas.set_window_title(
+        fig.canvas.manager.set_window_title(
             'Digital String Tuner (c) Ralf Antonius Timmermann')
         ax1 = fig.add_subplot(111)
         ax1.set_xlabel('Frequency/Hz')
@@ -140,7 +153,9 @@ class MPmatplot(Process):
                 logging.warning("{0} messages in MP queue".format(qsize))
             baseline = dic.get('baseline')
             noise_toggle = dic.get('noise_toggle')
-            yfft = dic.get('yfft') if not noise_toggle or baseline is None else baseline
+            yfft = dic.get('yfft') \
+                if not noise_toggle or baseline is None \
+                else baseline
             ymax = max(yfft)
             fmin = dic.get('fmin')
             fmax = dic.get('fmax')

@@ -1,4 +1,4 @@
-from numpy import hanning, hamming, abs
+from numpy import abs
 from numpy.fft import rfft, rfftfreq
 from scipy.signal import butter, freqs, windows
 from typing import Tuple
@@ -7,8 +7,8 @@ from numpy.typing import NDArray
 from FFTaux import mytimer
 import parameters
 
-hanning = hanning(M=parameters.SLICE_LENGTH)
-hamming = hamming(M=parameters.SLICE_LENGTH)
+# hanning = hanning(M=parameters.SLICE_LENGTH)
+# hamming = hamming(M=parameters.SLICE_LENGTH)
 apodization_gaussian = windows.gaussian(
     M=parameters.SLICE_LENGTH,
     std=parameters.SLICE_LENGTH / parameters.APODIZATION_GAUSS_SIGMA
@@ -17,11 +17,12 @@ t1 = rfftfreq(
     n=parameters.SLICE_LENGTH,
     d=1. / parameters.RATE
 )
-b, a = butter(
+b, a, *_ = butter(
     N=parameters.F_ORDER,
     Wn=parameters.F_FILT,
     btype='highpass',
     analog=True)
+
 _, h = freqs(
     b=b,
     a=a,
