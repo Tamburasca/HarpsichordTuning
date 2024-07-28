@@ -14,13 +14,10 @@ periods = 0.74 or 1.49 s.
 The sampling frequency is f<sub>s</sub> = 44,100 s<sup>-1</sup>
 
 Each slice is apodized utilizing Gaussian windowing, where L = 
-7<img src="https://render.githubusercontent.com/render/math?math=$\sigma$">, 
-resulting in a FWHM (@-6dB) = 2.62 bins and a full width of the main lobe of 
+7 &sigma;, resulting in a FWHM (@-6dB) = 2.62 bins and a full width of the main lobe of 
 10.46 bins. This translates to 3.53 or 1.76 Hz and 14.1 or 7.1 Hz for N = 15 and 
 16, respectively. The highest side lobe is -71 dB. Worth mentioning, the 
-Gaussian L = 
-7<img src="https://render.githubusercontent.com/render/math?math=$\sigma$">
-is similar to a Blackman-Harris-Nuttall window.
+Gaussian L = 7 &sigma; is similar to a Blackman-Harris-Nuttall window.
 
 Subsequently, in the
 frequency domain, Butterworth high-pass filtering is applied to suppress noise
@@ -41,8 +38,10 @@ The ear hears the fundamental frequency most prominently,
 but the overall sound is also colored by the presence of various overtones 
 (frequencies greater than the fundamental frequency).
 However, a real string behaves closer to a stiff bar according to a forth-order 
-differential equation 
-<img src="https://render.githubusercontent.com/render/math?math=\ddot y \propto {-y}\!\!''''">
+differential equation
+
+$$\ddot{y} \propto {-y}\!\!''''$$
+
 with a quadratic dispersion. Hence, its partials can be approximated by
 
 **(2) <em>f<sub>n</sub> = n * f<sub>0</sub> * sqrt(1 + B * n<sup>2</sup>)</em>**
