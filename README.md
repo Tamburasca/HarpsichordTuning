@@ -42,24 +42,23 @@ but the overall sound is also colored by the presence of various overtones
 However, a real string behaves closer to a stiff bar according to a forth-order 
 differential equation 
 
-$$\ddot{y} \propto {-y}''''$$
+$$\ddot{y} \propto {-y}''''\tag{2}$$
 
 with a quadratic dispersion. Hence, its partials can be approximated by
 
-$$f_{n} = n f_{0} \sqrt{1 + B n^{2}}$$
+$$f_{n} = n f_{0} \sqrt{1 + B n^{2}}\tag{3}$$
 
 All peak positions are correlated to each other, such that they 
 can be identifed as higher partials to one common base frequency f<sub>0</sub>. 
 By rewriting (2), we get for two frequencies that can be 
 applied to all permutations of peaks
 
-$$B = {{C - 1} \over j^{2} - C * i^{2}}$$
+$$B = {{C - 1} \over j^{2} - C * i^{2}}\tag{4}$$
 
 where 
+$`C = ({{f_{j} i} \over f_{i} j})^{2}`$
 
-$$C = ({{f_{j} i} \over f_{i} j})^{2}$$
-
-$$f_{0} = {f_{i} \over i \sqrt{1 + B i^{2}}$$
+$$f_{0} = {f_{i} \over i \sqrt{1 + B i^{2}}}\tag{5}$$
 
 The measured frequencies of the partials are denoted
 **<em>f<sub>i</sub> < f<sub>j</sub></em>** and **1 &#8804;
@@ -70,7 +69,7 @@ depending on the instrument to be tuned, B < 0.001 and < 0.05 for
 harpsichords and pianos, respectively. Finally, a synthetic spectrum 
 is calculated from f<sub>0</sub> and B and compared to the measured 
 one by minimizating the L1-norm of the coefficient vector, the coefficients being
-<em>abs(f<sub>i</sub><sup>measured</sup> - f<sub>i</sub><sup>calculated</sup>)</em>.
+<em>|f<sub>i</sub><sup>measured</sup> - f<sub>i</sub><sup>calculated</sup>|</em>.
 The L2-norm was tested, but behaved inferior. I employ the module 
 [scipy.optimize.slsqp](https://docs.scipy.org/doc/scipy/reference/optimize.minimize-slsqp.html#optimize-minimize-slsqp),
 designed for least-square minimizations. Although it requires the Jacobian 
