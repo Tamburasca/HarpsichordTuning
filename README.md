@@ -73,7 +73,7 @@ harpsichords and pianos, respectively.
 Finally, a synthetic spectrum 
 is calculated from f<sub>0</sub> and B and compared to the measured 
 one by minimizating the L1-norm of the coefficient vector, the coefficients being
-<em>|f<sub>i</sub><sup>measured</sup> - f<sub>i</sub><sup>calculated</sup>|</em>.
+|<em>f<sub>i</sub><sup>measured</sup> - f<sub>i</sub><sup>calculated</sup></em>|.
 
 The L2-norm was tested, but behaved inferior. I employ the module 
 [scipy.optimize.slsqp](https://docs.scipy.org/doc/scipy/reference/optimize.minimize-slsqp.html#optimize-minimize-slsqp), originally
@@ -86,8 +86,8 @@ be the most reliable and fastest minimizer, when compared to brute-force or 'L-B
 The frequency of the first partial f<sub>1</sub> is 
 compared to a value derived from the pitch level and a tuning table 
 [tuningTable.py](https://github.com/Tamburasca/HarpsichordTuning/blob/master/Tuning/tuningTable.py), 
-currently comprising Werkmeister III, 1/4 Comma Meantone, and Equal Temperament 
-- feel free to edit/enhance it for yourself. We have not yet considered 
+currently comprising Werkmeister III, 1/4 Comma Meantone, 
+and Equal Temperament - feel free to edit/enhance it for yourself. We have not yet considered 
 enharmonic equivalency in meantone, hence, one would have to enable/disable 
 certain keys, 
 such as A♭ vs. G#. The key in the center of the pie shows what key was 
@@ -109,9 +109,9 @@ diminish and increase the max (min) frequency displayed. 'ctrl-r' resets
 parameter to initial values.
 
 The background noise can be measured through an integration and averaging 
-over slices by toggling ctrl-alt-3. Caveat: background noise must be kept 
-low during that time. Ctrl-alt-1 and ctrl-alt-2 increase or decrease sensitivity
-levels
+over slices by toggling 'ctrl-alt-3'. Caveat: background noise must be kept 
+low during that time. 'Ctrl-alt-1' and 'ctrl-alt-2' 
+increase or decrease sensitivity levels
  
 Run the program with: <em>python3 -m Tuning</em>
 
