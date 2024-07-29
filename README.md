@@ -2,7 +2,7 @@
 
 ### Introduction
 
-We present here an automatic tuning tool for string instruments, 
+We present an automatic tuning tool for string instruments, 
 e.g. harpsichords and pianos.
 
 The current application (exclusively realized in Python) 
@@ -11,7 +11,7 @@ splits it into smaller, overlapping slices, and applies the Fourier transform to
 each. This practice is known as short time Fourier transform, i.e. STFT. 
 The slices overlap by multiples of 1024 samples. They have sizes of
 L = 2<sup>N</sup> samples, where N=15 or 16, resulting in sampling 
-periods of 0.74 or 1.49 s each slice. 
+periods of 0.74 or 1.49 s for each slice. 
 The sampling frequency is f<sub>s</sub> = 44,100 s<sup>-1</sup>
 
 Each slice is apodized utilizing Gaussian windowing, where L = 
@@ -37,8 +37,9 @@ $$f_{n} = n f_{1}\tag{1}$$
 
 where n is the n<em>th</em> partial. 
 The ear hears the fundamental frequency most prominently, 
-but the overall sound is also colored by the presence of various overtones 
-(frequencies greater than the fundamental frequency).
+but the overall sound is colored by the presence of various overtones, i.e. 
+frequencies greater than the fundamental frequency, each 
+partial at a diverse intensity.
 However, a real string behaves closer to a stiff bar according to a forth-order 
 differential equation 
 
@@ -50,13 +51,14 @@ $$f_{n} = n f_{0} \sqrt{1 + B n^{2}}\tag{3}$$
 
 All peak positions are correlated to each other, such that they 
 can be identifed as higher partials to one common base frequency f<sub>0</sub>. 
-By rewriting (2), we get for two frequencies that can be 
+By rewriting (3), we get for two frequencies that can be 
 applied to all permutations of peaks
 
 $$B = {{C - 1} \over j^{2} - C * i^{2}}\tag{4}$$
 
 where 
-$`C = ({{f_{j} i} \over f_{i} j})^{2}`$
+
+$$C = ({{f_{j} i} \over f_{i} j})^{2}$$
 
 $$f_{0} = {f_{i} \over i \sqrt{1 + B i^{2}}}\tag{5}$$
 
@@ -66,12 +68,15 @@ The measured frequencies of the partials are denoted
 The maximum inharmonicity coefficient needs to be adjusted in
 [parameters.py](https://github.com/Tamburasca/HarpsichordTuning/blob/master/Tuning/parameters.py), 
 depending on the instrument to be tuned, B < 0.001 and < 0.05 for 
-harpsichords and pianos, respectively. Finally, a synthetic spectrum 
+harpsichords and pianos, respectively. 
+
+Finally, a synthetic spectrum 
 is calculated from f<sub>0</sub> and B and compared to the measured 
 one by minimizating the L1-norm of the coefficient vector, the coefficients being
 <em>|f<sub>i</sub><sup>measured</sup> - f<sub>i</sub><sup>calculated</sup>|</em>.
+
 The L2-norm was tested, but behaved inferior. I employ the module 
-[scipy.optimize.slsqp](https://docs.scipy.org/doc/scipy/reference/optimize.minimize-slsqp.html#optimize-minimize-slsqp),
+[scipy.optimize.slsqp](https://docs.scipy.org/doc/scipy/reference/optimize.minimize-slsqp.html#optimize-minimize-slsqp), originally
 designed for least-square minimizations. Although it requires the Jacobian 
 of the L1 to be computed as well - imposing additional CPU-power - it seemed to 
 be the most reliable and fastest minimizer, when compared to brute-force or 'L-BFGS-B'.
@@ -82,7 +87,7 @@ The frequency of the first partial f<sub>1</sub> is
 compared to a value derived from the pitch level and a tuning table 
 [tuningTable.py](https://github.com/Tamburasca/HarpsichordTuning/blob/master/Tuning/tuningTable.py), 
 currently comprising Werkmeister III, 1/4 Comma Meantone, and Equal Temperament 
-(feel free to edit/enhance it for yourself). We have not yet considered 
+- feel free to edit/enhance it for yourself. We have not yet considered 
 enharmonic equivalency in meantone, hence, one would have to enable/disable 
 certain keys, 
 such as A♭ vs. G#. The key in the center of the pie shows what key was 
@@ -95,22 +100,26 @@ The orange vertical bars indicate the peaks identified by the peak
 finding routine. The red vertical bars show the partials up to 
 <em>n<sub>max</sub> &#8804; NPARTIAL</em> as 
 derived from the computed base frequency and inharmonicity coefficient 
-when applying (2).
+when applying (3).
 
 The hotkey 'ctrl-y' or 'x' stops the program or toggles between halt and 
 resume, respectively. 'Ctrl-j' and 'ctrl-k' shorten and lengthen the shift 
 between the audio slices, whereas 'ctrl-n' ('alt-n') and 'ctrl-m' ('alt-m') 
 diminish and increase the max (min) frequency displayed. 'ctrl-r' resets 
 parameter to initial values.
+
+The background noise can be measured through an integration and averaging 
+over slices by toggling ctrl-alt-3. Caveat: background noise must be kept 
+low during that time. Ctrl-alt-1 and ctrl-alt-2 increase or decrease sensitivity
+levels
  
 Run the program with: <em>python3 -m Tuning</em>
 
 ### Caveat
 
 1) When tuning you may consider preventing the display from blanking, locking 
-and the monitor's DPMS (on UNIX) energy saver from kicking in. To date I haven't 
-found a decent solution yet that works for all OS flavors equally well. 
-Suggestions welcome.
+and the monitor's DPMS (on UNIX) energy saver from kicking in. Caffeine is 
+a solution https://launchpad.net/caffeine
 
 2) On certain Linux distributions, a package named python-tk (or similar) needs 
 to be installed, when running in virtual environments.
@@ -148,5 +157,5 @@ ORGANISATION EUROPEENNE POUR LA RECHERCHE NUCLEAIRE, AB-Note-2004-021 BDI (2004)
 
 #### Contact
 
-Ralf Antonius Timmermann, Email: rtimmermann@astro.uni-bonn.de, 
+Ralf Antonius Timmermann, email: rtimmermann@astro.uni-bonn.de, 
 Argelander Institute for Astronomy (AIfA), University Bonn, Germany.
