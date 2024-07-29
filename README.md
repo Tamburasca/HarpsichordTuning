@@ -42,7 +42,7 @@ but the overall sound is also colored by the presence of various overtones
 However, a real string behaves closer to a stiff bar according to a forth-order 
 differential equation 
 
-$$ \ddot{y} \propto {-y}'''' $$ (2)
+    $$ \ddot{y} \propto {-y}'''' $$ 
 
 with a quadratic dispersion. Hence, its partials can be approximated by
 
