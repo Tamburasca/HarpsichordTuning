@@ -46,16 +46,16 @@ differential equation
 
 with a quadratic dispersion. Hence, its partials can be approximated by
 
-**(3) $`f_{n} = n * f_{0} * \sqrt{1 + B n^{2}}`$**
+**(3) $`f_{n} = n f_{0} \sqrt{1 + B n^{2}}`$**
 
 All peak positions are correlated to each other, such that they 
 can be identifed as higher partials to one common base frequency f<sub>0</sub>. 
 By rewriting (2), we get for two frequencies that can be 
 applied to all permutations of peaks
 
-**(3) <em>B = (C - 1) / (j<sup>2</sup> - C * i<sup>2</sup>)</em>**, 
+**(4) $`B = (C - 1) /over{j^{2} - C * i^{2}})`$**, 
 where 
-**<em>C = (f<sub>j</sub> * i / f<sub>i</sub> * j) <sup>2</sup></em>**
+**C = (f_{j} i /over{f_{i} j})^{2}`$**
 
 **(4) <em>f<sub>0</sub> = f<sub>i</sub> / (i * sqrt(1 + B * i<sup>2</sup>))</em>**
 
