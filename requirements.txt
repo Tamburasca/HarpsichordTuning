@@ -3,5 +3,5 @@ PyAudio      ==0.2.14
 numpy        ==1.26.4
 scipy        ==1.13.1
 matplotlib   ==3.9.1
-scikit-image ==0.14.0
+scikit-image ==0.24.0
 numdifftools ==0.9.41
