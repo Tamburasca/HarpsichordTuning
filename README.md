@@ -10,15 +10,16 @@ collects a mono signal from the computer's input audio stream (USB connector),
 splits it into smaller, overlapping slices, and applies the Fourier transform to
 each. This practice is known as short time Fourier transform, i.e. STFT. 
 The slices overlap by multiples of 1024 samples. They have sizes of
-$$L = 2^N$$ samples, where N=15 or 16, resulting in sampling 
-periods = 0.74 or 1.49 s for each slice. 
+L = 2<sup>N</sup> samples, where N=15 or 16, resulting in sampling 
+periods of 0.74 or 1.49 s each slice. 
 The sampling frequency is f<sub>s</sub> = 44,100 s<sup>-1</sup>
 
 Each slice is apodized utilizing Gaussian windowing, where L = 
-7 &sigma;, resulting in a FWHM (@-6dB) = 2.62 bins and a full width of the main lobe of 
+7&sigma;, resulting in a FWHM (@-6dB) = 2.62 bins and a full width 
+of the main lobe of 
 10.46 bins. This translates to 3.53 or 1.76 Hz and 14.1 or 7.1 Hz for N = 15 and 
 16, respectively. The highest side lobe is -71 dB. Worth mentioning, the 
-Gaussian L = 7 &sigma; is similar to a Blackman-Harris-Nuttall window.
+Gaussian L = 7&sigma; is similar to a Blackman-Harris-Nuttall window.
 
 Subsequently, in the
 frequency domain, Butterworth high-pass filtering is applied to suppress noise
@@ -32,7 +33,7 @@ the frequency f<sub>0</sub> and the inharmonicity factor B.
 For an ideal string the frequencies of higher partials are just multiples
 of the fundamental frequency
 
-**(1) <em>f<sub>n</sub> = n * f<sub>1</sub> </em>**, 
+**(1) $$ f_{n} = n_{1} $$**, 
 
 where n is the n<em>th</em> partial. 
 The ear hears the fundamental frequency most prominently, 
@@ -41,11 +42,11 @@ but the overall sound is also colored by the presence of various overtones
 However, a real string behaves closer to a stiff bar according to a forth-order 
 differential equation 
 
-$$\ddot{y} \propto {-y}''''$$
+**(2) $$ \ddot{y} \propto {-y}'''' $$**
 
 with a quadratic dispersion. Hence, its partials can be approximated by
 
-**(2) <em>f<sub>n</sub> = n * f<sub>0</sub> * sqrt(1 + B * n<sup>2</sup>)</em>**
+**(3) $$ f_{n} = n * f_{0} * \sqrt{1 + B n^{2}} $$**
 
 All peak positions are correlated to each other, such that they 
 can be identifed as higher partials to one common base frequency f<sub>0</sub>. 
