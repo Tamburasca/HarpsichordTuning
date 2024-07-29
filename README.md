@@ -33,9 +33,7 @@ the frequency f<sub>0</sub> and the inharmonicity factor B.
 For an ideal string the frequencies of higher partials are just multiples
 of the fundamental frequency
 
-\begin{equation}
-$$f_{n} = n f_{1} \label{eq:1}$$
-\end{equation}
+$`f_{n} = n f_{1} \label{eq:1}`$
 
 where n is the n<em>th</em> partial. 
 The ear hears the fundamental frequency most prominently, 
