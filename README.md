@@ -2,15 +2,16 @@
 
 ### Introduction
 
-An automatic tuning tool for string instruments, e.g. harpsichords and pianos.
+We present here an automatic tuning tool for string instruments, 
+e.g. harpsichords and pianos.
 
-The current application (exclusively written in Python) 
-collects a mono signal from the computer's input audio stream,
+The current application (exclusively realized in Python) 
+collects a mono signal from the computer's input audio stream (USB connector),
 splits it into smaller, overlapping slices, and applies the Fourier transform to
 each. This practice is known as short time Fourier transform, i.e. STFT. 
 The slices overlap by multiples of 1024 samples. They have sizes of
-L = 2<sup>N</sup> samples, where N=15 or 16, resulting in sampling 
-periods = 0.74 or 1.49 s. 
+$$L = 2^N$$ samples, where N=15 or 16, resulting in sampling 
+periods = 0.74 or 1.49 s for each slice. 
 The sampling frequency is f<sub>s</sub> = 44,100 s<sup>-1</sup>
 
 Each slice is apodized utilizing Gaussian windowing, where L = 
