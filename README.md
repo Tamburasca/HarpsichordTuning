@@ -33,7 +33,7 @@ the frequency f<sub>0</sub> and the inharmonicity factor B.
 For an ideal string the frequencies of higher partials are just multiples
 of the fundamental frequency
 
-**$$f_{n} = n f_{1}\label{eq:test1}$$**
+$$f_{n} = n f_{1}\label{eq:test1}$$
 
 where n is the n<em>th</em> partial. 
 The ear hears the fundamental frequency most prominently, 
@@ -42,7 +42,7 @@ but the overall sound is also colored by the presence of various overtones
 However, a real string behaves closer to a stiff bar according to a forth-order 
 differential equation 
 
-**$$\ddot{y} \propto {-y}''''$$** 
+$$\ddot{y} \propto {-y}''''$$
 
 with a quadratic dispersion. Hence, its partials can be approximated by
 
@@ -54,7 +54,9 @@ By rewriting (2), we get for two frequencies that can be
 applied to all permutations of peaks
 
 **$$B = {{C - 1} \over j^{2} - C * i^{2}}$$**,
+
 where 
+
 $$C = {({f_{j} i} \over f_{i} j)}^{2}$$
 
 **$$f_{0} = f_{i} \over i \sqrt{1 + B i^{2}}**
