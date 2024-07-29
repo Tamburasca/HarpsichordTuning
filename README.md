@@ -33,7 +33,7 @@ the frequency f<sub>0</sub> and the inharmonicity factor B.
 For an ideal string the frequencies of higher partials are just multiples
 of the fundamental frequency
 
-**(1) $`f_{n} = n f_{1}\label{eq:test1}`$**
+**(1) $`f_{n} = n f_{1}`$**
 
 where n is the n<em>th</em> partial. 
 The ear hears the fundamental frequency most prominently, 
@@ -53,9 +53,9 @@ can be identifed as higher partials to one common base frequency f<sub>0</sub>.
 By rewriting (2), we get for two frequencies that can be 
 applied to all permutations of peaks
 
-**(4) $`B = C - 1 /over{j^{2} - C * i^{2}}`$**, 
+**(4) $`B = C - 1 \over{j^{2} - C * i^{2}}`$**, 
 where 
-**C = (f_{j} i /over{f_{i} j})^{2}`$**
+**C = (f_{j} i \over{f_{i} j})^{2}`$**
 
 **(4) <em>f<sub>0</sub> = f<sub>i</sub> / (i * sqrt(1 + B * i<sup>2</sup>))</em>**
 
