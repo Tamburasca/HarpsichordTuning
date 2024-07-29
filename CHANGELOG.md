@@ -9,11 +9,13 @@
 
 ## 3.5.0 (xxxx-xx-xx)
 ### Added
+- CHANGELOG.md 
 ### Changed
 - setup.py reads from requirements.txt
 - conda env list provided
 - typing modified
 ### Fixed
+- updated to current module versions (see requirements.txt)
 ### Deprecated
 ### Removed
 ### Security

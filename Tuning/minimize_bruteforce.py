@@ -74,13 +74,16 @@ def myslicelog(x0: List) -> Tuple[_T, _T]:
     return slice(0.993 * f0,
                  1.0071 * f0,
                  0.002 * f0), \
-           slice(log10(b) - 1.0,
-                 min(log10(b) + .51, log10(parameters.INHARM)),
-                 0.25)
+        slice(log10(b) - 1.0,
+              min(log10(b) + .51, log10(parameters.INHARM)),
+              0.25)
 
 
 @mytimer("L1 Minimization")
-def final_fit(av: ndarray, ind: List[Tuple]) -> Tuple[float, float]:
+def final_fit(
+        av: ndarray,
+        ind: List[Tuple]
+) -> Tuple[float, float]:
     """
     fits the base frequency, inharmonicity by minimizing the L1 cost function
     as the deviation from the measured resonance frequencies to the

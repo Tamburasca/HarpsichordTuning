@@ -7,8 +7,6 @@ from numpy.typing import NDArray
 from FFTaux import mytimer
 import parameters
 
-# hanning = hanning(M=parameters.SLICE_LENGTH)
-# hamming = hamming(M=parameters.SLICE_LENGTH)
 apodization_gaussian = windows.gaussian(
     M=parameters.SLICE_LENGTH,
     std=parameters.SLICE_LENGTH / parameters.APODIZATION_GAUSS_SIGMA

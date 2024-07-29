@@ -39,7 +39,7 @@ from pynput import keyboard
 from operator import itemgetter
 from multiprocessing import Queue
 import logging
-from typing import Tuple
+from typing import Tuple, Dict
 from numpy.typing import NDArray
 import time
 # internal
@@ -70,7 +70,10 @@ if parameters.DEBUG:
 
 
 class Tuner:
-    def __init__(self, **kwargs):
+    def __init__(
+            self,
+            **kwargs
+    ):
         """
         :param a1: float
             pitch frequency for a1
@@ -107,9 +110,10 @@ class Tuner:
 
     def callback(
             self,
-            in_data,
-            frame_count,
-            time_info, flag
+            in_data: bytes,
+            frame_count: int,
+            time_info: Dict,
+            flag: int
     ) -> Tuple[None, int]:
         """
         :param in_data:

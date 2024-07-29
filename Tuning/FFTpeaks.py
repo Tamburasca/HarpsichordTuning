@@ -29,7 +29,10 @@ class Noise:
 
     Comment: __call__ not utilized, as windows can be used
     """
-    def __init__(self, flux: NDArray):
+    def __init__(
+            self,
+            flux: NDArray
+    ):
         i = len(flux)
         self.__flux = abs(2. * flux[2:i - 2] - flux[0:i - 4] - flux[4:i])
         # padding two value to prepend and two to append
