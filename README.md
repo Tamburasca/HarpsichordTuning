@@ -46,20 +46,20 @@ $$\ddot{y} \propto {-y}''''$$
 
 with a quadratic dispersion. Hence, its partials can be approximated by
 
-**$$f_{n} = n f_{0} \sqrt{1 + B n^{2}}$$**
+$$f_{n} = n f_{0} \sqrt{1 + B n^{2}}$$
 
 All peak positions are correlated to each other, such that they 
 can be identifed as higher partials to one common base frequency f<sub>0</sub>. 
 By rewriting (2), we get for two frequencies that can be 
 applied to all permutations of peaks
 
-**$$B = {{C - 1} \over j^{2} - C * i^{2}}$$**,
+$$B = {{C - 1} \over j^{2} - C * i^{2}}$$
 
 where 
 
 $$C = {({f_{j} i} \over f_{i} j)}^{2}$$
 
-**$$f_{0} = f_{i} \over i \sqrt{1 + B i^{2}}**
+$$f_{0} = {f_{i} \over i \sqrt{1 + B i^{2}}
 
 The measured frequencies of the partials are denoted
 **<em>f<sub>i</sub> < f<sub>j</sub></em>** and **1 &#8804;
