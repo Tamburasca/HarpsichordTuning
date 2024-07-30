@@ -130,7 +130,7 @@ class MPmatplot(Process):
         fig = plt.gcf()
         win = fig.canvas.manager.window
         # disable closing figure button in the upper toolbar
-        # win.setWindowFlags(win.windowFlags() | QtCore.Qt.CustomizeWindowHint)  # ???
+        win.setWindowFlags(win.windowFlags() | QtCore.Qt.CustomizeWindowHint)
         win.setWindowFlags(win.windowFlags() & ~QtCore.Qt.WindowCloseButtonHint)
         fig.set_size_inches(12, 6)
         fig.canvas.manager.set_window_title(

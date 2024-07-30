@@ -212,7 +212,10 @@ class Tuner:
         if self.noise_toggle: print("Measuring Noise Level. Please keep quiet!")
 
     @mytimer
-    def noise_threshold(self, yfft: NDArray) -> Tuple[NDArray, NDArray]:
+    def noise_threshold(
+            self,
+            yfft: NDArray
+    ) -> Tuple[NDArray, NDArray]:
         """
         yfft averaged and standard deviation per bin by adding new dataset on previous:
         Welford’s method is a usable single-pass method for computing the variance.
