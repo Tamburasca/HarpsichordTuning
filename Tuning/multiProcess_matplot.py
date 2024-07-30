@@ -8,6 +8,7 @@ import logging
 from typing import List
 from numpy.typing import NDArray
 from queue import Queue
+from PySide6 import QtCore
 # internal
 import parameters
 
@@ -122,7 +123,13 @@ class MPmatplot(Process):
 
         plt.ion()  # Stop matplotlib windows from blocking
         plt.rcParams['keymap.quit'].remove('q')  # disable key q from closing the window
+        plt.rcParams['keymap.quit'].remove('ctrl+w')
+        plt.rcParams['keymap.quit'].remove('cmd+w')
         fig = plt.gcf()
+        win = fig.canvas.manager.window
+        # disable closing figure button in the upper toolbar
+        # win.setWindowFlags(win.windowFlags() | QtCore.Qt.CustomizeWindowHint)  # ???
+        win.setWindowFlags(win.windowFlags() & ~QtCore.Qt.WindowCloseButtonHint)
         fig.set_size_inches(12, 6)
         fig.canvas.manager.set_window_title(
             'Digital String Tuner (c) Ralf Antonius Timmermann')

@@ -109,10 +109,11 @@ diminish and increase the max (min) frequency displayed. 'ctrl-r' resets
 parameter to initial values.
 
 The background noise can be measured through an integration and averaging 
-over slices by toggling 'ctrl-alt-3'. This is an optional feature.
+over multiple slices by toggling 'ctrl-alt-3'. This is an optional feature.
 Caveat: background noise must be kept 
 low during that time. 'Ctrl-alt-1' and 'ctrl-alt-2' 
-increase or decrease sensitivity levels, respectively.
+increase or decrease sensitivity levels, respectively, if noise threshold equals
+'No'.
  
 Run the program with: <em>python3 -m Tuning</em>
 
