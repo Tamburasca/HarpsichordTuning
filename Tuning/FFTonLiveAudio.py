@@ -337,7 +337,7 @@ class Tuner:
                              tuning=self.tuning
                              )
         _process.start()
-        f_measured = list()
+        f_measured: List = []
 
         # start Recording
         self.stream.start_stream()
@@ -431,7 +431,7 @@ def main() -> int:
 
     h = keyboard.GlobalHotKeys({
         '<ctrl>+y': a.on_activate_y,  # exit
-        '<ctrl>+w': a.on_activate_y,  # exit
+        # '<ctrl>+w': a.on_activate_y,  # exit
         '<ctrl>+x': a.on_activate_x,  # toggle halt/resume
         '<ctrl>+j': a.on_activate_j,  # decrease slice shift
         '<ctrl>+k': a.on_activate_k,  # increase slice shift
@@ -442,7 +442,7 @@ def main() -> int:
         '<alt>+n': a.on_activate_na,  # decrease min freq
         '<ctrl>+<alt>+1': a.on_activate_noise_down,  # decrease noise level
         '<ctrl>+<alt>+2': a.on_activate_noise_up,  # increase noise level
-        '<ctrl>+<alt>+3': a.on_activate_measure_noise
+        '<ctrl>+<alt>+3': a.on_activate_measure_noise # toggle noise measurement on/off
     })
     h.start()
     a.animate()

@@ -23,8 +23,10 @@ class MPmatplot(Process):
         self.__firstplot = True
         # factor accounts for the Gaussian apodization
         self.__resolution = parameters.RATE / parameters.SLICE_LENGTH * 2.62
-        self.__t1 = rfftfreq(parameters.SLICE_LENGTH,
-                             1./parameters.RATE)
+        self.__t1 = rfftfreq(
+            parameters.SLICE_LENGTH,
+            1. / parameters.RATE
+        )
         self.__queue = queue
         self.__tuning = kwargs.get('tuning')
         self.__a1 = kwargs.get('a1')
