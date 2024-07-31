@@ -32,7 +32,6 @@ certain conditions.
 import pyaudio
 from numpy import frombuffer, int16, hstack, log2, zeros_like, sqrt
 from scipy.signal import butter, sosfilt
-import matplotlib.pyplot as plt
 from skimage import util
 from time import sleep
 from pynput import keyboard
@@ -427,10 +426,8 @@ def main() -> int:
             )
         except (IndexError, ValueError):
             print("Error: Chosen number not in list of provided temperaments")
-            pass
         except AssertionError:
             print("Error: A4 pitch in the range from 392 to 494 Hz")
-            pass
         except KeyboardInterrupt:
             return 1
 
@@ -452,5 +449,4 @@ def main() -> int:
     h.start()
     a.animate()
 
-    plt.close('all')
     return 0

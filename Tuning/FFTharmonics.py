@@ -164,7 +164,7 @@ def harmonics(peaks: List[Tuple]) -> List:
                 l1[item[0]] = list()
         logging.debug(
             "partials: {0:2d} {1:2d} lower: {2:10.4f} upper: {3:10.4f} "
-            "b: {4: .1e} fundamental: {5:10.4f}".format(*item))
+            "B: {4: .1e} fundamental: {5:10.4f}".format(*item))
 
     """
     disregard fundamentals for records, where both partials have a common 

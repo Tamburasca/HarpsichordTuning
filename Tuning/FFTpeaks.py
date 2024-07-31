@@ -193,7 +193,6 @@ def peak(
         listtup = \
             [item for item in listtup if item[1] > noise_level * noise_total]
     else:
-        # ToDo: needs to be tested
         # listtup = [item for item in listtup if item[1] > 20. * std[item[0]]]
         listtup = [item for item in listtup
                    if item[1] > (parameters.FACTOR_STANDARD_DEV_NOISE

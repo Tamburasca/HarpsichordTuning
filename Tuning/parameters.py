@@ -1,3 +1,8 @@
+"""
+Parameter file:
+Some values must not be modified, others with great care.
+"""
+
 """logging format"""
 myformat = "%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s"
 
@@ -18,7 +23,7 @@ Corrected for the sample size."""
 SLICE_SHIFT: int = 16384
 
 """F_FILT: high pass cutoff frequency [Hz]"""
-F_FILT: float = 100.
+F_FILT: float = 60.
 
 """F_ORDER: order of high pass Butterworth filter"""
 F_ORDER: int = 2
@@ -30,7 +35,7 @@ NOISE_LEVEL: float = 50.
 
 """factor multiplied with the standard deviation and added to the mean noise 
 background, after measurement of the noise background (may be > 6.)"""
-FACTOR_STANDARD_DEV_NOISE = 7.
+FACTOR_STANDARD_DEV_NOISE: float = 8.
 
 """Required minimal horizontal distance (>= 1) in samples between neighbouring 
 peaks. Smaller peaks are removed first until the condition is fulfilled for 
@@ -56,7 +61,7 @@ NMAX: int = 16
 NPARTIAL: int = 17
 
 """lower frequency limit, i.e. A0. May not need to be adjusted."""
-FREQUENCY_LIMIT = 26.5
+FREQUENCY_LIMIT: float = 26.5
 
 """
 initial max frequency [Hz] displayed, can be adjusted via ctrl-n/m or alt-n/m

@@ -114,6 +114,11 @@ class MPmatplot(Process):
                                    )
         axes.add_collection(yevents1)
 
+    # ToDo temporary function
+    def on_press(self, event):
+        # print(event.key)
+        pass
+
     def run(self) -> None:
         """
         Matplotlib commands swapped to a proprietary process. Run in an
@@ -128,6 +133,8 @@ class MPmatplot(Process):
         plt.rcParams['keymap.quit'].remove('ctrl+w')
         plt.rcParams['keymap.quit'].remove('cmd+w')
         fig = plt.gcf()
+        # ToDo. testing key event connections:
+        # self.cid = fig.canvas.mpl_connect('key_press_event', self.on_press)
         win = fig.canvas.manager.window
         # disable closing figure button in the upper toolbar
         win.setWindowFlags(win.windowFlags() | QtCore.Qt.CustomizeWindowHint)
