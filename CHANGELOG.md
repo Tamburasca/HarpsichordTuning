@@ -7,13 +7,16 @@
 ### Removed
 ### Security
 
-## 3.5.0 (xxxx-xx-xx)
+## 3.5.0 (2024-07-31)
 ### Added
 - CHANGELOG.md 
+- new parameter in parameters.py
+- plot figure cannot be closed by MATPLOTLIB standard hot keys 
+- conda env list provided
 ### Changed
 - setup.py reads from requirements.txt
-- conda env list provided
 - typing modified
+- noise measurement: peak height > average background + factor * standard deviation   
 ### Fixed
 - updated to current module versions (see requirements.txt)
 ### Deprecated

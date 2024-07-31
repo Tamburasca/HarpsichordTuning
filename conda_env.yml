@@ -58,6 +58,7 @@ dependencies:
   - libedit=3.1.20221030=h5eee18b_0
   - libevent=2.1.12=hdbd6064_1
   - libffi=3.4.4=h6a678d5_1
+  - libgcc=7.2.0=h69d50b8_2
   - libgcc-ng=11.2.0=h1234567_1
   - libglib=2.78.4=hdc74915_0
   - libgomp=11.2.0=h1234567_1
@@ -100,7 +101,6 @@ dependencies:
   - pyopenssl=23.0.0=py39h06a4308_0
   - pyparsing=3.0.9=py39h06a4308_0
   - pyqt=5.15.7=py39h6a678d5_1
-  - pyqt5-sip=12.11.0=py39h6a678d5_1
   - pysocks=1.7.1=py39h06a4308_0
   - python=3.9.7=hf930737_3_cpython
   - python-dateutil=2.8.2=pyhd3eb1b0_0
@@ -152,8 +152,13 @@ dependencies:
       - numpy==1.26.4
       - pyaudio==0.2.14
       - pynput==1.7.7
+      - pyqt5-sip==12.15.0
+      - pyside6==6.7.2
+      - pyside6-addons==6.7.2
+      - pyside6-essentials==6.7.2
       - pywavelets==1.6.0
       - scikit-image==0.24.0
       - scipy==1.13.1
+      - shiboken6==6.7.2
       - tifffile==2024.7.24
 prefix: /home/ralf/anaconda3/envs/Tuning3.9

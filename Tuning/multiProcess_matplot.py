@@ -67,7 +67,7 @@ class MPmatplot(Process):
             ),
             wedgeprops=dict(width=.6,
                             edgecolor='k',
-                            lw=.5))
+                            lw=0.))
         # inner pie
         axes.pie([1],
                  # 1 cent within the target means key is well tuned
@@ -174,10 +174,10 @@ class MPmatplot(Process):
                 measure_status = "No"
             else:
                 measure_status = "Yes"
-            info_text = "Resolution: {2:3.1f} Hz (-6 dB Main Lobe Width)\n" \
-                        "Audio shape: {0} [slices, samples]\n" \
-                        "Slice shift: {1:d} samples\n" \
-                        "Noise threshold: {3}".format(
+            info_text = " Resolution: {2:3.1f} Hz (-6 dB Main Lobe Width)\n" \
+                        " Audio shape: {0} [slices, samples]\n" \
+                        " Slice shift: {1:d} samples\n" \
+                        " Noise background: {3}".format(
                             dic.get('slices').shape,
                             dic.get('step'),
                             self.__resolution,

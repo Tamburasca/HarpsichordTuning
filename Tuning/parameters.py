@@ -28,6 +28,10 @@ no key pressed (silence). The threshold of peaks being regarded is calculated
 as NOISE_LEVEL * noise (calculated over the entire spectrum)"""
 NOISE_LEVEL: float = 50.
 
+"""factor multiplied with the standard deviation and added to the mean noise 
+background, after measurement of the noise background (may be > 6.)"""
+FACTOR_STANDARD_DEV_NOISE = 7.
+
 """Required minimal horizontal distance (>= 1) in samples between neighbouring 
 peaks. Smaller peaks are removed first until the condition is fulfilled for 
 all remaining peaks. Corrected for the sample size."""

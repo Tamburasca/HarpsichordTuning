@@ -1,5 +1,6 @@
 from __future__ import annotations
 from numpy import abs, average, median, append, insert, log, sqrt, exp
+from numpy import errstate as numpy_errstate
 from scipy.signal import find_peaks
 from operator import itemgetter
 import logging
@@ -10,7 +11,7 @@ from FFTaux import mytimer
 import parameters
 
 
-class Noise:
+class Noise(object):
     """
     DESCRIPTION:
     This snippet computes the noise following the definition set forth by the
@@ -105,15 +106,22 @@ def gaussian_convolution(
         for reference: three-node interpolation
         https://stackoverflow.com/questions/4039039/fastest-way-to-fit-a-parabola-to-set-of-points
         """
-        a = log(_amp[x - 1:x + 2])  # log amplitudes in Fourier space
-        offset = (
-                .5 * parameters.RATE / parameters.SLICE_LENGTH *
-                (a[2] - a[0]) / (2. * a[1] - a[0] - a[2])
-        )
-        ctr = f[1] + offset
-        dilation = (a[0] - a[1]) / ((f[0] - ctr) ** 2 - (f[1] - ctr) ** 2)
-        fwhm = 2. * sqrt(-.6931 / dilation)
-        height = exp(a[0] - dilation * (f[0] - ctr) ** 2)
+        with numpy_errstate(divide='raise'):
+            try:
+                a = log(_amp[x - 1:x + 2])  # log amplitudes in Fourier space
+                offset = (
+                        .5 * parameters.RATE / parameters.SLICE_LENGTH *
+                        (a[2] - a[0]) / (2. * a[1] - a[0] - a[2])
+                )
+                ctr = f[1] + offset
+                dilation = (a[0] - a[1]) / ((f[0] - ctr) ** 2 - (f[1] - ctr) ** 2)
+                fwhm = 2. * sqrt(-.6931 / dilation)
+                height = exp(a[0] - dilation * (f[0] - ctr) ** 2)
+            except FloatingPointError:
+                logging.warning(
+                    "Runtime warning in Gaussian Convolution encountered!"
+                )
+                return None
 
         return list([ctr, height, fwhm])
         # end embedded function
@@ -176,6 +184,8 @@ def peak(
     # subtract background
     corrected = spectrum[peaks] - (spectrum[left] + spectrum[right]) / 2
     logging.debug("Peaks found: {0}".format(len(peaks)))
+    # listtup is a list of tuples where tuple[0] is the position bin and
+    # tuple[1] the corrected peak height
     listtup = list(zip(peaks, corrected))
     # sort out peaks below threshold and consider NMAX highest,
     # sort key = amplitude descending
@@ -184,7 +194,11 @@ def peak(
             [item for item in listtup if item[1] > noise_level * noise_total]
     else:
         # ToDo: needs to be tested
-        listtup = [item for item in listtup if item[1] > 20. * std[item[0]]]
+        # listtup = [item for item in listtup if item[1] > 20. * std[item[0]]]
+        listtup = [item for item in listtup
+                   if item[1] > (parameters.FACTOR_STANDARD_DEV_NOISE
+                                 * std[item[0]] + baseline[item[0]])
+                   ]
     listtup.sort(key=lambda x: x[1], reverse=True)
     del listtup[parameters.NMAX:]
 

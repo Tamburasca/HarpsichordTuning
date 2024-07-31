@@ -80,7 +80,7 @@ class Tuner:
         :param tuning: string
             tuning temperament
         """
-        CHUNKSIZE = 1024  # fixed chunk size
+        CHUNKSIZE: int = 1024  # fixed chunk size
         self.step: int = parameters.SLICE_SHIFT
         self.fmax: int = parameters.FREQUENCY_MAX
         self.fmin: int = 0
@@ -230,7 +230,7 @@ class Tuner:
             return None, None
         elif self.__n == 2:
             yfft_first = self.__av
-            self.__av = (yfft_first + yfft) / 2
+            self.__av = (yfft_first + yfft) / 2.
             self.__std_squared = (
                     (yfft - self.__av) ** 2 + (yfft_first - self.__av) ** 2
             )
@@ -389,7 +389,9 @@ class Tuner:
                     {'yfft': yfft,
                      'noise_toggle': self.noise_toggle,
                      'baseline':
-                         20. * self.std if self.baseline is not None else None,
+                         self.baseline
+                         + parameters.FACTOR_STANDARD_DEV_NOISE * self.std
+                            if self.baseline is not None else None,
                      'key': key,
                      'off': off,
                      'slices': slices,
