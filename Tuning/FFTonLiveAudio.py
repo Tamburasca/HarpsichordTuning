@@ -443,9 +443,9 @@ def main() -> int:
         '<ctrl>+n': a.on_activate_n,  # decrease max freq
         '<alt>+m': a.on_activate_ma,  # increase min freq
         '<alt>+n': a.on_activate_na,  # decrease min freq
-        '<ctrl>+<alt>+1': a.on_activate_noise_down,  # decrease noise level
-        '<ctrl>+<alt>+2': a.on_activate_noise_up,  # increase noise level
-        '<ctrl>+<alt>+3': a.on_activate_measure_noise # toggle noise measurement on/off
+        '1': a.on_activate_noise_down,  # decrease noise level
+        '2': a.on_activate_noise_up,  # increase noise level
+        '3': a.on_activate_measure_noise # toggle noise measurement on/off
     })
     h.start()
     a.animate()

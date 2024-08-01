@@ -16,7 +16,8 @@
 ### Changed
 - setup.py reads from requirements.txt
 - typing modified
-- noise measurement: peak height > average background + factor * standard deviation   
+- noise measurement: peak height > average background + factor * standard deviation
+- hot-keys shifted
 ### Fixed
 - updated to current module versions (see requirements.txt)
 ### Deprecated

@@ -121,6 +121,10 @@ class MPmatplot(Process):
                                    )
         axes.add_collection(yevents1)
 
+    @staticmethod
+    def on_press(self, event):
+        print('press', event.key)
+
     def run(self) -> None:
         """
         Matplotlib commands swapped to a proprietary process. Run in an
@@ -129,7 +133,6 @@ class MPmatplot(Process):
         :return:
         """
         ln1, ln2, text, text1, ax1background = None, None, None, None, None
-
         plt.ion()  # Stop matplotlib windows from blocking
         plt.rcParams['keymap.quit'].remove('q')  # disable key q from closing the window
         plt.rcParams['keymap.quit'].remove('ctrl+w')
