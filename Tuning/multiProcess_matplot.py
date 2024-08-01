@@ -17,19 +17,26 @@ class MPmatplot(Process):
     def __init__(
             self,
             queue: Queue,
-            **kwargs
+            a1: float,
+            tuning: str
     ):
+        """
+        Matplotlib process instance
+        :param queue:
+        :param a1: pitch level
+        :param tuning: temperament key word
+        """
         super().__init__(daemon=True)
-        self.__firstplot = True
+        self.__firstplot: bool = True
         # factor accounts for the Gaussian apodization
-        self.__resolution = parameters.RATE / parameters.SLICE_LENGTH * 2.62
-        self.__t1 = rfftfreq(
+        self.__resolution: float = parameters.RATE / parameters.SLICE_LENGTH * 2.62
+        self.__t1: float = rfftfreq(
             parameters.SLICE_LENGTH,
             1. / parameters.RATE
         )
-        self.__queue = queue
-        self.__tuning = kwargs.get('tuning')
-        self.__a1 = kwargs.get('a1')
+        self.__queue: Queue = queue
+        self.__a1: float = a1
+        self.__tuning: str = tuning
         logging.debug(
             "Resolution incl. Gaussian apodization (Hz/channel) ~ {0}"
             .format(self.__resolution))
@@ -114,11 +121,6 @@ class MPmatplot(Process):
                                    )
         axes.add_collection(yevents1)
 
-    # ToDo temporary function
-    def on_press(self, event):
-        # print(event.key)
-        pass
-
     def run(self) -> None:
         """
         Matplotlib commands swapped to a proprietary process. Run in an
@@ -134,7 +136,7 @@ class MPmatplot(Process):
         plt.rcParams['keymap.quit'].remove('cmd+w')
         fig = plt.gcf()
         # ToDo. testing key event connections:
-        # self.cid = fig.canvas.mpl_connect('key_press_event', self.on_press)
+        # self.__cid = fig.canvas.mpl_connect('key_press_event', self.on_press)
         win = fig.canvas.manager.window
         # disable closing figure button in the upper toolbar
         win.setWindowFlags(win.windowFlags() | QtCore.Qt.CustomizeWindowHint)

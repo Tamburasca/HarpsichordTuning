@@ -71,7 +71,8 @@ if parameters.DEBUG:
 class Tuner:
     def __init__(
             self,
-            **kwargs
+            a1: float,
+            tuning: str
     ):
         """
         :param a1: float
@@ -84,8 +85,8 @@ class Tuner:
         self.fmax: int = parameters.FREQUENCY_MAX
         self.fmin: int = 0
         self.noise_level = parameters.NOISE_LEVEL
-        self.a1: float = kwargs.get('a1')
-        self.tuning: float = kwargs.get('tuning')  # see tuningTable.py
+        self.a1: float = a1
+        self.tuning: float = tuning  # see tuningTable.py
         self.x: bool = True
         self.rc: str = None
         self.noise_toggle = False
