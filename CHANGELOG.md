@@ -3,6 +3,7 @@
 ### Added
 ### Changed
 ### Fixed
+- clear queue before exiting
 ### Deprecated
 ### Removed
 ### Security

@@ -36,7 +36,7 @@ from skimage import util
 from time import sleep
 from pynput import keyboard
 from operator import itemgetter
-from multiprocessing import Queue
+from multiprocessing import Queue, queues
 import logging
 from typing import Tuple, Dict
 from numpy.typing import NDArray
@@ -350,7 +350,11 @@ class Tuner:
         # main loop while audio stream active
         while self.stream.is_active():
             slices = self.slice()
-            if self.rc == 'y':
+            if self.rc == 'y':  # exit
+                try:
+                    queue.get_nowait()  # clear queue
+                except queues.Empty:
+                    pass
                 return self.rc
 
             # work off all slices, before pulling from audio stream
