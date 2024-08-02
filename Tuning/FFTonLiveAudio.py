@@ -241,7 +241,7 @@ class Tuner:
                     ((self.__n - 2) * self.__std_squared +
                      (yfft - self.__av) * (yfft - av_previous)) / (self.__n - 1)
             )
-        print("Noise Measurement ..., Iteration No: {}".format(self.__n - 1))
+        print("Noise Measurement ..., iteration no: {}".format(self.__n - 1))
 
         return self.__av, sqrt(self.__std_squared)
 

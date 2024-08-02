@@ -66,29 +66,17 @@ class L1(object):
         x0[1] = 10 ** x0[1]
         return self.l1_minimum(x0, jac)
 
-    def l1_minimum_jac_direct(
-            self,
-            x0: NDArray
-    ) -> NDArray:
+    def l1_minimum_jac_direct(self, x0: NDArray) -> NDArray:
         self.l1_minimum(x0, jac=True)
         return self.jacobi
 
-    def l1_minimum_jac(
-            self,
-            x0: NDArray
-    ) -> NDArray:
+    def l1_minimum_jac(self, x0: NDArray) -> NDArray:
         return Jacobian(self.l1_minimum(x0))(x0).ravel()
 
-    def l1_minimum_hess(
-            self,
-            x0: NDArray
-    ) -> NDArray:
+    def l1_minimum_hess(self, x0: NDArray) -> NDArray:
         return Hessian(self.l1_minimum(x0))(x0)
 
-    def l1_minimum_der(
-            self,
-            x0: NDArray
-    ) -> Tuple[float, NDArray]:
+    def l1_minimum_der(self, x0: NDArray) -> Tuple[float, NDArray]:
         return self.l1_minimum(x0, jac=True), self.jacobi
 
     def compare_l1(self) -> bool:
