@@ -31,6 +31,7 @@ certain conditions.
 
 import pyaudio
 from numpy import frombuffer, int16, hstack, log2, zeros_like, sqrt
+from numpy.typing import NDArray
 from scipy.signal import butter, sosfilt
 from skimage import util
 from time import sleep
@@ -39,7 +40,6 @@ from operator import itemgetter
 from multiprocessing import Queue, queues
 import logging
 from typing import Tuple, Dict
-from numpy.typing import NDArray
 import time
 # internal
 from tuningTable import tuningtable
@@ -154,6 +154,7 @@ class Tuner:
     def on_activate_k(self) -> None:
         # increases the shift by which the slices progress
         self.step += 1024
+        # overlap must not exceed slice length
         if self.step > parameters.SLICE_LENGTH:
             self.step = parameters.SLICE_LENGTH
         print("Slice shift: {0:d} samples".format(self.step))
@@ -352,7 +353,9 @@ class Tuner:
             slices = self.slice()
             if self.rc == 'y':  # exit
                 try:
-                    queue.get_nowait()  # clear queue
+                    # clear queue, the MATPLOTLIB process hangs, if
+                    # payload remains in the queue when exiting
+                    queue.get_nowait()
                 except queues.Empty:
                     pass
                 return self.rc

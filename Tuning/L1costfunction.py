@@ -43,7 +43,8 @@ class L1(object):
         for found in self.__fo:
             f_calc = found[1] * x0[0] * sqrt(1. + x0[1] * found[1] ** 2)
             diff = f_calc - found[0]
-            l1 += abs(diff) / found[0]  # L1 norm normalized to frequency, as L1 increases from bass to discant
+            # L1 norm normalized to frequency, as L1 increases from bass to discant
+            l1 += abs(diff) / found[0]
             if jac:
                 # n-th partial is index + 1
                 self.jacobi += self.__derivative(

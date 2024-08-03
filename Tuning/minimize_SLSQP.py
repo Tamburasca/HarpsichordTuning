@@ -5,7 +5,7 @@ from numpy.typing import NDArray
 # internal
 from FFTaux import mytimer
 from L1costfunction import L1
-# from Tuning.FFTL2minimizer import L2
+# from L2costfunction import L2
 import parameters
 
 
