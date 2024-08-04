@@ -142,7 +142,9 @@ def harmonics(peaks: List[Tuple]) -> List:
                         # allow also negative b value > -0.0001 for
                         # uncertainties in the line fitting
                         f_fundamental = ind[i] / (m * sqrt(1. + b * m ** 2))
-                        if f_fundamental < parameters.FREQUENCY_LIMIT:
+                        if (parameters.FREQUENCY_LOWER
+                                > f_fundamental
+                                > parameters.FREQUENCY_UPPER):
                             break  # break two loops here
                         element = [
                             m, k, ind[i], ind[j], max(b, 0.), f_fundamental
@@ -208,7 +210,9 @@ def harmonics(peaks: List[Tuple]) -> List:
 
         base_frequency = av[5]
         inharmonicity = av[4]
-        if base_frequency > parameters.FREQUENCY_LIMIT:
+        if (parameters.FREQUENCY_LOWER
+                < base_frequency
+                < parameters.FREQUENCY_UPPER):
             if no_of_peak_combi > 1:
                 identified = select_list(selected=selected)
                 base_frequency, inharmonicity = final_fit(
@@ -233,7 +237,7 @@ def harmonics(peaks: List[Tuple]) -> List:
         # give it a shot with the strongest peak found
         peaks.sort(key=lambda x: x[1], reverse=True)  # sort by amplitude desc
         f1 = list(map(itemgetter(0), peaks))[0]
-        if f1 > parameters.FREQUENCY_LIMIT:
+        if parameters.FREQUENCY_LOWER < f1 < parameters.FREQUENCY_UPPER:
             f_n.append(f1)
             logging.info(
                 "Best result: f_1 = {0:.2f} Hz, B = {1:.1e}".format(f1, 0.)

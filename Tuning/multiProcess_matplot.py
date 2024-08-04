@@ -155,8 +155,8 @@ class MPmatplot(Process):
             bounds=[0.65, 0.5, 0.35, 0.5],
             zorder=5)  # default
         inset_pie.axis('equal')
-        displayed_title = "{0:s} (a1={1:3.0f} Hz)".format(self.__tuning,
-                                                          self.__a1)
+        displayed_title = "{0:s} (A4 = {1:3.0f} Hz)".format(self.__tuning,
+                                                            self.__a1)
         font_title = {'family': 'serif',
                       'color': 'darkred',
                       'weight': 'normal',

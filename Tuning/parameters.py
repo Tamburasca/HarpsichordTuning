@@ -60,8 +60,9 @@ NMAX: int = 16
 """number of partials = 16 considered in harmonic finding (experimental)"""
 NPARTIAL: int = 17
 
-"""lower frequency limit, i.e. A0. May not need to be adjusted."""
-FREQUENCY_LIMIT: float = 26.5
+"""lower/upper frequency limit, i.e. A0. and C7 May not need to be adjusted."""
+FREQUENCY_LOWER: float = 26.5
+FREQUENCY_UPPER: float = 4435.
 
 """
 initial max frequency [Hz] displayed, can be adjusted via ctrl-n/m or alt-n/m

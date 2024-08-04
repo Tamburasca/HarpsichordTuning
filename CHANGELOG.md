@@ -4,6 +4,7 @@
 ### Changed
 ### Fixed
 - clear queue before exiting
+- upper frequency limit for fundamental
 ### Deprecated
 ### Removed
 ### Security
