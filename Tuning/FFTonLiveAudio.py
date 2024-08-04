@@ -37,7 +37,7 @@ from skimage import util
 from time import sleep
 from pynput import keyboard
 from operator import itemgetter
-from multiprocessing import Queue, queues
+from multiprocessing import Queue
 import logging
 from typing import Tuple, Dict
 import time
@@ -352,12 +352,10 @@ class Tuner:
         while self.stream.is_active():
             slices = self.slice()
             if self.rc == 'y':  # exit
-                try:
-                    # clear queue, the MATPLOTLIB process hangs, if
-                    # payload remains in the queue when exiting
-                    queue.get_nowait()
-                except queues.Empty:
-                    pass
+                # clear queue, the MATPLOTLIB process hangs, if
+                # payload remains in the queue when exiting
+                while not queue.empty():
+                    queue.get()
                 return self.rc
 
             # work off all slices, before pulling from audio stream
