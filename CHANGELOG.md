@@ -4,6 +4,7 @@
 ### Changed
 ### Fixed
 - clear queue before exiting
+- clear queue after pausing via ctrl-x
 - upper frequency limit for fundamental
 ### Deprecated
 ### Removed

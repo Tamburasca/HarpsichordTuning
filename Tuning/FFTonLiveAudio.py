@@ -47,7 +47,7 @@ from FFTroutines import fft
 from FFTpeaks import peak
 from FFTharmonics import harmonics
 from multiProcess_matplot import MPmatplot
-from FFTaux import mytimer, baseline_als_optimized
+from FFTaux import mytimer  #, baseline_als_optimized
 import parameters
 
 __author__ = "Dr. Ralf Antonius Timmermann"
@@ -90,10 +90,11 @@ class Tuner:
         self.x: bool = True
         self.rc: str = None
         self.noise_toggle = False
-        self.__n: int = 0
         self.baseline = None
         self.std = None
-        self.callback_output: List = []
+        self.__n: int = 0
+        self.__callback_output: List = []
+        self.__queue: Queue = None
 
         audio = pyaudio.PyAudio()
         self.stream = audio.open(
@@ -123,7 +124,7 @@ class Tuner:
         :return:
         """
         audio_data = frombuffer(in_data, dtype=int16)
-        self.callback_output.append(audio_data)
+        self.__callback_output.append(audio_data)
 
         return None, pyaudio.paContinue
 
@@ -212,6 +213,10 @@ class Tuner:
         self.noise_toggle = not self.noise_toggle
         if self.noise_toggle: print("Measuring Noise Level. Please keep quiet!")
 
+    def clear_queue(self):
+        while not self.__queue.empty():
+            self.__queue.get_nowait()
+
     @mytimer
     def noise_threshold(
             self,
@@ -293,20 +298,23 @@ class Tuner:
             self.stream.stop_stream()
             while not self.x:
                 # loop and wait until 'x' or 'ctrl-y' is pressed
+                # clear queue, otherwise frames keep being displayed until
+                # queue emtpy
+                self.clear_queue()
                 if self.rc == 'y':
                     return None
                 sleep(.1)
-            self.callback_output = list()
+            self.__callback_output = list()
             self.stream.start_stream()
             logging.info(
                 "Clearing audio buffer and resuming audio stream ...")
         logging.debug("=== new audio cycle: filling buffer ===")
         # wait until buffer filled by at least one FFT slice, where
         # length is in units of buffer = 1024
-        while len(self.callback_output) < parameters.SLICE_LENGTH // 1024:
+        while len(self.__callback_output) < parameters.SLICE_LENGTH // 1024:
             sleep(0.02)
         # Convert the list of numpy-arrays into a 1D array (column-wise)
-        amp = hstack(self.callback_output)
+        amp = hstack(self.__callback_output)
         slices = util.view_as_windows(amp,
                                       window_shape=(
                                           parameters.SLICE_LENGTH),
@@ -335,8 +343,8 @@ class Tuner:
         def highpass_filter(sig: NDArray) -> NDArray:
             return sosfilt(sos, sig)
 
-        queue = Queue()
-        _process = MPmatplot(queue=queue,
+        self.__queue = Queue()
+        _process = MPmatplot(queue=self.__queue,
                              a1=self.a1,
                              tuning=self.tuning
                              )
@@ -352,17 +360,16 @@ class Tuner:
         while self.stream.is_active():
             slices = self.slice()
             if self.rc == 'y':  # exit
-                # clear queue, the MATPLOTLIB process hangs, if
-                # payload remains in the queue when exiting
-                while not queue.empty():
-                    queue.get_nowait()
+                # clear queue, the MATPLOTLIB process hangs, if queue is not
+                # empty when exiting
+                self.clear_queue()
                 return self.rc
 
             # work off all slices, before pulling from audio stream
             for sl in slices:
                 logging.debug("no of slices: " + str(len(slices)))
                 # remove current slice from beginning of buffer
-                del self.callback_output[0:self.step // 1024]
+                del self.__callback_output[0:self.step // 1024]
                 # apply highpass filter on time series
                 #sl = highpass_filter(sl)
                 # calculate FFT
@@ -389,8 +396,8 @@ class Tuner:
                 else:
                     off = 0.
                     key = ''
-                # send params into queue for plotting
-                queue.put(
+                # send params into self.__queue for plotting
+                self.__queue.put(
                     {'yfft': yfft,
                      'noise_toggle': self.noise_toggle,
                      'baseline':
@@ -439,7 +446,6 @@ def main() -> int:
 
     h = keyboard.GlobalHotKeys({
         '<ctrl>+y': a.on_activate_y,  # exit
-        # '<ctrl>+w': a.on_activate_y,  # exit
         '<ctrl>+x': a.on_activate_x,  # toggle halt/resume
         '<ctrl>+j': a.on_activate_j,  # decrease slice shift
         '<ctrl>+k': a.on_activate_k,  # increase slice shift
