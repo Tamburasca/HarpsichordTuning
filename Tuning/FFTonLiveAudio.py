@@ -37,7 +37,7 @@ from skimage import util
 from time import sleep
 from pynput import keyboard
 from operator import itemgetter
-from multiprocessing import Queue
+from multiprocessing import Queue, queues
 import logging
 from typing import Tuple, Dict
 import time
@@ -214,8 +214,11 @@ class Tuner:
         if self.noise_toggle: print("Measuring Noise Level. Please keep quiet!")
 
     def clear_queue(self):
-        while not self.__queue.empty():
-            self.__queue.get_nowait()
+        try:
+            while not self.__queue.empty():
+                self.__queue.get_nowait()
+        except queues.Empty:
+            pass
 
     @mytimer
     def noise_threshold(
@@ -297,9 +300,8 @@ class Tuner:
         if not self.x:
             self.stream.stop_stream()
             while not self.x:
-                # loop and wait until 'x' or 'ctrl-y' is pressed
-                # clear queue, otherwise frames keep being displayed until
-                # queue emtpy
+                # loop and wait until 'ctrl-x' or 'ctrl-y' is pressed
+                # clear queue, frames keep being displayed until queue is emtpy
                 self.clear_queue()
                 if self.rc == 'y':
                     return None

@@ -1,4 +1,4 @@
-from multiprocessing import Process
+from multiprocessing import Process, Queue
 import matplotlib.pyplot as plt
 from matplotlib.collections import EventCollection
 from matplotlib.axes import Axes
@@ -7,7 +7,6 @@ from timeit import default_timer
 import logging
 from typing import List
 from numpy.typing import NDArray
-from queue import Queue
 from PySide6 import QtCore
 # internal
 import parameters
