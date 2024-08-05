@@ -355,7 +355,7 @@ class Tuner:
                 # clear queue, the MATPLOTLIB process hangs, if
                 # payload remains in the queue when exiting
                 while not queue.empty():
-                    queue.get()
+                    queue.get_nowait()
                 return self.rc
 
             # work off all slices, before pulling from audio stream

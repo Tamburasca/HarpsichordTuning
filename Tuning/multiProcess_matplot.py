@@ -122,7 +122,7 @@ class MPmatplot(Process):
         axes.add_collection(yevents1)
 
     @staticmethod
-    def on_press(self, event):
+    def on_press(event):
         print('press', event.key)
 
     def run(self) -> None:
