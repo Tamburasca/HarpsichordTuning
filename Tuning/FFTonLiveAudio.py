@@ -37,7 +37,8 @@ from skimage import util
 from time import sleep
 from pynput import keyboard
 from operator import itemgetter
-from multiprocessing import Queue, queues
+from multiprocessing import Queue
+from queue import Empty
 import logging
 from typing import Tuple, Dict
 import time
@@ -217,7 +218,7 @@ class Tuner:
         try:
             while not self.__queue.empty():
                 self.__queue.get_nowait()
-        except queues.Empty:
+        except Empty:
             pass
 
     @mytimer
@@ -300,9 +301,9 @@ class Tuner:
         if not self.x:
             self.stream.stop_stream()
             while not self.x:
-                # loop and wait until 'ctrl-x' or 'ctrl-y' is pressed
                 # clear queue, frames keep being displayed until queue is emtpy
                 self.clear_queue()
+                # loop and wait until 'ctrl-x' or 'ctrl-y' is pressed
                 if self.rc == 'y':
                     return None
                 sleep(.1)
