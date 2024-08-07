@@ -347,18 +347,18 @@ class Tuner:
             return sosfilt(sos, sig)
 
         self.__queue = Queue()
-        _process = MPmatplot(queue=self.__queue,
-                             a1=self.a1,
-                             tuning=self.tuning
-                             )
-        _process.start()
-        f_measured: List = []
-
+        # start the MATPLOTLIB process
+        MPmatplot(
+            queue=self.__queue,
+            a1=self.a1,
+            tuning=self.tuning
+        ).start()
         # start Recording
         self.stream.start_stream()
         logging.info(
             "Permit a few cycles to adjust audio device!")
 
+        f_measured: List = []
         # main loop while audio stream active
         while self.stream.is_active():
             slices = self.slice()

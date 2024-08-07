@@ -7,7 +7,7 @@ Some values must not be modified, others with great care.
 myformat = "%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s"
 
 """audio sampling rate in kHz derived from driver -> hardware & sound
-do not modify!"""
+do not modify!!!"""
 RATE: int = 44100
 
 """Factor to multiply with the slice length: [1|2]"""
@@ -47,8 +47,7 @@ for the sample size."""
 WIDTH: tuple = (1 * FACTOR, 8 * FACTOR)
 
 """Sigma of the Gauss apodization window, where the length of slice
-L = APODIZATION_GAUSS_SIGMA * sigma
-do not modify"""
+L = APODIZATION_GAUSS_SIGMA * sigma - do not modify!!!"""
 APODIZATION_GAUSS_SIGMA: float = 7.
 
 """max. inharmonicity of strings considered (harpsichord, piano, ...)"""
@@ -60,14 +59,12 @@ NMAX: int = 16
 """number of partials = 16 considered in harmonic finding (experimental)"""
 NPARTIAL: int = 17
 
-"""lower/upper frequency limit, i.e. A0. and C7 May not need to be adjusted."""
+"""lower/upper frequency limit, i.e. A0. and C8 may not need to be adjusted."""
 FREQUENCY_LOWER: float = 26.5
 FREQUENCY_UPPER: float = 4435.
 
-"""
-initial max frequency [Hz] displayed, can be adjusted via ctrl-n/m or alt-n/m
-and is reset via ctrl-r to default
-"""
+"""initial max frequency [Hz] displayed, can be adjusted via ctrl-n/m or alt-n/m
+and is reset via ctrl-r to default"""
 FREQUENCY_MAX: int = 2000
 FREQUENCY_WIDTH_MIN: int = 500
 FREQUENCY_STEP: int = 500
