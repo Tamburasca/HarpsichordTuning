@@ -8,7 +8,7 @@ with open("requirements.txt", "r") as f:
 
 setuptools.setup(
     name="Tuning",
-    version="3.5.0",
+    version="3.5.1",
     author="Ralf Antonius Timmermann",
     author_email="rtimmermann@astro.uni-bonn.de",
     description="Harpsichord/Piano Tuning",
@@ -18,16 +18,10 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
+        "License :: OSI Approved :: BSD 3-Clause",
         "Operating System :: OS Independent",
     ],
-    python_requires='=3.9',
-    # install_requires=['pynput       >=1.7.3',
-    #                   'PyAudio      >=0.2.11',
-    #                   'numpy        >=1.22.3',
-    #                   'scipy        >=1.7.3',
-    #                   'matplotlib   >=3.5.2',
-    #                   'scikit-image >=0.19.2',
-    #                   'numdifftools >=0.9.39'],
-    install_requires=dependencies
+    python_requires='=3.12',
+    install_requires=dependencies,
+    license='BSD 3-Clause',
 )

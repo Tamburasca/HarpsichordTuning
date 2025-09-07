@@ -1,13 +1,15 @@
-from multiprocessing import Process, Queue
-import matplotlib.pyplot as plt
-from matplotlib.collections import EventCollection
-from matplotlib.axes import Axes
-from numpy.fft import rfftfreq
-from timeit import default_timer
 import logging
+from multiprocessing import Process, Queue
+from timeit import default_timer
 from typing import List
-from numpy.typing import NDArray
+
+import matplotlib.pyplot as plt
 from PySide6 import QtCore
+from matplotlib.axes import Axes
+from matplotlib.collections import EventCollection
+from numpy.fft import rfftfreq
+from numpy.typing import NDArray
+
 # internal
 import parameters
 
@@ -153,7 +155,8 @@ class MPmatplot(Process):
         inset_pie = ax1.inset_axes(
             bounds=[0.65, 0.5, 0.35, 0.5],
             zorder=5)  # default
-        inset_pie.axis('equal')
+        # inset_pie.axis('equal') # worked with matplotlib 3.9.1
+        inset_pie.set_aspect('equal', 'box') # seems to work with matplotlib 3.10.6
         displayed_title = "{0:s} (A4 = {1:3.0f} Hz)".format(self.__tuning,
                                                             self.__a1)
         font_title = {'family': 'serif',

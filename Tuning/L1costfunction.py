@@ -3,9 +3,11 @@ minimizer for L1 norm
 """
 
 from __future__ import annotations
-from numpy import sqrt, array, sign
-from numdifftools import Jacobian, Hessian
+
 from typing import List, Tuple
+
+from numdifftools import Jacobian, Hessian
+from numpy import sqrt, array, sign
 from numpy.typing import NDArray
 
 
@@ -15,7 +17,9 @@ class L1(object):
             ind: List[Tuple]
     ):
         """
-        :param ind: array - measured resonance frequencies as from peaks (FFT)
+        :param ind: list of tuples -
+        1st element of tuple: measured resonance frequencies as from peaks (FFT)
+        2nd element of tuple: its partial
         """
         self.__fo = ind
         self.l1_first: float = None

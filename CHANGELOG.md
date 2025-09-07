@@ -1,11 +1,22 @@
 # Changelog
-## unreleased (xxxx-xx-xx)
+## unreleased (2025-09-06)
+### Added
+### Changed
+### Fixed
+### Deprecated
+### Removed
+### Security
+
+## 3.5.1 (2025-09-06)
 ### Added
 ### Changed
 ### Fixed
 - clear queue before exiting
 - clear queue after pausing via ctrl-x
 - upper frequency limit for fundamental
+- smaller corrections
+- optimized imports
+- most recent modules in requirements.txt tested
 ### Deprecated
 ### Removed
 ### Security

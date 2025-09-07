@@ -1,11 +1,13 @@
+from typing import Tuple
+
 from numpy import abs
 from numpy.fft import rfft, rfftfreq
-from scipy.signal import butter, freqs, windows
-from typing import Tuple
 from numpy.typing import NDArray
+from scipy.signal import butter, freqs, windows
+
+import parameters
 # internal
 from FFTaux import mytimer
-import parameters
 
 apodization_gaussian = windows.gaussian(
     M=parameters.SLICE_LENGTH,

@@ -1,12 +1,14 @@
 import logging
-from scipy.optimize import minimize
 from typing import List, Tuple, Sequence
+
 from numpy.typing import NDArray
+from scipy.optimize import minimize
+
+import parameters
 # internal
 from FFTaux import mytimer
-from L1costfunction import L1
 # from L2costfunction import L2
-import parameters
+from L1costfunction import L1
 
 
 def callback(xk: NDArray) -> bool:

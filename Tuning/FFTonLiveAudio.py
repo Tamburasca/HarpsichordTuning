@@ -29,33 +29,34 @@ This is free software, and you are welcome to redistribute it under
 certain conditions.
 """
 
+import logging
+from multiprocessing import Queue
+from operator import itemgetter
+from queue import Empty
+from time import sleep
+from typing import Tuple, Dict
+
 import pyaudio
-from numpy import frombuffer, int16, hstack, log2, zeros_like, sqrt
+from numpy import frombuffer, int16, hstack, log2, sqrt
 from numpy.typing import NDArray
+from pynput import keyboard
 from scipy.signal import butter, sosfilt
 from skimage import util
-from time import sleep
-from pynput import keyboard
-from operator import itemgetter
-from multiprocessing import Queue
-from queue import Empty
-import logging
-from typing import Tuple, Dict
-import time
+
+import parameters
+from FFTaux import mytimer  # , baseline_als_optimized
+from FFTharmonics import harmonics
+from FFTpeaks import peak
+from FFTroutines import fft
+from multiProcess_matplot import MPmatplot
 # internal
 from tuningTable import tuningtable
-from FFTroutines import fft
-from FFTpeaks import peak
-from FFTharmonics import harmonics
-from multiProcess_matplot import MPmatplot
-from FFTaux import mytimer  #, baseline_als_optimized
-import parameters
 
 __author__ = "Dr. Ralf Antonius Timmermann"
 __copyright__ = "Copyright (c) 2020-24 Dr. Ralf Antonius Timmermann"
 __credits__ = ""
-__license__ = "GPLv3"
-__version__ = "3.5.0"
+__license__ = "BSD 3-Clause"
+__version__ = "3.5.1"
 __maintainer__ = "Dr. Ralf A. Timmermann"
 __email__ = "ralf.timmermann@gmx.de"
 __status__ = "Prod"
@@ -94,7 +95,7 @@ class Tuner:
         self.baseline = None
         self.std = None
         self.__n: int = 0
-        self.__callback_output: List = []
+        self.__callback_output: List = list()
         self.__queue: Queue = None
 
         audio = pyaudio.PyAudio()
@@ -443,8 +444,9 @@ def main() -> int:
         except (IndexError, ValueError):
             print("Error: Chosen number not in list of provided temperaments")
         except AssertionError:
-            print("Error: A4 pitch in the range from 392 to 494 Hz")
+            print("Error: A4 pitch is in the range from 392 to 494 Hz")
         except KeyboardInterrupt:
+            print("Program aborted by user")
             return 1
 
     h = keyboard.GlobalHotKeys({
@@ -452,7 +454,7 @@ def main() -> int:
         '<ctrl>+x': a.on_activate_x,  # toggle halt/resume
         '<ctrl>+j': a.on_activate_j,  # decrease slice shift
         '<ctrl>+k': a.on_activate_k,  # increase slice shift
-        '<ctrl>+r': a.on_activate_r,  # reset parameter to initial values
+        '<ctrl>+r': a.on_activate_r,  # reset to initial values
         '<ctrl>+m': a.on_activate_m,  # increase max freq
         '<ctrl>+n': a.on_activate_n,  # decrease max freq
         '<alt>+m': a.on_activate_ma,  # increase min freq
@@ -462,6 +464,10 @@ def main() -> int:
         '3': a.on_activate_measure_noise # toggle noise measurement on/off
     })
     h.start()
-    a.animate()
+    try:
+        a.animate()
+    except KeyboardInterrupt:
+        print("Program aborted by user")
+        return 1
 
     return 0

@@ -3,14 +3,16 @@ auxiliary functions
 """
 
 from __future__ import annotations
-from scipy.sparse.linalg import spsolve
-from scipy.sparse import diags, spdiags
-from numpy import ones, array
-from timeit import default_timer
-from functools import wraps
+
 import logging
+from functools import wraps
+from timeit import default_timer
 from typing import Callable
+
+from numpy import ones, array
 from numpy.typing import NDArray, ArrayLike
+from scipy.sparse import diags, spdiags
+from scipy.sparse.linalg import spsolve
 
 
 def mytimer(supersede: Callable | str = None) -> Callable:

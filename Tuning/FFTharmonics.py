@@ -1,13 +1,15 @@
-from numpy import sqrt, append, mean, array
-from math import gcd
 import logging
+from math import gcd
 from operator import itemgetter
 from typing import List, Tuple, Dict
+
+from numpy import sqrt, append, mean, array
+
+import parameters
 # internal
 from FFTaux import mytimer
 # from Tuning.minimize_bruteforce import final_fit
 from minimize_SLSQP import final_fit
-import parameters
 
 
 def bisection(

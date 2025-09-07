@@ -1,14 +1,17 @@
 from __future__ import annotations
+
+import logging
+from operator import itemgetter
+from typing import List, Tuple
+
 from numpy import abs, average, median, append, insert, log, sqrt, exp
 from numpy import errstate as numpy_errstate
-from scipy.signal import find_peaks
-from operator import itemgetter
-import logging
-from typing import List, Tuple
 from numpy.typing import NDArray
+from scipy.signal import find_peaks
+
+import parameters
 # internal
 from FFTaux import mytimer
-import parameters
 
 
 class Noise(object):
@@ -160,7 +163,7 @@ def peak(
         list (float) of tuples with peak frequencies and corresponding heights
         (no baseline subtracted)
     """
-    listf: List = []
+    listf: List = list()
 
     noise = Noise(flux=spectrum)
     noise_total = noise.total()

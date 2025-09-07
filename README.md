@@ -54,7 +54,7 @@ can be identifed as higher partials to one common base frequency f<sub>0</sub>.
 By rewriting (3), we get for two frequencies that can be 
 applied to all permutations of peaks
 
-$$B = {{C - 1} \over j^{2} - C * i^{2}}\tag{4}$$
+$$B = {{C - 1} \over j^{2} - C i^{2}}\tag{4}$$
 
 where 
 
