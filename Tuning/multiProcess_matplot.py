@@ -9,6 +9,7 @@ from matplotlib.axes import Axes
 from matplotlib.collections import EventCollection
 from numpy.fft import rfftfreq
 from numpy.typing import NDArray
+from _tkinter import TclError
 
 # internal
 import parameters
@@ -175,6 +176,11 @@ class MPmatplot(Process):
 
         # run eternally
         while True:
+            try:
+                win.winfo_id()
+            except TclError:
+                logging.info("Matplotlib window closed by user ...")
+                break
             # fetch parameter from queue, block till message is available
             # time consumed from putting to the queue till getting <.6 ms
             dic = self.__queue.get(block=True)

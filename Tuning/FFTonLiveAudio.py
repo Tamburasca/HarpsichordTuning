@@ -29,6 +29,7 @@ This is free software, and you are welcome to redistribute it under
 certain conditions.
 """
 
+import os
 import logging
 from multiprocessing import Queue
 from operator import itemgetter
@@ -348,11 +349,12 @@ class Tuner:
 
         self.__queue = Queue()
         # start the MATPLOTLIB process
-        MPmatplot(
+        mp = MPmatplot(
             queue=self.__queue,
             a1=self.a1,
-            tuning=self.tuning
-        ).start()
+            tuning=self.tuning,
+        )
+        mp.start()
         # start Recording
         self.stream.start_stream()
         logging.info(
@@ -361,6 +363,10 @@ class Tuner:
         f_measured = list()
         # main loop while audio stream active
         while self.stream.is_active():
+            # check for matplotlib process alive
+            if not mp.is_alive():
+                logging.info("Plotting process ended abnormally. Exiting ...")
+                os.system(f"kill {os.getpid()}")
             slices = self.slice()
             if self.rc == 'y':  # exit
                 # clear queue, the MATPLOTLIB process hangs, if queue is not

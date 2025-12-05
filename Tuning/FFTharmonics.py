@@ -156,7 +156,7 @@ def harmonics(peaks: list[tuple]) -> list:
                         if initial:
                             if (element[3] == initial[-1][3]
                                     and element[0] == initial[-1][0]):
-                                # remove previous dublette on upper frequency and lower partial
+                                # remove previous doublette on upper frequency and lower partial
                                 initial.pop()
                         initial.append(element)
                         break  # break two loops here
