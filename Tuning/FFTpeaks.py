@@ -2,16 +2,18 @@ from __future__ import annotations
 
 import logging
 from operator import itemgetter
-from typing import List, Tuple
 
+from typing import TypeVar
 from numpy import abs, average, median, append, insert, log, sqrt, exp
-from numpy import errstate as numpy_errstate
+from numpy import errstate as numpy_errstate, float32, float64
 from numpy.typing import NDArray
 from scipy.signal import find_peaks
 
-import parameters
 # internal
+import parameters
 from FFTaux import mytimer
+
+T = TypeVar('T', float32, float64, float)
 
 
 class Noise(object):
@@ -36,7 +38,7 @@ class Noise(object):
     def __init__(
             self,
             flux: NDArray
-    ):
+    ) -> None:
         i = len(flux)
         self.__flux = abs(2. * flux[2:i - 2] - flux[0:i - 4] - flux[4:i])
         # padding two value to prepend and two to append
@@ -48,21 +50,21 @@ class Noise(object):
             self,
             value: int,
             width: int = 50
-    ) -> float:
+    ) -> T:
         low = value - width if value - width >= 0 else 0
         high = value + width if value + width < self.__l else self.__l - 1
         return average(self.__b[low:high])
 
-    def total(self) -> float:
+    def total(self) -> T:
         return 0.6052697 * median(self.__flux)
 
 
 @mytimer("Gaussian Convolution")
 def gaussian_convolution(
-        freq: List,
-        amp: List,
-        initial: List[Tuple]
-) -> List[List[float]]:
+        freq: NDArray,
+        amp: NDArray,
+        initial: list[tuple]
+) -> list[list[float]]:
     """
     :param freq: list of floats
         frequencies of the FFT
@@ -76,10 +78,10 @@ def gaussian_convolution(
     _x = list(map(itemgetter(0), initial))
     # _y = list(map(itemgetter(1), initial))  # obsolete
     num_threads = len(initial)
-    peaks: List = []
+    peaks = list()
     logging.debug("Number of peaks: {0}".format(num_threads))
 
-    def _fitting(ids: int) -> List | None:
+    def _fitting(ids: int) -> list | None:
         """
         Each thread goes through this.
         :param ids: int, thread id = 0, 1, 2, ..., len(initial)-1
@@ -141,20 +143,20 @@ def gaussian_convolution(
 def peak(
         frequency: NDArray,
         spectrum: NDArray,
-        baseline: [None, NDArray],
-        std: [None, NDArray],
+        baseline: NDArray,
+        std: NDArray,
         noise_level: float
-) -> List[List[float]]:
+) -> list[list[float]]:
     """
     find peaks in frequency spectrum
     :param frequency: NDArray
         frequencies from FFT
     :param spectrum: NDArray
         spectrum amplitudes from FFT
-    :param baseline [None, NDArray]
+    :param baseline NDArray
         baseline of the audio signal in frequency domain after being averaged
         in silence, consider if baseline is not None
-    :param std [None, NDArray]
+    :param std NDArray
         standard deviation of the baseline of the audio signal in frequency
         domain after being averaged in silence
     :param noise_level: float
@@ -163,7 +165,7 @@ def peak(
         list (float) of tuples with peak frequencies and corresponding heights
         (no baseline subtracted)
     """
-    listf: List = list()
+    listf = list()
 
     noise = Noise(flux=spectrum)
     noise_total = noise.total()

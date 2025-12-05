@@ -1,7 +1,6 @@
 """
 auxiliary functions
 """
-
 from __future__ import annotations
 
 import logging
@@ -78,7 +77,7 @@ def baseline_als_optimized(
     """
     z, z_last = array([]), array([])
     lth = len(y)
-    d = diags([1, -2, 1], [0, -1, -2], shape=(lth, lth-2))
+    d = diags([1, -2, 1], [0, -1, -2], shape=(lth, lth - 2))
     # Precompute this term since it does not depend on `w`
     d = lam * d.dot(d.transpose())
     w = ones(lth)

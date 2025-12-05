@@ -8,7 +8,7 @@ with open("requirements.txt", "r") as f:
 
 setuptools.setup(
     name="Tuning",
-    version="3.5.1",
+    version="3.6.0",
     author="Ralf Antonius Timmermann",
     author_email="rtimmermann@astro.uni-bonn.de",
     description="Harpsichord/Piano Tuning",
@@ -21,7 +21,7 @@ setuptools.setup(
         "License :: OSI Approved :: BSD 3-Clause",
         "Operating System :: OS Independent",
     ],
-    python_requires='=3.12',
+    python_requires='=3.13',
     install_requires=dependencies,
     license='BSD 3-Clause',
 )

@@ -1,10 +1,23 @@
 # Changelog
-## unreleased (2025-09-06)
+## unreleased (xxxx-xx-xx)
 ### Added
 ### Changed
 ### Fixed
 ### Deprecated
 ### Removed
+### Security
+
+## 3.6.0 (2025-12-03)
+### Added
+### Changed
+- Utilizes backend TkAgg
+- Compatible with Python 3.13
+### Fixed
+- Typing
+### Deprecated
+### Removed
+- Window's close button is enabled again (needs to be redone with TkAgg - no 
+easy way without rewriting large parts of the code)
 ### Security
 
 ## 3.5.1 (2025-09-06)

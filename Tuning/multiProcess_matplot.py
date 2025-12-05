@@ -1,10 +1,10 @@
 import logging
 from multiprocessing import Process, Queue
 from timeit import default_timer
-from typing import List
 
+import matplotlib
 import matplotlib.pyplot as plt
-from PySide6 import QtCore
+# from PyQt6.QtCore import Qt  # Wayland issues to be solved
 from matplotlib.axes import Axes
 from matplotlib.collections import EventCollection
 from numpy.fft import rfftfreq
@@ -31,7 +31,7 @@ class MPmatplot(Process):
         self.__firstplot: bool = True
         # factor accounts for the Gaussian apodization
         self.__resolution: float = parameters.RATE / parameters.SLICE_LENGTH * 2.62
-        self.__t1: float = rfftfreq(
+        self.__t1: NDArray = rfftfreq(
             parameters.SLICE_LENGTH,
             1. / parameters.RATE
         )
@@ -87,7 +87,7 @@ class MPmatplot(Process):
     @staticmethod
     def eventcollection(
             axes: Axes,
-            peak_list: List,
+            peak_list: list[float],
             f_meas: NDArray
     ) -> None:
         """
@@ -135,16 +135,25 @@ class MPmatplot(Process):
         """
         ln1, ln2, text, text1, ax1background = None, None, None, None, None
         plt.ion()  # Stop matplotlib windows from blocking
+        plt.rcParams['backend'] = 'TkAgg'
         plt.rcParams['keymap.quit'].remove('q')  # disable key q from closing the window
         plt.rcParams['keymap.quit'].remove('ctrl+w')
         plt.rcParams['keymap.quit'].remove('cmd+w')
+        print(f"Matplotlib backend used: {matplotlib.get_backend()}")
         fig = plt.gcf()
-        # ToDo. testing key event connections:
         # self.__cid = fig.canvas.mpl_connect('key_press_event', self.on_press)
-        win = fig.canvas.manager.window
+        # ToDo: investigate why this does not work with Qt backend
         # disable closing figure button in the upper toolbar
-        win.setWindowFlags(win.windowFlags() | QtCore.Qt.CustomizeWindowHint)
-        win.setWindowFlags(win.windowFlags() & ~QtCore.Qt.WindowCloseButtonHint)
+        win = fig.canvas.manager.window
+        # TkAgg
+        #win.overrideredirect(True)
+        #win.protocol('WM_DELETE_WINDOW', donothing)
+        #win.geometry("{0}x{1}+0+0".format(win.winfo_screenwidth(), win.winfo_screenheight()))
+        #win.resizable(width=FALSE, height=FALSE)
+        # QtAgg
+        #print(win.windowFlags())
+        #win.setWindowFlags(win.windowFlags() | QtCore.Qt.CustomizeWindowHint)
+        #win.setWindowFlags(win.windowFlags() & ~QtCore.Qt.WindowCloseButtonHint)
         fig.set_size_inches(12, 6)
         fig.canvas.manager.set_window_title(
             'Digital String Tuner (c) Ralf Antonius Timmermann')
@@ -153,7 +162,7 @@ class MPmatplot(Process):
         ax1.set_ylabel('Intensity/arb. units')
         # inset_axes with nested pie and equal aspect ratio
         inset_pie = ax1.inset_axes(
-            bounds=[0.65, 0.5, 0.35, 0.5],
+            bounds=(0.65, 0.5, 0.35, 0.5),
             zorder=5)  # default
         # inset_pie.axis('equal') # worked with matplotlib 3.9.1
         inset_pie.set_aspect('equal', 'box') # seems to work with matplotlib 3.10.6
@@ -220,9 +229,10 @@ class MPmatplot(Process):
                 # ln2.set_xdata(self.__t1)
                 # ln2.set_ydata(baseline)
             # set attributes of subplot
-            ax1.set_xlim([fmin, fmax])
+            ax1.set_xlim((fmin, fmax))
+            if ymax == 0.: continue
             # permit some percentages of margin to the x-axes
-            ax1.set_ylim([-0.04 * ymax, 1.025 * ymax])
+            ax1.set_ylim((-0.04 * ymax, 1.025 * ymax))
             if noise_toggle:
                 ln1.set_color('orange')
             elif not noise_toggle and ln1.get_color() == 'orange':

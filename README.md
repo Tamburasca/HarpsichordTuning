@@ -115,18 +115,21 @@ low during that time. The hot-keys '1' and '2'
 increase or decrease sensitivity levels, respectively, if noise threshold equals
 'No'.
  
-Run the program with: <em>python3 -m Tuning</em>
+Run the program with: <em>python3 Tuning</em>
 
 ### Caveat
 
 1) When tuning you may consider preventing the display from blanking, locking 
-and the monitor's DPMS (on UNIX) energy saver from kicking in. Caffeine is 
-a solution https://launchpad.net/caffeine
+and the monitor's DPMS (on UNIX) energy saver from kicking in. Caffeine 
+(discontinued) is a solution https://launchpad.net/caffeine
 
 2) On certain Linux distributions, a package named python-tk (or similar) needs 
 to be installed, when running in virtual environments.
 
-3) Also note that the module pynput utilized here may encounter 
+3) sudo apt install portaudio19-dev is required on Debian-based systems to
+avoid errors with the module pyaudio.
+
+4) Also note that the module pynput utilized here may encounter 
 [plattform limitations](https://pynput.readthedocs.io/en/latest/limitations.html#)
 
 ### Results

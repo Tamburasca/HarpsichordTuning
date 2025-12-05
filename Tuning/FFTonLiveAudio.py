@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-FFTonLiveAudio Copyright (C) 2020-24, Dr. Ralf Antonius Timmermann
+FFTonLiveAudio Copyright (C) 2020-25, Dr. Ralf Antonius Timmermann
 
 A graphical tuning tool for string instruments, such as harpsichords and pianos.
 
@@ -34,7 +34,6 @@ from multiprocessing import Queue
 from operator import itemgetter
 from queue import Empty
 from time import sleep
-from typing import Tuple, Dict
 
 import pyaudio
 from numpy import frombuffer, int16, hstack, log2, sqrt
@@ -43,20 +42,20 @@ from pynput import keyboard
 from scipy.signal import butter, sosfilt
 from skimage import util
 
+# internal
 import parameters
 from FFTaux import mytimer  # , baseline_als_optimized
 from FFTharmonics import harmonics
 from FFTpeaks import peak
 from FFTroutines import fft
 from multiProcess_matplot import MPmatplot
-# internal
 from tuningTable import tuningtable
 
 __author__ = "Dr. Ralf Antonius Timmermann"
-__copyright__ = "Copyright (c) 2020-24 Dr. Ralf Antonius Timmermann"
+__copyright__ = "Copyright 2020-25 Dr. Ralf Antonius Timmermann"
 __credits__ = ""
 __license__ = "BSD 3-Clause"
-__version__ = "3.5.1"
+__version__ = "3.6.0"
 __maintainer__ = "Dr. Ralf A. Timmermann"
 __email__ = "ralf.timmermann@gmx.de"
 __status__ = "Prod"
@@ -95,7 +94,7 @@ class Tuner:
         self.baseline = None
         self.std = None
         self.__n: int = 0
-        self.__callback_output: List = list()
+        self.__callback_output = list()
         self.__queue: Queue = None
 
         audio = pyaudio.PyAudio()
@@ -115,9 +114,9 @@ class Tuner:
             self,
             in_data: bytes,
             frame_count: int,
-            time_info: Dict,
+            time_info: dict,
             flag: int
-    ) -> Tuple[None, int]:
+    ) -> tuple[None, int]:
         """
         :param in_data:
         :param frame_count:
@@ -226,7 +225,7 @@ class Tuner:
     def noise_threshold(
             self,
             yfft: NDArray
-    ) -> Tuple[NDArray, NDArray]:
+    ) -> tuple[NDArray, NDArray]:
         """
         yfft averaged and standard deviation per bin by adding new dataset on previous:
         Welford’s method is a usable single-pass method for computing the variance.
@@ -257,7 +256,7 @@ class Tuner:
         return self.__av, sqrt(self.__std_squared)
 
     @mytimer("key finding & absolute pitch level")
-    def find(self, f_measured: float) -> Tuple[str, float]:
+    def find(self, f_measured: float) -> tuple[str, float]:
         """
         finds key and its offset from true key for given a temperament
         :param f_measured: float
@@ -359,7 +358,7 @@ class Tuner:
         logging.info(
             "Permit a few cycles to adjust audio device!")
 
-        f_measured: List = []
+        f_measured = list()
         # main loop while audio stream active
         while self.stream.is_active():
             slices = self.slice()
@@ -471,3 +470,7 @@ def main() -> int:
         return 1
 
     return 0
+
+
+if __name__ == "__main__":
+    exit(main())

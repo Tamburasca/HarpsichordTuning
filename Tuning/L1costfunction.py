@@ -4,17 +4,15 @@ minimizer for L1 norm
 
 from __future__ import annotations
 
-from typing import List, Tuple
-
 from numdifftools import Jacobian, Hessian
-from numpy import sqrt, array, sign
+from numpy import sqrt, array, sign, nan
 from numpy.typing import NDArray
 
 
 class L1(object):
     def __init__(
             self,
-            ind: List[Tuple]
+            ind: list[tuple]
     ):
         """
         :param ind: list of tuples -
@@ -22,8 +20,8 @@ class L1(object):
         2nd element of tuple: its partial
         """
         self.__fo = ind
-        self.l1_first: float = None
-        self.l1_last: float = None
+        self.l1_first: float = nan
+        self.l1_last: float = nan
         self.jacobi: NDArray = array([0., 0.])
 
     def l1_minimum(
@@ -36,10 +34,11 @@ class L1(object):
         l1 = sum( abs( f_i(measured) - f_i(calculated) ) / f_i(measured) )
         :param x0: NDArray - [f0, b] such that
             f = i * x0[0] * sqrt(1. + x0[1] * i**2)
+            inharmonicity of a vibrating string for partial i
         :param jac: bool - if jacobi is to be calculated
         :return: float - l1 cost function
         other property:
-        self.jacobi - NDArray - derivatives dl1/df_0 and dl1/dB
+        self.jacobi - NDArray - derivatives δl1/δf_0 and δl1/δB
         """
         l1 = 0.  # l1 cost function
         self.jacobi = array([0., 0.])
@@ -56,7 +55,7 @@ class L1(object):
                     i=found[1],
                     trova=found[0]
                 ) * sign(diff)
-        if self.l1_first is None:
+        if self.l1_first is nan:
             self.l1_first = l1
         self.l1_last = l1
 
@@ -81,7 +80,7 @@ class L1(object):
     def l1_minimum_hess(self, x0: NDArray) -> NDArray:
         return Hessian(self.l1_minimum(x0))(x0)
 
-    def l1_minimum_der(self, x0: NDArray) -> Tuple[float, NDArray]:
+    def l1_minimum_der(self, x0: NDArray) -> tuple[float, NDArray]:
         return self.l1_minimum(x0, jac=True), self.jacobi
 
     def compare_l1(self) -> bool:

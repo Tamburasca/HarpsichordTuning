@@ -1,12 +1,10 @@
-from typing import Tuple
-
 from numpy import abs
 from numpy.fft import rfft, rfftfreq
 from numpy.typing import NDArray
 from scipy.signal import butter, freqs, windows
 
-import parameters
 # internal
+import parameters
 from FFTaux import mytimer
 
 apodization_gaussian = windows.gaussian(
@@ -30,7 +28,7 @@ _, h = freqs(
 
 
 @mytimer
-def fft(amp: NDArray) -> Tuple[NDArray, NDArray]:
+def fft(amp: NDArray) -> tuple[NDArray, NDArray]:
     """
     performs FFT on a Gaussian apodized time series, where L = 7 sigma.
     High pass filter performed on frequency domain.
@@ -48,9 +46,9 @@ def fft(amp: NDArray) -> Tuple[NDArray, NDArray]:
     y_final = abs(h * y_raw)
     """
     if PSD then: 
-    psd = 2. * noise power bandwidth * abs(y_raw)**2 / samples**2
-    # noise power bandwidth = 2 or 1.81 for Hanning or Hamming windows, resp. 
-    y_final = 2 * 2.0 * y_final ** 2 / len(amp)**2
+        psd = 2. * noise power bandwidth * abs(y_raw)**2 / samples**2
+        # noise power bandwidth = 2 or 1.81 for Hanning or Hamming windows, resp. 
+        y_final = 2 * 2.0 * y_final ** 2 / len(amp)**2
     """
 
     return t1, y_final

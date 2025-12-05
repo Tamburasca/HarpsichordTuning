@@ -1,19 +1,20 @@
 import logging
 from math import gcd
 from operator import itemgetter
-from typing import List, Tuple, Dict
 
-from numpy import sqrt, append, mean, array
+from numpy import sqrt, mean, append, array
+from numpy.typing import NDArray
+from typing import Any
 
-import parameters
 # internal
+import parameters
 from FFTaux import mytimer
 # from Tuning.minimize_bruteforce import final_fit
 from minimize_SLSQP import final_fit
 
 
 def bisection(
-        vector: List,
+        vector: list,
         value: float
 ) -> int:
     """
@@ -48,8 +49,8 @@ def bisection(
 
 
 def l1min(
-        ind: List,
-        x0: List
+        ind: list,
+        x0: list
 ) -> float:
     """
     returns the cost function for a regression on the L1 norm
@@ -89,7 +90,7 @@ def l1min(
     return l1
 
 
-def select_list(selected: List[List]) -> List[Tuple]:
+def select_list(selected: NDArray[list]) -> list[tuple[float, int]]:
     """
     list of resonance peaks according to harmonics - remove dublettes with same
     upper frequency tagged with upper partial
@@ -105,7 +106,7 @@ def select_list(selected: List[List]) -> List[Tuple]:
 
 
 @mytimer("harmonics (subtract time for L1 minimization, if called)")
-def harmonics(peaks: List[Tuple]) -> List:
+def harmonics(peaks: list[tuple]) -> list:
     """
     finds harmonics between each two frequencies by applying the inharmonicity
     formula by a neested loop through all the peaks
@@ -115,9 +116,10 @@ def harmonics(peaks: List[Tuple]) -> List:
     list (float)
         positions of first NPARTIAL partials
     """
-    initial: List = []
-    l1: Dict[int, List] = {}
-    f_n: List = []
+    initial: list = list()
+    l1: dict[int, list[float]] = dict()
+    l1_mean: dict[int, Any] = dict()
+    f_n = list()
 
     # sort by frequency ascending
     peaks.sort(key=lambda x: x[0])
@@ -186,15 +188,16 @@ def harmonics(peaks: List[Tuple]) -> List:
                     # Add all l1 values to list for same lower partial
                     l1[key].append(l1min(ind=ind, x0=[dat[5], dat[4]]))
                 # l1 cost function averaged for equal lower partials
-                l1[key] = mean(l1[key])
+                #l1[key] = mean(l1[key])
+                l1_mean[key] = mean(l1[key])
             # identify lower partial with minimum l1
             selected = array(
                 list(
-                    filter(lambda x: x[0] == min(l1, key=l1.get), initial))
+                    filter(lambda x: x[0] == min(l1_mean, key=l1_mean.get), initial))
             )
             av = selected.mean(axis=0)
             no_of_peak_combi = selected.shape[0]
-            logging.debug("L1: {}".format(l1))
+            logging.debug("L1: {}".format(l1_mean))
         elif len(l1) == 1:
             # if only one lower partial with gcd=1
             selected = array(

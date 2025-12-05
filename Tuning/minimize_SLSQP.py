@@ -1,11 +1,12 @@
 import logging
-from typing import List, Tuple, Sequence
+from collections.abc import Collection
 
+from numpy import array
 from numpy.typing import NDArray
 from scipy.optimize import minimize
 
-import parameters
 # internal
+import parameters
 from FFTaux import mytimer
 # from L2costfunction import L2
 from L1costfunction import L1
@@ -18,7 +19,7 @@ def callback(xk: NDArray) -> bool:
     return False
 
 
-def bounds(x0: NDArray) -> Sequence:
+def bounds(x0: NDArray) -> Collection[tuple[float, float]]:
     f0 = x0[0]
     b = max(0., x0[1])
 
@@ -28,8 +29,8 @@ def bounds(x0: NDArray) -> Sequence:
 @mytimer("L1 Minimization")
 def final_fit(
         av: NDArray,
-        ind: List
-) -> Tuple[float, float]:
+        ind: list[tuple[float, int]]
+) -> tuple[float, float]:
     """
     fits the base frequency and inharmonicity by minimizing the L1 cost function
     as the deviation from the measured resonance frequencies to the
@@ -45,7 +46,7 @@ def final_fit(
     """
     if av[4] <= 0:
         return av[5], av[4]
-    guess = [av[5], av[4]]
+    guess = array([av[5], av[4]])
     l1_min = L1(ind)
     l1_min.l1_minimum(x0=guess)
     try:
@@ -61,13 +62,14 @@ def final_fit(
                        # hess=l1_min.l1_minimum_hess
                        )
         '''
-        res = minimize(fun=l1_min.l1_minimum_der,
-                       x0=guess,
-                       bounds=bounds(guess),
-                       method='SLSQP',
-                       jac=True,
-                       callback=callback,
-                       options={})
+        res = minimize(
+            fun=l1_min.l1_minimum_der,
+            x0=guess,
+            bounds=bounds(guess),
+            method='SLSQP',
+            jac=True,
+            callback=callback,
+            options={})
 
         def debug_msg(success: bool) -> None:
             logging.debug("Minimizer: Success: {0} L1 initial value: {1}, "
@@ -81,7 +83,7 @@ def final_fit(
 
         if l1_min.l1_first > res.fun:
             debug_msg(True)
-            return res.x[0], res.x[1]
+            return res.x
         else:
             debug_msg(False)
             return av[5], av[4]

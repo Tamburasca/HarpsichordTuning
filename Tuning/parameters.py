@@ -53,11 +53,11 @@ APODIZATION_GAUSS_SIGMA: float = 7.
 """max. inharmonicity of strings considered (harpsichord, piano, ...)"""
 INHARM: float = 0.001
 
-"""max number of highest peaks"""
-NMAX: int = 16
+"""max number of highest peaks found"""
+NMAX: int = 20
 
-"""number of partials = 16 considered in harmonic finding (experimental)"""
-NPARTIAL: int = 17
+"""number of partials = NMAX considered in harmonic finding (experimental)"""
+NPARTIAL: int = NMAX
 
 """lower/upper frequency limit, i.e. A0. and C8 may not need to be adjusted."""
 FREQUENCY_LOWER: float = 26.5
