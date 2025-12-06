@@ -408,7 +408,8 @@ class Tuner:
                 # check if there are already some messages left in the queue
                 qsize = self.__queue.qsize()
                 if qsize > 0:
-                    logging.warning("{0} messages left in MP queue".format(qsize))
+                    logging.warning("{0} message(s) left in MP queue"
+                                    .format(qsize))
                 # send params into self.__queue for plotting
                 self.__queue.put(
                     {'yfft': yfft,
