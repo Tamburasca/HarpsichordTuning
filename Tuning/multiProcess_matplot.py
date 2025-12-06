@@ -177,9 +177,10 @@ class MPmatplot(Process):
         # run eternally
         while True:
             try:
-                win.winfo_id()
+                # will throw an error if the window has been closed abnormally
+                _ = win.winfo_id()
             except TclError:
-                logging.info("Matplotlib window closed by user ...")
+                logging.info("Matplotlib window closed by user abnormally ...")
                 break
             # fetch parameter from queue, block till message is available
             # time consumed from putting to the queue till getting <.6 ms
