@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import logging
 from operator import itemgetter
-
 from typing import TypeVar
+
 from numpy import abs, average, median, append, insert, log, sqrt, exp
 from numpy import errstate as numpy_errstate, float32, float64
 from numpy.typing import NDArray
@@ -35,6 +35,7 @@ class Noise(object):
 
     Comment: __call__ not utilized, as windows can be used
     """
+
     def __init__(
             self,
             flux: NDArray
@@ -42,8 +43,8 @@ class Noise(object):
         i = len(flux)
         self.__flux = abs(2. * flux[2:i - 2] - flux[0:i - 4] - flux[4:i])
         # padding two value to prepend and two to append
-        self.__b = insert(self.__flux, 0, [flux[0]]*2)
-        self.__b = append(self.__b, [self.__flux[-1]]*2)
+        self.__b = insert(self.__flux, 0, [flux[0]] * 2)
+        self.__b = append(self.__b, [self.__flux[-1]] * 2)
         self.__l = len(self.__b)
 
     def __call__(

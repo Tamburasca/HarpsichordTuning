@@ -188,7 +188,6 @@ def harmonics(peaks: list[tuple]) -> list:
                     # Add all l1 values to list for same lower partial
                     l1[key].append(l1min(ind=ind, x0=[dat[5], dat[4]]))
                 # l1 cost function averaged for equal lower partials
-                #l1[key] = mean(l1[key])
                 l1_mean[key] = mean(l1[key])
             # identify lower partial with minimum l1
             selected = array(

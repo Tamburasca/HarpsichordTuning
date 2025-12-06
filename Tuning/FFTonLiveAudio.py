@@ -343,6 +343,7 @@ class Tuner:
             fs=parameters.RATE,
             output='sos'
         )
+
         def highpass_filter(sig: NDArray) -> NDArray:
             return sosfilt(sos, sig)
 
@@ -380,7 +381,7 @@ class Tuner:
                 # remove current slice from beginning of buffer
                 del self.__callback_output[0:self.step // 1024]
                 # apply highpass filter on time series
-                #sl = highpass_filter(sl)
+                # sl = highpass_filter(sl)
                 # calculate FFT
                 t1, yfft = fft(amp=sl)
                 # measure noise if toggled
@@ -417,7 +418,7 @@ class Tuner:
                      'baseline':
                          self.baseline
                          + parameters.FACTOR_STANDARD_DEV_NOISE * self.std
-                            if self.baseline is not None else None,
+                         if self.baseline is not None else None,
                      'key': key,
                      'off': off,
                      'slices': slices,
@@ -432,7 +433,6 @@ class Tuner:
 
 
 def main() -> int:
-
     def input_pitch() -> float:
         pitch = float(input("A4 pitch frequency [Hz]?: "))
         assert 392 < pitch < 494
@@ -471,7 +471,7 @@ def main() -> int:
         '<alt>+n': a.on_activate_na,  # decrease min freq
         '1': a.on_activate_noise_down,  # decrease noise level
         '2': a.on_activate_noise_up,  # increase noise level
-        '3': a.on_activate_measure_noise # toggle noise measurement on/off
+        '3': a.on_activate_measure_noise  # toggle noise measurement on/off
     })
     h.start()
     try:

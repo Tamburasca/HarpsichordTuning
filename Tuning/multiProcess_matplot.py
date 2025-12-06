@@ -1,4 +1,5 @@
 import logging
+from _tkinter import TclError
 from multiprocessing import Process, Queue
 from timeit import default_timer
 
@@ -9,7 +10,6 @@ from matplotlib.axes import Axes
 from matplotlib.collections import EventCollection
 from numpy.fft import rfftfreq
 from numpy.typing import NDArray
-from _tkinter import TclError
 
 # internal
 import parameters
@@ -147,14 +147,14 @@ class MPmatplot(Process):
         # disable closing figure button in the upper toolbar
         win = fig.canvas.manager.window
         # TkAgg
-        #win.overrideredirect(True)
-        #win.protocol('WM_DELETE_WINDOW', donothing)
-        #win.geometry("{0}x{1}+0+0".format(win.winfo_screenwidth(), win.winfo_screenheight()))
-        #win.resizable(width=FALSE, height=FALSE)
+        # win.overrideredirect(True)
+        # win.protocol('WM_DELETE_WINDOW', donothing)
+        # win.geometry("{0}x{1}+0+0".format(win.winfo_screenwidth(), win.winfo_screenheight()))
+        # win.resizable(width=FALSE, height=FALSE)
         # QtAgg
-        #print(win.windowFlags())
-        #win.setWindowFlags(win.windowFlags() | QtCore.Qt.CustomizeWindowHint)
-        #win.setWindowFlags(win.windowFlags() & ~QtCore.Qt.WindowCloseButtonHint)
+        # print(win.windowFlags())
+        # win.setWindowFlags(win.windowFlags() | QtCore.Qt.CustomizeWindowHint)
+        # win.setWindowFlags(win.windowFlags() & ~QtCore.Qt.WindowCloseButtonHint)
         fig.set_size_inches(12, 6)
         fig.canvas.manager.set_window_title(
             'Digital String Tuner (c) Ralf Antonius Timmermann')
@@ -166,7 +166,7 @@ class MPmatplot(Process):
             bounds=(0.65, 0.5, 0.35, 0.5),
             zorder=5)  # default
         # inset_pie.axis('equal') # worked with matplotlib 3.9.1
-        inset_pie.set_aspect('equal', 'box') # seems to work with matplotlib 3.10.6
+        inset_pie.set_aspect('equal', 'box')  # seems to work with matplotlib 3.10.6
         displayed_title = "{0:s} (A4 = {1:3.0f} Hz)".format(self.__tuning,
                                                             self.__a1)
         font_title = {'family': 'serif',
@@ -208,10 +208,10 @@ class MPmatplot(Process):
                         " Audio shape: {0} [slices, samples]\n" \
                         " Slice shift: {1:d} samples\n" \
                         " Noise background: {3}".format(
-                            dic.get('slices').shape,
-                            dic.get('step'),
-                            self.__resolution,
-                            measure_status)
+                dic.get('slices').shape,
+                dic.get('step'),
+                self.__resolution,
+                measure_status)
             info_color = 'red' if dic.get('slices').shape[0] > 3 else 'black'
             if self.__firstplot:
                 # Setup line, define plot, text, and copy background once

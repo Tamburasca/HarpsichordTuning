@@ -1,5 +1,6 @@
 import logging
 from collections.abc import Sequence
+
 from numpy import array
 from numpy.typing import NDArray
 from scipy.optimize import minimize
@@ -75,10 +76,10 @@ def final_fit(
                           "last value: {2}\n\t"
                           "number of iterations/evaluation: {3}/{4}\n\t"
                           "message: {5}".format(
-                                success,
-                                l1_min.l1_first, res.fun,
-                                res.nit, res.nfev,
-                                res.message))
+                success,
+                l1_min.l1_first, res.fun,
+                res.nit, res.nfev,
+                res.message))
 
         if l1_min.l1_first > res.fun:
             debug_msg(True)
