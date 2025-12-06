@@ -16,8 +16,8 @@
 - Typing
 ### Deprecated
 ### Removed
-- Window's close button is enabled again (needs to be redone with TkAgg - no 
-easy way without rewriting large parts of the code)
+- Window's close button is enabled again (needs to be redone with TkAgg) - 
+however, app exits if it's hit
 ### Security
 
 ## 3.5.1 (2025-09-06)
