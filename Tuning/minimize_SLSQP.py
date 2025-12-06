@@ -1,6 +1,5 @@
 import logging
-from collections.abc import Collection
-
+from collections.abc import Sequence
 from numpy import array
 from numpy.typing import NDArray
 from scipy.optimize import minimize
@@ -12,14 +11,13 @@ from FFTaux import mytimer
 from L1costfunction import L1
 
 
-def callback(xk: NDArray) -> bool:
+def callback(xk: NDArray) -> None:
     # toggle for minimizer analysis -> L1_contours
     # print("[{},{}],".format(xk[0], xk[1]))
+    pass
 
-    return False
 
-
-def bounds(x0: NDArray) -> Collection[tuple[float, float]]:
+def bounds(x0: NDArray) -> Sequence[tuple[float, float]]:
     f0 = x0[0]
     b = max(0., x0[1])
 
@@ -69,7 +67,8 @@ def final_fit(
             method='SLSQP',
             jac=True,
             callback=callback,
-            options={})
+            options=None
+        )
 
         def debug_msg(success: bool) -> None:
             logging.debug("Minimizer: Success: {0} L1 initial value: {1}, "
