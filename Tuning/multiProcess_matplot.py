@@ -186,9 +186,9 @@ class MPmatplot(Process):
             dic = self.__queue.get(block=True)
             _start = default_timer()
             # check if there are already some messages more than those picked
-            qsize = self.__queue.qsize()
-            if qsize > 0:
-                logging.warning("{0} messages in MP queue".format(qsize))
+            # qsize = self.__queue.qsize()
+            # if qsize > 0:
+            #    logging.warning("{0} messages in MP queue".format(qsize))
             baseline = dic.get('baseline')
             noise_toggle = dic.get('noise_toggle')
             yfft = dic.get('yfft') \

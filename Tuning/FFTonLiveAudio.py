@@ -29,7 +29,6 @@ This is free software, and you are welcome to redistribute it under
 certain conditions.
 """
 
-import os
 import logging
 from multiprocessing import Queue
 from operator import itemgetter
@@ -363,10 +362,11 @@ class Tuner:
         f_measured = list()
         # main loop while audio stream active
         while self.stream.is_active():
-            # check for matplotlib process alive
+            # check for matplotlib process being alive, if not exit gracefully
             if not mp.is_alive():
+                self.clear_queue()
                 logging.info("Plotting process ended abnormally. Exiting ...")
-                os.system(f"kill {os.getpid()}")
+                break
             slices = self.slice()
             if self.rc == 'y':  # exit
                 # clear queue, the MATPLOTLIB process hangs, if queue is not
@@ -405,6 +405,10 @@ class Tuner:
                 else:
                     off = 0.
                     key = ''
+                # check if there are already some messages left in the queue
+                qsize = self.__queue.qsize()
+                if qsize > 0:
+                    logging.warning("{0} messages left in MP queue".format(qsize))
                 # send params into self.__queue for plotting
                 self.__queue.put(
                     {'yfft': yfft,
@@ -471,6 +475,8 @@ def main() -> int:
     h.start()
     try:
         a.animate()
+        if a.rc != 'y':
+            return 1
     except KeyboardInterrupt:
         print("Program aborted by user")
         return 1
