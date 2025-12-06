@@ -57,7 +57,7 @@ INHARM: float = 0.001
 NMAX: int = 20
 
 """number of partials = NMAX considered in harmonic finding (experimental)"""
-NPARTIAL: int = 20
+NPARTIAL: int = 25
 
 """lower/upper frequency limit, i.e. A0. and C8 may not need to be adjusted."""
 FREQUENCY_LOWER: float = 26.5

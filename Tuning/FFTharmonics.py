@@ -56,7 +56,7 @@ def l1min(
     returns the cost function for a regression on the L1 norm
     l1 = sum( abs( f_i(measured) - f_i(calculated) ) / f_i(measured) )
     :param ind: list - measured resonance frequencies as from peaks (FFT)
-    after being cleansed, dublicates removed, etc.
+    after being cleansed, duplicates removed, etc.
     :param x0: list - [f0, b] such that f = i * x0[0] * sqrt(1. + x0[1] * i**2)
     :return: float - l1 cost function
     """
@@ -128,10 +128,10 @@ def harmonics(peaks: list[tuple]) -> list:
     logging.debug("ind: " + str(ind))
     logging.debug("height: " + str(height))
 
-    # loop through the combination of partials up to NPARTIAL
+    # loop through all combinations of partials up to NPARTIAL
     for m in range(1, parameters.NPARTIAL):
         for k in range(m + 1, parameters.NPARTIAL):
-            # loop through all peaks found (ascending, neested loops)
+            # loop through all peaks found (ascending, nested loops)
             for i in range(0, len(ind)):
                 for j in range(i + 1, len(ind)):
                     tmp = ((ind[j] * m) / (ind[i] * k)) ** 2

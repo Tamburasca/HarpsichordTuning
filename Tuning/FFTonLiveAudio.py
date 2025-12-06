@@ -476,7 +476,7 @@ def main() -> int:
     h.start()
     try:
         a.animate()
-        # if not exited normally, return error code 1
+        # if exited abnormally, return error code 1
         if a.rc != 'y':
             return 1
     except KeyboardInterrupt:
