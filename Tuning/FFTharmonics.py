@@ -228,10 +228,12 @@ def harmonics(peaks: list[tuple]) -> list:
                     "Final: f_0 = {2:.3f} Hz, B = {3:.3e}".format(
                         av[5], av[4], base_frequency, inharmonicity)
                 )
-            for n in range(1, parameters.NPARTIAL):
-                f_n = append(f_n,
-                             base_frequency * n * sqrt(
-                                 1. + inharmonicity * n ** 2))
+            for n in range(1, 640):
+#            for n in range(1, parameters.NPARTIAL):
+                f_synth = base_frequency * n * sqrt(
+                                 1. + inharmonicity * n ** 2)
+                if f_synth < 12_000: f_n = append(f_n, f_synth)  # show < 12.000 Hz
+                else: break
             logging.info(
                 "Best result: f_1 = {0:.2f} Hz, B = {1:.1e}".format(
                     f_n[0], inharmonicity)

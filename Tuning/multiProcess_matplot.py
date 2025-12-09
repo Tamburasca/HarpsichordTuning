@@ -40,7 +40,7 @@ class MPmatplot(Process):
         self.__a1: float = a1
         self.__tuning: str = tuning
         logging.debug(
-            "Resolution incl. Gaussian apodization (Hz/channel) ~ {0}"
+            "Resolution with Gaussian apodization (Hz/channel) ~ {0}"
             .format(self.__resolution))
 
     @staticmethod
@@ -117,9 +117,9 @@ class MPmatplot(Process):
         axes.add_collection(yevents)
         yevents1 = EventCollection(positions=f_meas,
                                    color='tab:red',
-                                   linelength=-2 * y_axis0,
+                                   linelength=-1.5 * y_axis0,
                                    lineoffset=y_axis0,
-                                   linewidth=1.5
+                                   linewidth=1.2
                                    )
         axes.add_collection(yevents1)
 
