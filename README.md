@@ -3,27 +3,35 @@
 ### Introduction
 
 We present an automatic tuning tool for string instruments, 
-e.g. harpsichords and pianos.
+e.g. harpsichords and pianos, that accounts for the inharmonicity of real 
+strings. It competes with commercial products, such as 
+[Veritune](https://veritune.com/), 
+[TuneLab Pro](https://www.tunelabpro.com/), PianoTune, Seiko SAT100, 
+Korg AW-3,
+Piano Tuner (Android), and others, but is open-source and free of charge. 
 
 The current application (exclusively realized in Python) 
 collects a mono signal from the computer's input audio stream (USB connector),
 splits it into smaller, overlapping slices, and applies the Fourier transform to
-each. This practice is known as short time Fourier transform, i.e. STFT. 
+each. This practice is known as short time Fourier transform STFT. 
 The slices overlap by multiples of 1024 samples. They have sizes of
 L = 2<sup>N</sup> samples, where N=15 or 16, resulting in sampling 
 periods of 0.74 or 1.49 s for each slice. 
-The sampling frequency is f<sub>s</sub> = 44,100 s<sup>-1</sup>
+The sampling frequency is f<sub>s</sub> = 44,100 s<sup>-1</sup>.
 
 Each slice is apodized utilizing Gaussian windowing, where L = 
 7&sigma;, resulting in a FWHM (@-6dB) = 2.62 bins and a full width 
 of the main lobe of 
 10.46 bins. This translates to 3.53 or 1.76 Hz and 14.1 or 7.1 Hz for N = 15 and 
 16, respectively. The highest side lobe is -71 dB. Worth mentioning, the 
-Gaussian L = 7&sigma; is similar to a Blackman-Harris-Nuttall window.
+Gaussian L = 7&sigma; apodization is similar to that of a 
+Blackman-Harris-Nuttall window.
 
 Subsequently, in the
 frequency domain, Butterworth high-pass filtering is applied to suppress noise
 at the bottom side, before fundamental and overtone frequencies are sought.
+The cutoff frequency and order of the filter can be adjusted in
+[parameters](https://github.com/Tamburasca/HarpsichordTuning/blob/master/Tuning/parameters.py).
 In order to achieve the highest accuracy in their positions, we fit a 
 parabola - by three-node interpolation - to the
 logarithm of the Gaussian in Fourier space, for the
@@ -70,16 +78,20 @@ The maximum inharmonicity coefficient needs to be adjusted in
 depending on the instrument to be tuned, B < 0.001 and < 0.05 for 
 harpsichords and pianos, respectively. 
 
-Finally, a synthetic spectrum 
-is calculated from f<sub>0</sub> and B and compared to the measured 
-one by minimizating the L1-norm of the coefficient vector, the coefficients being
-|<em>f<sub>i</sub><sup>measured</sup> - f<sub>i</sub><sup>calculated</sup></em>|.
+Finally, by varying f<sub>0</sub> and B, a synthetic spectrum 
+is calculated such, that the L1-norm of the coefficient vector, the 
+coefficients being
+|<em>f<sub>i</sub><sup>measured</sup> - f<sub>i</sub><sup>calculated</sup></em>|
+is minimized. <em>f<sub>i</sub><sup>measured</sup></em> is the measured 
+frequencies of <em>ith</em> partial.
 
-The L2-norm was tested, but behaved inferior. I employ the module 
+The L2-norm was tested to be inferior. I employ the module 
 [scipy.optimize.slsqp](https://docs.scipy.org/doc/scipy/reference/optimize.minimize-slsqp.html#optimize-minimize-slsqp), originally
-designed for least-square minimizations. Although it requires the Jacobian 
-of the L1 to be computed as well - imposing additional CPU-power - it seemed to 
-be the most reliable and fastest minimizer, when compared to brute-force or 'L-BFGS-B'.
+designed for least-square minimization. Although it requires the Jacobian 
+of the L1 to be computed (manually) as 
+well - imposing additional CPU-power - it seemed to 
+be the most reliable and fastest minimizer, when compared 
+to brute-force or 'L-BFGS-B'.
 
 ### Features
 
@@ -109,19 +121,19 @@ diminish and increase the max (min) frequency displayed. 'ctrl-r' resets
 parameter to initial values.
 
 The background noise can be measured through an integration and averaging 
-over multiple slices by toggling hot-key'3'. This is an optional feature.
-Caveat: background noise must be kept 
-low during that time. The hot-keys '1' and '2' 
+over multiple slices by toggling hot-key '3'. This is an optional feature 
+(dev branch). Caveat: the background noise must be kept 
+at a minimum during that time. The hot-keys '1' and '2' 
 increase or decrease sensitivity levels, respectively, if noise threshold equals
 'No'.
  
-Run the program with: <em>python3 Tuning</em>
+Run the program by <em>python3 Tuning</em> in the commandline.
 
-### Caveat
+### Caveats
 
 1) When tuning you may consider preventing the display from blanking, locking 
 and the monitor's DPMS (on UNIX) energy saver from kicking in. Caffeine 
-(discontinued) is a solution https://launchpad.net/caffeine
+(discontinued) is a possible solution.
 
 2) On certain Linux distributions, a package named python-tk (or similar) needs 
 to be installed, when running in virtual environments.

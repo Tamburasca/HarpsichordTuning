@@ -138,7 +138,7 @@ class Tuner:
 
     def on_activate_y(self) -> None:
         # exits the program
-        print("quitting...")
+        print("Exiting ...")
         self.rc = 'y'
 
     def on_activate_r(self) -> None:
