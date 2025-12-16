@@ -21,7 +21,7 @@ class MPmatplot(Process):
             queue: Queue,
             a1: float,
             tuning: str
-    ):
+    ) -> None:
         """
         Matplotlib process instance
         :param queue:
@@ -78,7 +78,7 @@ class MPmatplot(Process):
                             edgecolor='k',
                             lw=0.))
         # inner pie
-        axes.pie([1],
+        axes.pie(x=[1],
                  # 1 cent within the target means key is well tuned
                  # paint pie white (default) to make it opaque
                  colors='y' if key_pressed and -1 < displaced < 1 else 'w',
@@ -217,13 +217,13 @@ class MPmatplot(Process):
                 # Setup line, define plot, text, and copy background once
                 ln1, = ax1.plot(self.__t1, yfft)
                 # ln2, = ax1.plot(self.__t1, baseline)
-                text = ax1.text(fmax, ymax, '',
+                text = ax1.text(x=fmax, y=ymax, s='',
                                 verticalalignment='top',
                                 horizontalalignment='right',
                                 fontsize=12,
                                 fontweight='bold'
                                 )
-                text1 = ax1.text(fmin, ymax, '',
+                text1 = ax1.text(x=fmin, y=ymax, s='',
                                  horizontalalignment='left',
                                  verticalalignment='top')
                 ax1.set_title(label=displayed_title,

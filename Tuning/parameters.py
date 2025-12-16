@@ -69,5 +69,8 @@ FREQUENCY_MAX: int = 2000
 FREQUENCY_WIDTH_MIN: int = 500
 FREQUENCY_STEP: int = 500
 
+"""cost function to be used in the minimization"""
+COST_FUNCTION = 'L1'  # 'L1' or 'L2'
+
 """debug flag"""
 DEBUG: bool = False

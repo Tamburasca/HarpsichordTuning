@@ -9,7 +9,7 @@ from typing import Any
 # internal
 import parameters
 from FFTaux import mytimer
-# from Tuning.minimize_bruteforce import final_fit
+# from minimize_bruteforce import final_fit
 from minimize_SLSQP import final_fit
 
 
@@ -90,9 +90,9 @@ def l1min(
     return l1
 
 
-def select_list(selected: NDArray[list]) -> list[tuple[float, int]]:
+def select_list(selected: NDArray) -> list[tuple[float, int]]:
     """
-    list of resonance peaks according to harmonics - remove dublettes with same
+    list of resonance peaks according to harmonics - remove doublettes with same
     upper frequency tagged with upper partial
     :param selected: list of selected peaks
     :return: list of tuples (resonance peaks, upper partial)
@@ -109,9 +109,9 @@ def select_list(selected: NDArray[list]) -> list[tuple[float, int]]:
 def harmonics(peaks: list[tuple]) -> list:
     """
     finds harmonics between each two frequencies by applying the inharmonicity
-    formula by a neested loop through all the peaks
+    formula by a nested loop through all the peaks
     :param peaks: list
-        tuples of freqencies and amplitudes of FFT transformed spectrum
+        tuples of frequencies and amplitudes of FFT transformed spectrum
     :return:
     list (float)
         positions of first NPARTIAL partials
@@ -139,7 +139,7 @@ def harmonics(peaks: list[tuple]) -> list:
                         b = (tmp - 1.) / (k ** 2 - tmp * m ** 2)
                     except ZeroDivisionError:
                         logging.info(
-                            "devideByZero: discarded value in harmonics finding"
+                            "divideByZero: discarded value in harmonics finding"
                         )
                         continue
                     if -0.0001 < b < parameters.INHARM:

@@ -9,6 +9,8 @@
 
 ## 3.6.0 (2025-12-03)
 ### Added
+- toggle between L1 and L2 minimization for the determination of f0 and b. 
+Parameter set in parameters.py
 ### Changed
 - Utilizes backend TkAgg
 - Compatible with Python 3.13

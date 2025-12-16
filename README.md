@@ -88,7 +88,7 @@ frequencies of <em>ith</em> partial.
 The L2-norm was tested to be inferior. I employ the module 
 [scipy.optimize.slsqp](https://docs.scipy.org/doc/scipy/reference/optimize.minimize-slsqp.html#optimize-minimize-slsqp), originally
 designed for least-square minimization. Although it requires the Jacobian 
-of the L1 to be computed (manually) as 
+of the L1 to be computed (analytically) as 
 well - imposing additional CPU-power - it seemed to 
 be the most reliable and fastest minimizer, when compared 
 to brute-force or 'L-BFGS-B'.

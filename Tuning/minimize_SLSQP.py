@@ -1,19 +1,23 @@
 import logging
 from collections.abc import Sequence
+from typing import Callable
 
 from numpy import array
 from numpy.typing import NDArray
-from scipy.optimize import minimize
+from scipy.optimize import minimize, OptimizeResult
 
 # internal
 import parameters
 from FFTaux import mytimer
-# from L2costfunction import L2
-from L1costfunction import L1
+
+if parameters.COST_FUNCTION == 'L1':
+    from L1costfunction import L1
+else:
+    from L2costfunction import L2
 
 
 def callback(xk: NDArray) -> None:
-    # toggle for minimizer analysis -> L1_contours
+    # toggle for minimizer analysis -> Lx_contours
     # print("[{},{}],".format(xk[0], xk[1]))
     pass
 
@@ -25,45 +29,41 @@ def bounds(x0: NDArray) -> Sequence[tuple[float, float]]:
     return (.995 * f0, 1.005 * f0), (.05 * b, min(5. * b, parameters.INHARM))
 
 
-@mytimer("L1 Minimization")
+@mytimer(f"{parameters.COST_FUNCTION}-Minimization")
 def final_fit(
         av: NDArray,
         ind: list[tuple[float, int]]
 ) -> tuple[float, float]:
     """
-    fits the base frequency and inharmonicity by minimizing the L1 cost function
+    fits the base frequency and inharmonicity by minimizing the Lx cost function
     as the deviation from the measured resonance frequencies to the
     calculated frequencies f = i * res.x0[0] * sqrt(1. + res.x0[1] * i**2),
     where i is the partial
     :param av: array - [lower, upper partials, lower, upper frequencies,
     inharmonicity, and base frequency]
     :param ind: array - measured resonance frequencies as from FFT
-    :return: float, float - base frequency, inharmonicity (if success: fit
+    :return - base frequency, inharmonicity, if success: fit
     result, else returns input values
     note:
     https://stackoverflow.com/questions/41137092/jacobian-and-hessian-inputs-in-scipy-optimize-minimize
+
+    bruteforce approach as was dismissed:
+    res = minimize(fun=l1_min.l1_minimum_der,
+                   x0=guess,
+                   bounds=bounds(f0=av[5], b=av[4]),
+                   # constraints=constraints(f0=av[5], b=av[4]),
+                   method='BFGS',
+                   options={'return_all': False},
+                   jac=True
+                   # jac=l1_min.l1_minimum_jac,
+                   # hess=l1_min.l1_minimum_hess
+                   )
     """
-    if av[4] <= 0:
-        return av[5], av[4]
-    guess = array([av[5], av[4]])
-    l1_min = L1(ind)
-    l1_min.l1_minimum(x0=guess)
-    try:
-        '''
-        res = minimize(fun=l1_min.l1_minimum_der,
-                       x0=guess,
-                       bounds=bounds(f0=av[5], b=av[4]),
-                       # constraints=constraints(f0=av[5], b=av[4]),
-                       method='BFGS',
-                       options={'return_all': False},
-                       jac=True
-                       # jac=l1_min.l1_minimum_jac,
-                       # hess=l1_min.l1_minimum_hess
-                       )
-        '''
-        res = minimize(
-            fun=l1_min.l1_minimum_der,
-            x0=guess,
+
+    def minimizer(f: Callable, x0: NDArray) -> OptimizeResult:
+        return minimize(
+            fun=f,
+            x0=x0,
             bounds=bounds(guess),
             method='SLSQP',
             jac=True,
@@ -71,17 +71,30 @@ def final_fit(
             options=None
         )
 
-        def debug_msg(success: bool) -> None:
-            logging.debug("Minimizer: Success: {0} L1 initial value: {1}, "
-                          "last value: {2}\n\t"
-                          "number of iterations/evaluation: {3}/{4}\n\t"
-                          "message: {5}".format(
-                success,
-                l1_min.l1_first, res.fun,
-                res.nit, res.nfev,
-                res.message))
+    if av[4] <= 0:
+        return av[5], av[4]
+    guess = array([av[5], av[4]])
 
-        if l1_min.l1_first > res.fun:
+    try:
+        if parameters.COST_FUNCTION == 'L1':
+            l1_min = L1(ind)
+            l1_min.l1_minimum(x0=guess)
+            res = minimizer(l1_min.l1_minimum_der, x0=guess)
+            l_first = l1_min.l1_first
+        else:  # L2
+            l2_min = L2(ind)
+            l2_min.l2_minimum(x0=guess)
+            res = minimizer(l2_min.l2_minimum_der, x0=guess)
+            l_first = l2_min.l2_first
+
+        def debug_msg(success: bool) -> None:
+            logging.debug(
+                f"{parameters.COST_FUNCTION}-Minimizer: Success: {success}\n\t"
+                f"initial value: {l_first}, last value: {res.fun}\n\t"
+                f"number of iterations/evaluation: {res.nit}/{res.nfev}\n\t"
+                f"message: {res.message}")
+
+        if l_first > res.fun:
             debug_msg(True)
             return res.x
         else:
