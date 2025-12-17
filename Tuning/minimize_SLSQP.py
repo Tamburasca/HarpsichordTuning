@@ -60,9 +60,12 @@ def final_fit(
                    )
     """
 
-    def minimizer(f: Callable, x0: NDArray) -> OptimizeResult:
+    def minimizer(
+            fun: Callable,
+            x0: NDArray
+    ) -> OptimizeResult:
         return minimize(
-            fun=f,
+            fun=fun,
             x0=x0,
             bounds=bounds(guess),
             method='SLSQP',
@@ -79,12 +82,12 @@ def final_fit(
         if parameters.COST_FUNCTION == 'L1':
             l1_min = L1(ind)
             l1_min.l1_minimum(x0=guess)
-            res = minimizer(l1_min.l1_minimum_der, x0=guess)
+            res = minimizer(fun=l1_min.l1_minimum_der, x0=guess)
             l_first = l1_min.l1_first
         else:  # L2
             l2_min = L2(ind)
             l2_min.l2_minimum(x0=guess)
-            res = minimizer(l2_min.l2_minimum_der, x0=guess)
+            res = minimizer(fun=l2_min.l2_minimum_der, x0=guess)
             l_first = l2_min.l2_first
 
         def debug_msg(success: bool) -> None:

@@ -49,7 +49,6 @@ class L2(object):
         for found in self.__fo:
             f_calc = found[1] * x0[0] * sqrt(1. + x0[1] * found[1] ** 2)
             diff = f_calc - found[0]
-            # ToDo L2 norm normalized to the frequency, as L2 varies with frequency
             l2 += diff * diff / found[0] / found[0]
             if jac:
                 # n-th partial is index + 1

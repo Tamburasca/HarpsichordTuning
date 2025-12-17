@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-FFTonLiveAudio Copyright (C) 2020-25, Dr. Ralf Antonius Timmermann
+FFTonLiveAudio Copyright (c) 2020-25, Dr. Ralf Antonius Timmermann
 
 A graphical tuning tool for string instruments, such as harpsichords and pianos.
 
@@ -52,13 +52,13 @@ from multiProcess_matplot import MPmatplot
 from tuningTable import tuningtable
 
 __author__ = "Dr. Ralf Antonius Timmermann"
-__copyright__ = "Copyright 2020-25 Dr. Ralf Antonius Timmermann"
+__copyright__ = "Copyright 2020-25, Ralf A. Timmermann"
 __credits__ = ""
 __license__ = "BSD 3-Clause"
 __version__ = "3.6.0"
-__maintainer__ = "Dr. Ralf A. Timmermann"
+__maintainer__ = "Ralf A. Timmermann"
 __email__ = "ralf.timmermann@gmx.de"
-__status__ = "Prod"
+__status__ = "Production"
 
 print(__doc__)
 
