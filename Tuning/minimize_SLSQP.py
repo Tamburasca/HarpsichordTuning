@@ -9,11 +9,7 @@ from scipy.optimize import minimize, OptimizeResult
 # internal
 import parameters
 from FFTaux import mytimer
-
-if parameters.COST_FUNCTION == 'L1':
-    from L1costfunction import L1
-else:
-    from L2costfunction import L2
+from LxCostfunction import L1, L2
 
 
 def callback(xk: NDArray) -> None:
@@ -27,6 +23,21 @@ def bounds(x0: NDArray) -> Sequence[tuple[float, float]]:
     b = max(0., x0[1])
 
     return (.995 * f0, 1.005 * f0), (.05 * b, min(5. * b, parameters.INHARM))
+
+
+def minimizer(
+        fun: Callable,
+        x0: NDArray
+) -> OptimizeResult:
+    return minimize(
+        fun=fun,
+        x0=x0,
+        bounds=bounds(x0),
+        method='SLSQP',
+        jac=True,
+        callback=callback,
+        options=None
+    )
 
 
 @mytimer(f"{parameters.COST_FUNCTION}-Minimization")
@@ -59,49 +70,35 @@ def final_fit(
                    # hess=l1_min.l1_minimum_hess
                    )
     """
-
-    def minimizer(
-            fun: Callable,
-            x0: NDArray
-    ) -> OptimizeResult:
-        return minimize(
-            fun=fun,
-            x0=x0,
-            bounds=bounds(guess),
-            method='SLSQP',
-            jac=True,
-            callback=callback,
-            options=None
-        )
-
     if av[4] <= 0:
         return av[5], av[4]
-    guess = array([av[5], av[4]])
 
+    x0 = array([av[5], av[4]])
     try:
         if parameters.COST_FUNCTION == 'L1':
             l1_min = L1(ind)
-            l1_min.l1_minimum(x0=guess)
-            res = minimizer(fun=l1_min.l1_minimum_der, x0=guess)
+            l1_min.l1_minimum(x0=x0)
+            res = minimizer(fun=l1_min.l1_minimum_der, x0=x0)
             l_first = l1_min.l1_first
         else:  # L2
             l2_min = L2(ind)
-            l2_min.l2_minimum(x0=guess)
-            res = minimizer(fun=l2_min.l2_minimum_der, x0=guess)
+            l2_min.l2_minimum(x0=x0)
+            res = minimizer(fun=l2_min.l2_minimum_der, x0=x0)
             l_first = l2_min.l2_first
 
-        def debug_msg(success: bool) -> None:
+        if l_first > res.fun:
             logging.debug(
-                f"{parameters.COST_FUNCTION}-Minimizer: Success: {success}\n\t"
+                f"{parameters.COST_FUNCTION}-Minimizer: Success: True\n\t"
                 f"initial value: {l_first}, last value: {res.fun}\n\t"
                 f"number of iterations/evaluation: {res.nit}/{res.nfev}\n\t"
                 f"message: {res.message}")
-
-        if l_first > res.fun:
-            debug_msg(True)
             return res.x
         else:
-            debug_msg(False)
+            logging.debug(
+                f"{parameters.COST_FUNCTION}-Minimizer: Success: False\n\t"
+                f"initial value: {l_first}, last value: {res.fun}\n\t"
+                f"number of iterations/evaluation: {res.nit}/{res.nfev}\n\t"
+                f"message: {res.message}")
             return av[5], av[4]
 
     except Exception as e:

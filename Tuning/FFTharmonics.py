@@ -34,7 +34,7 @@ def bisection(
     ju = n - 1  # and upper limits.
     while ju - jl > 1:
         # If we are not yet done,
-        jm = (ju + jl) >> 1  # compute a midpoint with a bitshift
+        jm = (ju + jl) >> 1  # compute a midpoint with a bit shift
         if value >= vector[jm]:
             jl = jm  # and replace either the lower limit
         else:
@@ -105,7 +105,7 @@ def select_list(selected: NDArray) -> list[tuple[float, int]]:
     return [(key, int(value)) for (key,), value in identified.items()]
 
 
-@mytimer("harmonics (subtract time for L1 minimization, if called)")
+@mytimer(f"harmonics (minus time for {parameters.COST_FUNCTION} minimization)")
 def harmonics(peaks: list[tuple]) -> list:
     """
     finds harmonics between each two frequencies by applying the inharmonicity

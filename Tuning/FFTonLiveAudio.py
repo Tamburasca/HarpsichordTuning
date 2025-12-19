@@ -52,7 +52,7 @@ from multiProcess_matplot import MPmatplot
 from tuningTable import tuningtable
 
 __author__ = "Dr. Ralf Antonius Timmermann"
-__copyright__ = "Copyright 2020-25, Ralf A. Timmermann"
+__copyright__ = "Copyright (c) 2020-25, Ralf A. Timmermann"
 __credits__ = ""
 __license__ = "BSD 3-Clause"
 __version__ = "3.6.0"

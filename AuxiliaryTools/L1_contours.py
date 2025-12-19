@@ -1,8 +1,8 @@
 from numpy import log10, arange, meshgrid, stack, array, amin, amax, append
 import matplotlib.pyplot as plt
 from matplotlib import cm
-from Tuning.L1costfunction import L1
-from Tuning.L2costfunction import L2
+from Tuning.LxCostfunction import L1
+from Tuning.LxCostfunction import L2
 
 theCM = cm.get_cmap()
 
