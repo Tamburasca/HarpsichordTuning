@@ -11,6 +11,7 @@
 ### Added
 - toggle between L1 and L2 minimization for the determination of f0 and b. 
 Parameter set in parameters.py
+- noise level change extended to background measurements
 ### Changed
 - Utilizes backend TkAgg
 - Compatible with Python 3.13

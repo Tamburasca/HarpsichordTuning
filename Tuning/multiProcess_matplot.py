@@ -145,7 +145,7 @@ class MPmatplot(Process):
         # self.__cid = fig.canvas.mpl_connect('key_press_event', self.on_press)
         # ToDo: investigate why this does not work with Qt backend
         # disable closing figure button in the upper toolbar
-        win = fig.canvas.manager.window
+        win = fig.canvas.manager.window  # type: ignore
         # TkAgg
         # win.overrideredirect(True)
         # win.protocol('WM_DELETE_WINDOW', donothing)
@@ -174,7 +174,8 @@ class MPmatplot(Process):
                       'weight': 'normal',
                       'size': 14}
 
-        # run eternally
+        # run eternally until error occurs (window closed abnormally) or is
+        # exited elsewhere via ctrl-y
         while True:
             try:
                 # will throw an error if the window has been closed abnormally
@@ -187,6 +188,7 @@ class MPmatplot(Process):
             dic = self.__queue.get(block=True)
             _start = default_timer()
             # check if there are already some messages more than those picked
+            # relocated to FFTonLiveAudio.py
             # qsize = self.__queue.qsize()
             # if qsize > 0:
             #    logging.warning("{0} messages in MP queue".format(qsize))
@@ -229,7 +231,7 @@ class MPmatplot(Process):
                 ax1.set_title(label=displayed_title,
                               loc='right',
                               fontdict=font_title)
-                ax1background = fig.canvas.copy_from_bbox(ax1.bbox)
+                ax1background = fig.canvas.copy_from_bbox(ax1.bbox) # type: ignore
             else:
                 ln1.set_xdata(self.__t1)
                 ln1.set_ydata(yfft)
@@ -269,7 +271,7 @@ class MPmatplot(Process):
                 self.__firstplot = False
             else:
                 # restore background
-                fig.canvas.restore_region(ax1background)
+                fig.canvas.restore_region(ax1background) # type: ignore
                 # redraw just the points
                 ax1.draw_artist(ln1)
                 ax1.draw_artist(text)

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import logging
 from operator import itemgetter
 from typing import TypeVar
@@ -187,9 +185,11 @@ def peak(
     # avaraged background of both sides
     left = [int(i) for i in properties['left_ips']]
     right = [int(i + 1) for i in properties['right_ips']]
+
     # subtract background
     corrected = spectrum[peaks] - (spectrum[left] + spectrum[right]) / 2
     logging.debug("Peaks found: {0}".format(len(peaks)))
+
     # listtup is a list of tuples where tuple[0] is the position bin and
     # tuple[1] the corrected peak height
     listtup = list(zip(peaks, corrected))
@@ -197,13 +197,17 @@ def peak(
     # sort key = amplitude descending
     if baseline is None:
         listtup = \
-            [item for item in listtup if item[1] > noise_level * noise_total]
+            [item for item in listtup
+             if item[1] > (parameters.NOISE_LEVEL
+                           * noise_level
+                           * noise_total)]
     else:
-        # listtup = [item for item in listtup if item[1] > 20. * std[item[0]]]
-        listtup = [item for item in listtup
-                   if item[1] > (parameters.FACTOR_STANDARD_DEV_NOISE
-                                 * std[item[0]] + baseline[item[0]])
-                   ]
+        listtup = \
+            [item for item in listtup
+             if item[1] > (parameters.FACTOR_STANDARD_DEV_NOISE
+                           * noise_level
+                           * std[item[0]]
+                           + baseline[item[0]])]
     listtup.sort(key=lambda x: x[1], reverse=True)
     del listtup[parameters.NMAX:]
 

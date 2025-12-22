@@ -85,7 +85,7 @@ class Tuner:
         self.step: int = parameters.SLICE_SHIFT
         self.fmax: int = parameters.FREQUENCY_MAX
         self.fmin: int = 0
-        self.noise_level = parameters.NOISE_LEVEL
+        self.noise_level = 1.
         self.a1: float = a1
         self.tuning: float = tuning  # see tuningTable.py
         self.x: bool = True
@@ -147,7 +147,7 @@ class Tuner:
         self.fmin = 0
         self.fmax = parameters.FREQUENCY_MAX
         self.step = parameters.SLICE_SHIFT
-        self.noise_level = parameters.NOISE_LEVEL
+        self.noise_level = 1.
         self.noise_toggle = False
         self.__n = 0
         self.baseline = None
@@ -203,16 +203,17 @@ class Tuner:
     def on_activate_noise_up(self) -> None:
         # increase noise level by 10%
         self.noise_level *= 1.1
-        print("Noise level increased to {0:1.1f}".format(self.noise_level))
+        print("Noise level increased to {0:1.2f}".format(self.noise_level))
 
     def on_activate_noise_down(self) -> None:
         # decrease noise level by 9.09%
         self.noise_level /= 1.1
-        print("Noise level decreased to {0:1.1f}".format(self.noise_level))
+        print("Noise level decreased to {0:1.2f}".format(self.noise_level))
 
     def on_activate_measure_noise(self) -> None:
         self.noise_toggle = not self.noise_toggle
         if self.noise_toggle: print("Measuring Noise Level. Please keep quiet!")
+        sleep(1.)
 
     def clear_queue(self):
         try:
@@ -387,14 +388,15 @@ class Tuner:
                 # measure noise if toggled
                 if self.noise_toggle:
                     self.baseline, self.std = self.noise_threshold(yfft)
-                # other option
+                # other option disregarded owing to time consumption
                 # baseline = baseline_als_optimized(yfft, lam=3.e4, p=.01, niter=1)
                 # call peakfinding
-                peaks = peak(frequency=t1,
-                             spectrum=yfft,
-                             baseline=self.baseline,
-                             std=self.std,
-                             noise_level=self.noise_level)
+                peaks = peak(
+                    frequency=t1,
+                    spectrum=yfft,
+                    baseline=self.baseline,
+                    std=self.std,
+                    noise_level=self.noise_level)
                 peaklist = list(map(itemgetter(0), peaks))
                 # call harmonics
                 if peaks is not None:
@@ -417,7 +419,9 @@ class Tuner:
                      'noise_toggle': self.noise_toggle,
                      'baseline':
                          self.baseline
-                         + parameters.FACTOR_STANDARD_DEV_NOISE * self.std
+                         + parameters.FACTOR_STANDARD_DEV_NOISE
+                         * self.std
+                         * self.noise_level
                          if self.baseline is not None else None,
                      'key': key,
                      'off': off,

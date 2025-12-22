@@ -72,19 +72,16 @@ def l1min(
     # loop over peaks found
     for found in ind:
         idx = bisection(freq, found)
-        if idx == -1:
-            # <min frequency
+        if idx == -1:  # <min frequency
             ids = 0
-        elif idx == num_freq_calc:
-            # >max frequency
+        elif idx == num_freq_calc:  # >max frequency
             ids = num_freq_calc - 1
-        else:
-            # consider the closest candidate of neighbors
+        else:  # consider the closest candidate of neighbors
             ids = idx \
                 if abs(found - freq[idx]) < abs(found - freq[idx + 1]) \
                 else idx + 1
         diff = freq[ids] - found
-        # L1 norm normalized to the frequency, as L1 increases from bass to discant
+        # L1 norm normalized to frequency, as L1 increases from bass to discant
         l1 += abs(diff) / found
 
     return l1
@@ -229,11 +226,13 @@ def harmonics(peaks: list[tuple]) -> list:
                         av[5], av[4], base_frequency, inharmonicity)
                 )
             for n in range(1, 640):
-#            for n in range(1, parameters.NPARTIAL):
+                # for n in range(1, parameters.NPARTIAL):
                 f_synth = base_frequency * n * sqrt(
-                                 1. + inharmonicity * n ** 2)
-                if f_synth < 12_000: f_n = append(f_n, f_synth)  # show < 12.000 Hz
-                else: break
+                    1. + inharmonicity * n ** 2)
+                if f_synth < 12_000:
+                    f_n = append(f_n, f_synth)  # show < 12.000 Hz
+                else:
+                    break
             logging.info(
                 "Best result: f_1 = {0:.2f} Hz, B = {1:.1e}".format(
                     f_n[0], inharmonicity)
