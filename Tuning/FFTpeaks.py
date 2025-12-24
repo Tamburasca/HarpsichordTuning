@@ -72,12 +72,13 @@ def gaussian_convolution(
     :param initial: list of float tuple
         frequencies and corresponding heights of peaks found
     """
-    _amp = amp.copy()
-    _freq = freq.copy()
+    peaks = list()
     _x = list(map(itemgetter(0), initial))
+    # ToDo: remove obsolete lines
+    # _amp = amp.copy() # obsolete
+    # _freq = freq.copy() # obsolete
     # _y = list(map(itemgetter(1), initial))  # obsolete
     num_threads = len(initial)
-    peaks = list()
     logging.debug("Number of peaks: {0}".format(num_threads))
 
     def _fitting(ids: int) -> list | None:
@@ -88,21 +89,22 @@ def gaussian_convolution(
         """
         x = _x[ids]  # frequency bin with peak
         # do not exceed the array on either side
-        if (x - 1) < 0 or (x + 2) > len(_freq):
+        if (x - 1) < 0 or (x + 2) > len(freq):
             logging.warning("Fit center value out of window: peak disregarded!")
             return None
 
-        f = _freq[x - 1:x + 2]  # frequencies: one neighbor on either side
-        test = _amp[x - 1:x + 2]  # amplitudes
+        f = freq[x - 1:x + 2]  # frequencies: one neighbor on either side
+        test = amp[x - 1:x + 2]  # amplitudes
         if (test[0] > test[1] or test[2] > test[1]
                 or (test[1] * test[1]) < (test[0] * test[2])):
             logging.warning(
                 "Convolution requirement violated: peak disregarded!"
             )
             return None
+
         """
-        EUROPEAN ORGANIZATION FOR NUCLEAR RESEARCH / ORGANISATION EUROPEENNE POUR LA RECHERCHE NUCLEAIRE
-        CERN – AB DIVISION
+        EUROPEAN ORGANIZATION FOR NUCLEAR RESEARCH / ORGANISATION EUROPEENNE 
+        POUR LA RECHERCHE NUCLEAIRE CERN – AB DIVISION
         AB-Note-2004-021 BDI, February 2004
         by M. Gasior, J.L. Gonzalez
         three-node interpolation of the logarithm of a Gaussion to a parabola
@@ -112,11 +114,9 @@ def gaussian_convolution(
         """
         with numpy_errstate(divide='raise'):
             try:
-                a = log(_amp[x - 1:x + 2])  # log amplitudes in Fourier space
-                offset = (
-                        .5 * parameters.RATE / parameters.SLICE_LENGTH *
-                        (a[2] - a[0]) / (2. * a[1] - a[0] - a[2])
-                )
+                a = log(amp[x - 1:x + 2])  # log amplitudes in Fourier space
+                offset = (.5 * parameters.RATE / parameters.SLICE_LENGTH *
+                          (a[2] - a[0]) / (2. * a[1] - a[0] - a[2]))
                 ctr = f[1] + offset
                 dilation = (a[0] - a[1]) / ((f[0] - ctr) ** 2 - (f[1] - ctr) ** 2)
                 fwhm = 2. * sqrt(-.6931 / dilation)
@@ -130,7 +130,7 @@ def gaussian_convolution(
         return list([ctr, height, fwhm])
         # end embedded function
 
-    for i in range(num_threads):
+    for i in range(num_threads):  # loop over all peaks found
         result = _fitting(ids=i)
         if result:
             peaks.append(result)
@@ -182,7 +182,7 @@ def peak(
         width=parameters.WIDTH
     )
     # print(peaks, properties['left_ips'], properties['right_ips'])
-    # avaraged background of both sides
+    # averaged background of both sides
     left = [int(i) for i in properties['left_ips']]
     right = [int(i + 1) for i in properties['right_ips']]
 
@@ -204,10 +204,10 @@ def peak(
     else:
         listtup = \
             [item for item in listtup
-             if item[1] > (parameters.FACTOR_STANDARD_DEV_NOISE
+             if item[1] > (baseline[item[0]] +
+                           parameters.FACTOR_STANDARD_DEV_NOISE
                            * noise_level
-                           * std[item[0]]
-                           + baseline[item[0]])]
+                           * std[item[0]])]
     listtup.sort(key=lambda x: x[1], reverse=True)
     del listtup[parameters.NMAX:]
 

@@ -7,20 +7,24 @@ from scipy.signal import butter, freqs, windows
 import parameters
 from FFTaux import mytimer
 
+# Gaussian apodization window
 apodization_gaussian = windows.gaussian(
     M=parameters.SLICE_LENGTH,
-    std=parameters.SLICE_LENGTH / parameters.APODIZATION_GAUSS_SIGMA
-)
+    std=parameters.SLICE_LENGTH / parameters.APODIZATION_GAUSS_SIGMA)
+
+# Frequency bins for FFT
 t1 = rfftfreq(
     n=parameters.SLICE_LENGTH,
-    d=1. / parameters.RATE
-)
+    d=1. / parameters.RATE)
+
+# Analog Butterworth high pass filter design
 b, a, *_ = butter(
     N=parameters.F_ORDER,
     Wn=parameters.F_FILT,
     btype='highpass',
     analog=True)
 
+# Butterworth filter frequency response
 _, h = freqs(
     b=b,
     a=a,

@@ -1,10 +1,10 @@
 import logging
 from math import gcd
 from operator import itemgetter
+from typing import Any
 
 from numpy import sqrt, mean, append, array
 from numpy.typing import NDArray
-from typing import Any
 
 # internal
 import parameters

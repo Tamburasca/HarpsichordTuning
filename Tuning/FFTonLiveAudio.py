@@ -385,7 +385,7 @@ class Tuner:
                 # sl = highpass_filter(sl)
                 # calculate FFT
                 t1, yfft = fft(amp=sl)
-                # measure noise if toggled
+                # measure noise if toggled on
                 if self.noise_toggle:
                     self.baseline, self.std = self.noise_threshold(yfft)
                 # other option disregarded owing to time consumption
@@ -417,12 +417,11 @@ class Tuner:
                 self.__queue.put(
                     {'yfft': yfft,
                      'noise_toggle': self.noise_toggle,
-                     'baseline':
-                         self.baseline
-                         + parameters.FACTOR_STANDARD_DEV_NOISE
-                         * self.std
-                         * self.noise_level
-                         if self.baseline is not None else None,
+                     'baseline': self.baseline
+                                 + parameters.FACTOR_STANDARD_DEV_NOISE
+                                 * self.std
+                                 * self.noise_level
+                     if self.baseline is not None else None,
                      'key': key,
                      'off': off,
                      'slices': slices,
@@ -478,6 +477,7 @@ def main() -> int:
         '3': a.on_activate_measure_noise  # toggle noise measurement on/off
     })
     h.start()
+
     try:
         a.animate()
         # if exited abnormally, return error code 1

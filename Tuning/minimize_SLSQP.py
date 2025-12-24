@@ -19,6 +19,11 @@ def callback(xk: NDArray) -> None:
 
 
 def bounds(x0: NDArray) -> Sequence[tuple[float, float]]:
+    """
+    bounds for base frequency and inharmonicity
+    :param x0: frequency and inharmonicity initial guess
+    :return:
+    """
     f0 = x0[0]
     b = max(0., x0[1])
 
@@ -29,6 +34,12 @@ def minimizer(
         fun: Callable,
         x0: NDArray
 ) -> OptimizeResult:
+    """
+    SLSQP minimizer
+    :param fun: function to minimize
+    :param x0: frequency and inharmonicity initial guess
+    :return:
+    """
     return minimize(
         fun=fun,
         x0=x0,
@@ -58,7 +69,7 @@ def final_fit(
     note:
     https://stackoverflow.com/questions/41137092/jacobian-and-hessian-inputs-in-scipy-optimize-minimize
 
-    bruteforce approach as was dismissed:
+    bruteforce approach as is dismissed:
     res = minimize(fun=l1_min.l1_minimum_der,
                    x0=guess,
                    bounds=bounds(f0=av[5], b=av[4]),
