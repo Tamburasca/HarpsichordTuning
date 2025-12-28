@@ -51,6 +51,18 @@ def minimizer(
     )
 
 
+def msg(
+        success: bool,
+        l_first: float,
+        res: OptimizeResult
+) -> None:
+    logging.debug(
+        f"{parameters.COST_FUNCTION}-Minimizer: Success: {success}\n\t"
+        f"initial value: {l_first}, last value: {res.fun}\n\t"
+        f"number of iterations/evaluation: {res.nit}/{res.nfev}\n\t"
+        f"message: {res.message}")
+
+
 @mytimer(f"{parameters.COST_FUNCTION}-Minimization")
 def final_fit(
         av: NDArray,
@@ -98,18 +110,10 @@ def final_fit(
             l_first = l2_min.l2_first
 
         if l_first > res.fun:
-            logging.debug(
-                f"{parameters.COST_FUNCTION}-Minimizer: Success: True\n\t"
-                f"initial value: {l_first}, last value: {res.fun}\n\t"
-                f"number of iterations/evaluation: {res.nit}/{res.nfev}\n\t"
-                f"message: {res.message}")
+            msg(success=True, l_first=l_first, res=res)
             return res.x
         else:
-            logging.debug(
-                f"{parameters.COST_FUNCTION}-Minimizer: Success: False\n\t"
-                f"initial value: {l_first}, last value: {res.fun}\n\t"
-                f"number of iterations/evaluation: {res.nit}/{res.nfev}\n\t"
-                f"message: {res.message}")
+            msg(success=False, l_first=l_first, res=res)
             return av[5], av[4]
 
     except Exception as e:

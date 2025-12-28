@@ -54,7 +54,7 @@ APODIZATION_GAUSS_SIGMA: float = 7.
 INHARM: float = 5.e-4
 
 """max number of highest peaks found"""
-NMAX: int = 20
+NMAX: int = 12
 
 """number of partials = NMAX considered in harmonic finding (experimental)"""
 NPARTIAL: int = 20

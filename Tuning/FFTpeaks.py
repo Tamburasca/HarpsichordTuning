@@ -3,7 +3,7 @@ from operator import itemgetter
 from typing import TypeVar
 
 from numpy import abs, average, median, append, insert, log, sqrt, exp
-from numpy import errstate as numpy_errstate, float32, float64
+from numpy import errstate as np_errstate, float32, float64
 from numpy.typing import NDArray
 from scipy.signal import find_peaks
 
@@ -74,9 +74,6 @@ def gaussian_convolution(
     """
     peaks = list()
     _x = list(map(itemgetter(0), initial))
-    # ToDo: remove obsolete lines
-    # _amp = amp.copy() # obsolete
-    # _freq = freq.copy() # obsolete
     # _y = list(map(itemgetter(1), initial))  # obsolete
     num_threads = len(initial)
     logging.debug("Number of peaks: {0}".format(num_threads))
@@ -112,7 +109,7 @@ def gaussian_convolution(
         for reference: three-node interpolation
         https://stackoverflow.com/questions/4039039/fastest-way-to-fit-a-parabola-to-set-of-points
         """
-        with numpy_errstate(divide='raise'):
+        with np_errstate(divide='raise'):
             try:
                 a = log(amp[x - 1:x + 2])  # log amplitudes in Fourier space
                 offset = (.5 * parameters.RATE / parameters.SLICE_LENGTH *
@@ -183,8 +180,8 @@ def peak(
     )
     # print(peaks, properties['left_ips'], properties['right_ips'])
     # averaged background of both sides
-    left = [int(i) for i in properties['left_ips']]
-    right = [int(i + 1) for i in properties['right_ips']]
+    left = [round(i) for i in properties['left_ips']]
+    right = [round(i + 1) for i in properties['right_ips']]
 
     # subtract background
     corrected = spectrum[peaks] - (spectrum[left] + spectrum[right]) / 2

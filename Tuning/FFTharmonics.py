@@ -12,77 +12,43 @@ from FFTaux import mytimer
 # from minimize_bruteforce import final_fit
 from minimize_SLSQP import final_fit
 
-
-def bisection(
-        vector: list,
-        value: float
-) -> int:
-    """
-    For <vector> and <value>, returns an index j such that <value> is between
-    vector[j] and vector[j+1]. Values in <vector> must increase
-    monotonically. j=-1 or j=len(vector) is returned to indicate that
-    <value> is out of range below and above, respectively.
-    ref.:
-    https://stackoverflow.com/questions/2566412/find-nearest-value-in-numpy-array
-    """
-    n = len(vector)
-    if value < vector[0]:
-        return -1
-    elif value > vector[n - 1]:
-        return n
-    jl = 0  # Initialize lower
-    ju = n - 1  # and upper limits.
-    while ju - jl > 1:
-        # If we are not yet done,
-        jm = (ju + jl) >> 1  # compute a midpoint with a bit shift
-        if value >= vector[jm]:
-            jl = jm  # and replace either the lower limit
-        else:
-            ju = jm  # or the upper limit, as appropriate.
-        # Repeat until the test condition is satisfied.
-    if value == vector[0]:  # edge cases at bottom
-        return 0
-    elif value == vector[n - 1]:  # and top
-        return n - 1
-    else:
-        return jl
+I_MAX = int(16_000 / parameters.FREQUENCY_LOWER)
 
 
-def l1min(
+def l1min_new(
         ind: list,
         x0: list
 ) -> float:
     """
     returns the cost function for a regression on the L1 norm
     l1 = sum( abs( f_i(measured) - f_i(calculated) ) / f_i(measured) )
+    where f_i(measured) is considered to its nearest neighbor either
+    f_i(calculated) or f_i+1(calculated)
     :param ind: list - measured resonance frequencies as from peaks (FFT)
     after being cleansed, duplicates removed, etc.
     :param x0: list - [f0, b] such that f = i * x0[0] * sqrt(1. + x0[1] * i**2)
     :return: float - l1 cost function
     """
-    fmax = max(ind)
     l1 = 0.  # l1 cost function
-    freq = list()
-    for i in range(1, 640):
-        f = i * x0[0] * sqrt(1. + x0[1] * i ** 2)
-        freq.append(f)
-        if f > fmax:
-            break  # exit if superseded max. frequency measured to save time
-    num_freq_calc = len(freq)
+    j = 1
     # loop over peaks found
     for found in ind:
-        idx = bisection(freq, found)
-        if idx == -1:  # <min frequency
-            ids = 0
-        elif idx == num_freq_calc:  # >max frequency
-            ids = num_freq_calc - 1
-        else:  # consider the closest candidate of neighbors
-            ids = idx \
-                if abs(found - freq[idx]) < abs(found - freq[idx + 1]) \
-                else idx + 1
-        diff = freq[ids] - found
-        # L1 norm normalized to frequency, as L1 increases from bass to discant
-        l1 += abs(diff) / found
+        fl = j * x0[0] * sqrt(1. + x0[1] * j ** 2)
+        for i in range(j, I_MAX):
+            fh = (i + 1) * x0[0] * sqrt(1. + x0[1] * (i + 1) ** 2)
+            j = i
+            if found < fl and i == 1:
+                l1 += (fl - found) / found
+                break
+            elif fl <= found < fh:
+                if (found - fl) < (fh - found):
+                    diff = found - fl
+                else:
+                    diff = fh - found
+                l1 += diff / found
+                break
+            else:
+                fl = fh
 
     return l1
 
@@ -113,12 +79,12 @@ def harmonics(peaks: list[tuple]) -> list:
     list (float)
         positions of first NPARTIAL partials
     """
-    initial: list = list()
+    initial = list()
     l1: dict[int, list[float]] = dict()
     l1_mean: dict[int, Any] = dict()
     f_n = list()
 
-    # sort by frequency ascending
+    # sort by frequency asc. and make list of indices (positions) and heights
     peaks.sort(key=lambda x: x[0])
     ind = list(map(itemgetter(0), peaks))
     height = list(map(itemgetter(1), peaks))
@@ -143,9 +109,9 @@ def harmonics(peaks: list[tuple]) -> list:
                         # allow also negative b value > -0.0001 for
                         # uncertainties in the line fitting
                         f_fundamental = ind[i] / (m * sqrt(1. + b * m ** 2))
-                        if (parameters.FREQUENCY_LOWER
-                                > f_fundamental
-                                > parameters.FREQUENCY_UPPER):
+                        if not (parameters.FREQUENCY_LOWER
+                                < f_fundamental
+                                < parameters.FREQUENCY_UPPER):
                             break  # break two loops here
                         element = [
                             m, k, ind[i], ind[j], max(b, 0.), f_fundamental
@@ -183,7 +149,8 @@ def harmonics(peaks: list[tuple]) -> list:
             for key in l1:
                 for dat in filter(lambda x: x[0] == key, initial):
                     # Add all l1 values to list for same lower partial
-                    l1[key].append(l1min(ind=ind, x0=[dat[5], dat[4]]))
+                    t_new = l1min_new(ind=ind, x0=[dat[5], dat[4]])
+                    l1[key].append(t_new)
                 # l1 cost function averaged for equal lower partials
                 l1_mean[key] = mean(l1[key])
             # identify lower partial with minimum l1
@@ -225,7 +192,7 @@ def harmonics(peaks: list[tuple]) -> list:
                     "Final: f_0 = {2:.3f} Hz, B = {3:.3e}".format(
                         av[5], av[4], base_frequency, inharmonicity)
                 )
-            for n in range(1, 640):
+            for n in range(1, I_MAX):
                 # for n in range(1, parameters.NPARTIAL):
                 f_synth = base_frequency * n * sqrt(
                     1. + inharmonicity * n ** 2)
@@ -237,6 +204,7 @@ def harmonics(peaks: list[tuple]) -> list:
                 "Best result: f_1 = {0:.2f} Hz, B = {1:.1e}".format(
                     f_n[0], inharmonicity)
             )
+
     elif not initial and len(ind) > 0:
         # if fundamental could not be calculated through at least two lines,
         # give it a shot with the strongest peak found

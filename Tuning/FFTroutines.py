@@ -44,13 +44,13 @@ def fft(amp: NDArray) -> tuple[NDArray, NDArray]:
     list float
         intensities
     """
-    # apply apodization
+    # apply apodization and perform FFT
     y_raw = rfft(apodization_gaussian * amp)
     # apply analog high pass Butterworth filter
     y_final = abs(h * y_raw)
     """
     if PSD then: 
-        psd = 2. * noise power bandwidth * abs(y_raw)**2 / samples**2
+        # psd = 2. * noise power bandwidth * abs(y_raw)**2 / samples**2
         # noise power bandwidth = 2 or 1.81 for Hanning or Hamming windows, resp. 
         y_final = 2 * 2.0 * y_final ** 2 / len(amp)**2
     """

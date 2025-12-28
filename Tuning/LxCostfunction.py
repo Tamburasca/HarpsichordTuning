@@ -14,7 +14,7 @@ difference approximation.
 """
 
 from numdifftools import Jacobian, Hessian
-from numpy import sqrt, array, sign, nan
+from numpy import sqrt, array, sign, nan, zeros
 from numpy.typing import NDArray
 
 
@@ -34,7 +34,8 @@ class L1(object):
         self.__fo = ind
         self.l1_first: float = nan
         self.l1_last: float = nan
-        self.jacobi: NDArray = array([0., 0.])
+        self.jacobi: NDArray = zeros(2, dtype=float)
+        self.jacobi.fill(nan)
 
     def l1_minimum(
             self,
@@ -54,7 +55,7 @@ class L1(object):
         self.jacobi - derivatives δl1/δf_0 and δl1/δB
         """
         l1 = 0.  # l1 cost function
-        self.jacobi = array([0., 0.])
+        if jac: self.jacobi = array([0., 0.])
         # loop over peaks found
         for found in self.__fo:
             f_calc = found[1] * x0[0] * sqrt(1. + x0[1] * found[1] ** 2)
@@ -165,7 +166,8 @@ class L2(object):
         self.__fo = ind
         self.l2_first: float = nan
         self.l2_last: float = nan
-        self.jacobi: NDArray = array([0., 0.])
+        self.jacobi: NDArray = zeros(2, dtype=float)
+        self.jacobi.fill(nan)
 
     def l2_minimum(
             self,
@@ -185,7 +187,7 @@ class L2(object):
         self.jacobi - derivatives δl2/δf_0 and δl2/δB
         """
         l2 = 0.  # l2 cost function
-        self.jacobi = array([0., 0.])
+        if jac: self.jacobi = array([0., 0.])
         # loop over peaks found
         for found in self.__fo:
             f_calc = found[1] * x0[0] * sqrt(1. + x0[1] * found[1] ** 2)
