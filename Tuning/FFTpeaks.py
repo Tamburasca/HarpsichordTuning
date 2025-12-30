@@ -190,7 +190,7 @@ def peak(
     # listtup is a list of tuples where tuple[0] is the position bin and
     # tuple[1] the corrected peak height
     listtup = list(zip(peaks, corrected))
-    # sort out peaks below threshold and consider NMAX highest,
+    # sort out peaks below threshold and consider NPEAKS highest,
     # sort key = amplitude descending
     if baseline is None:
         listtup = \
@@ -206,7 +206,7 @@ def peak(
                            * noise_level
                            * std[item[0]])]
     listtup.sort(key=lambda x: x[1], reverse=True)
-    del listtup[parameters.NMAX:]
+    del listtup[parameters.NPEAKS:]
 
     if len(listtup) != 0:
         # run Gaussfits to the lines found

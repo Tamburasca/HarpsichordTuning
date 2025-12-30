@@ -20,7 +20,7 @@ t1 = rfftfreq(
 # Analog Butterworth high pass filter design
 b, a, *_ = butter(
     N=parameters.F_ORDER,
-    Wn=parameters.F_FILT,
+    Wn=parameters.F_FREQ,
     btype='highpass',
     analog=True)
 

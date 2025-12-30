@@ -319,10 +319,10 @@ class Tuner:
             sleep(0.02)
         # Convert the list of numpy-arrays into a 1D array (column-wise)
         amp = hstack(self.__callback_output)
-        slices = util.view_as_windows(amp,
-                                      window_shape=(
-                                          parameters.SLICE_LENGTH),
-                                      step=self.step)
+        slices = util.view_as_windows(
+            arr_in=amp,
+            window_shape=(parameters.SLICE_LENGTH),
+            step=self.step)
         logging.debug("Audio shape: {0}, Sliced audio shape: {1}"
                       .format(amp.shape,
                               slices.shape))
@@ -337,17 +337,6 @@ class Tuner:
         string
             return code
         """
-        sos = butter(
-            N=parameters.F_ORDER,
-            Wn=parameters.F_FILT,
-            btype='highpass',
-            fs=parameters.RATE,
-            output='sos'
-        )
-
-        def highpass_filter(sig: NDArray) -> NDArray:
-            return sosfilt(sos, sig)
-
         self.__queue = Queue()
         # start the MATPLOTLIB process
         mp = MPmatplot(

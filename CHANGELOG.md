@@ -7,7 +7,7 @@
 ### Removed
 ### Security
 
-## 3.6.0 (2025-12-28)
+## 3.6.0 (2025-12-30)
 ### Added
 - Toggle between L1 and L2 minimization for the final determination of f0 and b. 
 Appropriate parameter is set in parameters.py

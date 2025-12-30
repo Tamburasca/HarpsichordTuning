@@ -22,8 +22,8 @@ to its previous, can be adjusted by +/-1024 samples through hotkeys crtl-j/k.
 Corrected for the sample size."""
 SLICE_SHIFT: int = 16384
 
-"""F_FILT: high pass cutoff frequency [Hz]"""
-F_FILT: float = 60.
+"""F_FREQ: high pass cutoff frequency [Hz]"""
+F_FREQ: float = 60.
 
 """F_ORDER: order of high pass Butterworth filter"""
 F_ORDER: int = 2
@@ -53,24 +53,26 @@ APODIZATION_GAUSS_SIGMA: float = 7.
 """max. inharmonicity of strings considered (harpsichord, piano, ...)"""
 INHARM: float = 5.e-4
 
-"""max number of highest peaks found"""
-NMAX: int = 12
+"""Max number of highest peaks found.
+Seems that the number needs to be reduced to higher frequencies.
+First guesses: 12 for bass, 6 for discant"""
+NPEAKS: int = 12
 
-"""number of partials = NMAX considered in harmonic finding (experimental)"""
+"""number of partials considered in harmonic finding (experimental)"""
 NPARTIAL: int = 20
 
 """lower/upper frequency limit, i.e. A0. and C8 may not need to be adjusted."""
 FREQUENCY_LOWER: float = 26.5
 FREQUENCY_UPPER: float = 4435.
 
-"""initial max frequency [Hz] displayed, can be adjusted via ctrl-n/m or alt-n/m
-and is reset via ctrl-r to default"""
+"""initial max frequency [Hz] displayed, can be adjusted via hotkeys 
+ctrl-n/m or alt-n/m and is reset via ctrl-r to default"""
 FREQUENCY_MAX: int = 2000
 FREQUENCY_WIDTH_MIN: int = 500
 FREQUENCY_STEP: int = 500
 
-"""cost function to be used in the minimization"""
-COST_FUNCTION = 'L1'  # 'L1' or 'L2'
+"""cost function to be used in the minimization: ['L1'|'L2']"""
+COST_FUNCTION = 'L1'
 
 """debug flag"""
 DEBUG: bool = False
