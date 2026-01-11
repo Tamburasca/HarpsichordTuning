@@ -29,7 +29,7 @@ class L1(object):
         """
         :param ind: list of tuples -
         1st element of tuple: measured resonance frequencies as from peaks (FFT)
-        2nd element of tuple: its partial i
+        2nd element of tuple: its partial as determined by peak selection
         """
         self.__fo = ind
         self.l1_first: float = nan
@@ -54,18 +54,20 @@ class L1(object):
         if jac is True the Jacobian is calculated analytically and stored in
         self.jacobi - derivatives δl1/δf_0 and δl1/δB
         """
+        f0, b = x0[0], max(x0[1], 0.)
         l1 = 0.  # l1 cost function
         if jac: self.jacobi = array([0., 0.])
+
         # loop over peaks found
         for found in self.__fo:
-            f_calc = found[1] * x0[0] * sqrt(1. + x0[1] * found[1] ** 2)
+            f_calc = found[1] * f0 * sqrt(1. + b * found[1] ** 2)
             diff = f_calc - found[0]
             # L1 norm normalized to frequency, as L1 varies with frequency
             l1 += abs(diff) / found[0]
             if jac:
                 # n-th partial is index + 1
                 self.jacobi += self.__derivative(
-                    x0=x0,
+                    x0=array([f0, b]),
                     i=found[1],
                     trova=found[0]
                 ) * sign(diff)
@@ -139,9 +141,7 @@ class L1(object):
         :param trova: measured frequency at partial i
         :return:
         """
-        x0[1] = max(0., x0[1])  # let b be non-negative
         tmp = sqrt(1. + x0[1] * i ** 2)
-
         # derivative with respect to base frequency
         deriv_f0 = i * tmp / trova
         # derivative with respect to inharmonicity
@@ -161,7 +161,7 @@ class L2(object):
         """
         :param ind: list of tuples -
         1st element of tuple: measured resonance frequencies as from peaks (FFT)
-        2nd element of tuple: its partial i
+        2nd element of tuple: its partial as determined by peak selection
         """
         self.__fo = ind
         self.l2_first: float = nan
@@ -186,17 +186,19 @@ class L2(object):
         if jac is True the Jacobian is calculated analytically and stored in
         self.jacobi - derivatives δl2/δf_0 and δl2/δB
         """
+        f0, b = x0[0], max(x0[1], 0.)
         l2 = 0.  # l2 cost function
         if jac: self.jacobi = array([0., 0.])
+
         # loop over peaks found
         for found in self.__fo:
-            f_calc = found[1] * x0[0] * sqrt(1. + x0[1] * found[1] ** 2)
+            f_calc = found[1] * f0 * sqrt(1. + b * found[1] ** 2)
             diff = f_calc - found[0]
             l2 += diff * diff / found[0] / found[0]
             if jac:
                 # n-th partial is index + 1
                 self.jacobi += self.__derivative(
-                    x0=x0,
+                    x0=array([f0, b]),
                     i=found[1],
                     trova=found[0])
         if self.l2_first is nan: self.l2_first = l2
@@ -269,10 +271,8 @@ class L2(object):
         :param trova: measured frequency at partial i
         :return:
         """
-        x0[1] = max(0., x0[1])  # let b be non-negative
         tmp = sqrt(1. + x0[1] * i ** 2)
         tmp1 = (i * x0[0] * tmp - trova) / trova / trova
-
         # derivative with respect to base frequency
         deriv_f0 = 2. * i * tmp * tmp1
         # derivative with respect to inharmonicity

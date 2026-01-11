@@ -45,28 +45,30 @@ from skimage import util
 # internal
 import parameters
 from FFTaux import mytimer  # , baseline_als_optimized
-from FFTharmonics import harmonics
+from FFTharmonics2 import harmonics
 from FFTpeaks import peak
 from FFTroutines import fft
 from multiProcess_matplot import MPmatplot
 from tuningTable import tuningtable
 
 __author__ = "Dr. Ralf Antonius Timmermann"
-__copyright__ = "Copyright (c) 2020-25, Ralf A. Timmermann"
-__credits__ = ""
+__copyright__ = "Copyright (c) 2020-26, Ralf A. Timmermann"
+__credits__ = "[]"
 __license__ = "BSD 3-Clause"
-__version__ = "3.6.0"
+__version__ = "3.7.0"
 __maintainer__ = "Ralf A. Timmermann"
 __email__ = "ralf.timmermann@gmx.de"
 __status__ = "Production"
 
 print(__doc__)
 
-logging.basicConfig(format=parameters.myformat,
+logging.basicConfig(format=parameters.MYFORMAT,
                     level=logging.INFO,
                     datefmt="%H:%M:%S")
 if parameters.DEBUG:
     logging.getLogger().setLevel(logging.DEBUG)
+
+CHUNKSIZE: int = 1024  # fixed chunk size
 
 
 class Tuner:
@@ -81,20 +83,19 @@ class Tuner:
         :param tuning: string
             tuning temperament
         """
-        CHUNKSIZE: int = 1024  # fixed chunk size
         self.step: int = parameters.SLICE_SHIFT
         self.fmax: int = parameters.FREQUENCY_MAX
         self.fmin: int = 0
-        self.noise_level = 1.
+        self.noise_level: float = 1.
         self.a1: float = a1
         self.tuning: float = tuning  # see tuningTable.py
         self.x: bool = True
         self.rc: str = None
-        self.noise_toggle = False
-        self.baseline = None
-        self.std = None
+        self.noise_toggle: bool = False
+        self.baseline: NDArray = None
+        self.std: NDArray = None
         self.__n: int = 0
-        self.__callback_output = list()
+        self.__callback_output: list = list()
         self.__queue: Queue = None
 
         audio = pyaudio.PyAudio()
@@ -107,7 +108,7 @@ class Tuner:
             stream_callback=self.callback,
             frames_per_buffer=CHUNKSIZE
         )
-        logging.debug("Audio Device info: {}".
+        logging.info("Audio Device info: {}".
                       format(audio.get_default_input_device_info()))
 
     def callback(
@@ -155,7 +156,7 @@ class Tuner:
 
     def on_activate_k(self) -> None:
         # increases the shift by which the slices progress
-        self.step += 1024
+        self.step += CHUNKSIZE
         # overlap must not exceed slice length
         if self.step > parameters.SLICE_LENGTH:
             self.step = parameters.SLICE_LENGTH
@@ -163,9 +164,9 @@ class Tuner:
 
     def on_activate_j(self) -> None:
         # decreases the shift by which the slices progress
-        self.step -= 1024
-        if self.step < 4096:
-            self.step = 4096
+        self.step -= CHUNKSIZE
+        if self.step < 4 * CHUNKSIZE:
+            self.step = 4 * CHUNKSIZE
         print("Slice shift: {0:d} samples".format(self.step))
 
     def on_activate_na(self) -> None:
@@ -206,14 +207,15 @@ class Tuner:
         print("Noise level increased to {0:1.2f}".format(self.noise_level))
 
     def on_activate_noise_down(self) -> None:
-        # decrease noise level by 9.09%
+        # decrease noise level by 10%
         self.noise_level /= 1.1
         print("Noise level decreased to {0:1.2f}".format(self.noise_level))
 
     def on_activate_measure_noise(self) -> None:
+        if not self.noise_toggle:
+            print("Measuring Noise Level. Please keep quiet!")
+            sleep(1.)  # let the system settle for a while
         self.noise_toggle = not self.noise_toggle
-        if self.noise_toggle: print("Measuring Noise Level. Please keep quiet!")
-        sleep(1.)
 
     def clear_queue(self):
         try:
@@ -313,7 +315,7 @@ class Tuner:
             logging.info(
                 "Clearing audio buffer and resuming audio stream ...")
         logging.debug("=== new audio cycle: filling buffer ===")
-        # wait until buffer filled by at least one FFT slice, where
+        # wait until buffer is filled by at least one FFT slice, where
         # length is in units of buffer = 1024
         while len(self.__callback_output) < parameters.SLICE_LENGTH // 1024:
             sleep(0.02)
@@ -370,14 +372,12 @@ class Tuner:
                 logging.debug("no of slices: " + str(len(slices)))
                 # remove current slice from beginning of buffer
                 del self.__callback_output[0:self.step // 1024]
-                # apply highpass filter on time series
-                # sl = highpass_filter(sl)
-                # calculate FFT
+                # calculate FFT & apply highpass filter on time series
                 t1, yfft = fft(amp=sl)
-                # measure noise if toggled on
+                # measure background noise if toggled on
                 if self.noise_toggle:
                     self.baseline, self.std = self.noise_threshold(yfft)
-                # other option disregarded owing to time consumption
+                # other option as disregarded owing to its time consumption
                 # baseline = baseline_als_optimized(yfft, lam=3.e4, p=.01, niter=1)
                 # call peakfinding
                 peaks = peak(

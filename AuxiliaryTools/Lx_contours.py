@@ -6,7 +6,7 @@ from Tuning.LxCostfunction import L2
 
 matplotlib.pyplot.get_cmap('hsv')
 
-Minimizer = 'L1'  # 'L2'
+Minimizer = 'L2'  # 'L2'
 
 
 path = array([
@@ -45,14 +45,14 @@ xm_u = max(initial[0], final[0], amax(path, axis=0)[0]) * 1.003
 xm_l = min(initial[0], final[0], amin(path, axis=0)[0]) * 0.997
 x = arange(xm_l,
            xm_u,
-           (xm_u - xm_l) / 1000.)
+           (xm_u - xm_l) / 2000.)
 # lower, upper limit B
 # ym_l, ym_u = -5.0, -3.7
 ym_u = max(log10(initial[1]), log10(final[1]), log10(amax(path, axis=0))[1]) + .1
 ym_l = min(log10(initial[1]), log10(final[1]), log10(amin(path, axis=0))[1]) - .1
 y = arange(ym_l,
            ym_u,
-           (ym_u - ym_l) / 1000.)
+           (ym_u - ym_l) / 2000.)
 xgrid, ygrid = meshgrid(x, y)
 xy = stack([xgrid, ygrid])
 

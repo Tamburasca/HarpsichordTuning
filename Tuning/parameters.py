@@ -4,7 +4,9 @@ Some values must not be modified, others with great care.
 """
 
 """logging format"""
-myformat = "%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s"
+#MYFORMAT = "%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s"
+MYFORMAT = ("%(asctime)s.%(msecs)03d :: %(levelname)s: %(filename)s - "
+            "line %(lineno)s - function: %(funcName)s() :: %(message)s")
 
 """audio sampling rate in kHz derived from driver -> hardware & sound
 do not modify!!!"""

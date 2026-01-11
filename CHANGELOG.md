@@ -7,6 +7,22 @@
 ### Removed
 ### Security
 
+## 3.7.0 (2026-01-10)
+### Added
+### Changed
+- harmonics calculation optimized by utilizing all combinations of partials
+  without common divisor to determine f0 and b. All permutations are grouped by 
+  the lower partial and the lower peak numbers. For each group the mean f0 and b
+  are calculated and the L1 norm of the differences between measured and
+  calculated partials is determined. The group with the lowest L1 norm is used
+  as start values for the final minimization (L1 or L2).
+### Fixed
+### Deprecated
+### Removed
+- bisection function for finding intersection points of peak heights with
+  background is removed (not used anymore)
+### Security
+
 ## 3.6.0 (2025-12-30)
 ### Added
 - Toggle between L1 and L2 minimization for the final determination of f0 and b. 
