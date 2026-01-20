@@ -10,12 +10,12 @@
 ## 3.7.0 (2026-01-10)
 ### Added
 ### Changed
-- harmonics calculation optimized by utilizing all combinations of partials
-  without common divisor to determine f0 and b. All permutations are grouped by 
-  the lower partial and the lower peak numbers. For each group the mean f0 and b
-  are calculated and the L1 norm of the differences between measured and
-  calculated partials is determined. The group with the lowest L1 norm is used
-  as start values for the final minimization (L1 or L2).
+- Harmonics calculation is optimized by utilizing adjacent peaks up to the
+  highest peak to compute f0 and b. Combinations of f0 and b are computed 
+  ruling out greatest common divisor >1. For each key the L1 norm of the
+  differences between measured and calculated partials is determined.
+  The one revealing lowest L1 norm is used as start values for the final
+  minimization via scipy.optimize.minimize (L1 or L2).
 ### Fixed
 ### Deprecated
 ### Removed
