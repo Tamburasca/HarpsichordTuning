@@ -30,6 +30,7 @@ certain conditions.
 """
 
 import logging
+import sys
 from multiprocessing import Queue
 from operator import itemgetter
 from queue import Empty
@@ -39,7 +40,6 @@ import pyaudio
 from numpy import frombuffer, int16, hstack, log2, sqrt
 from numpy.typing import NDArray
 from pynput import keyboard
-from scipy.signal import butter, sosfilt
 from skimage import util
 
 # internal
@@ -67,6 +67,10 @@ logging.basicConfig(format=parameters.MYFORMAT,
                     datefmt="%H:%M:%S")
 if parameters.DEBUG:
     logging.getLogger().setLevel(logging.DEBUG)
+
+if parameters.COST_FUNCTION != 'L1':
+    print("The 'L2-Minimzer' is deprecated for the time being!")
+    sys.exit(1)
 
 CHUNKSIZE: int = 1024  # fixed chunk size
 

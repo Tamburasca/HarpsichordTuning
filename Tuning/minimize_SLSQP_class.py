@@ -9,7 +9,7 @@ from scipy.optimize import minimize, OptimizeResult
 # internal
 import parameters
 from FFTaux import mytimer
-from LxCostfunction import L1, L2
+from LxCostfunction2 import L1, L2
 
 
 class MinimizeSLSQP(object):
@@ -18,14 +18,22 @@ class MinimizeSLSQP(object):
             norm: str = 'L1'
     ) -> None:
         assert norm in ['L1', 'L2'], "MinimizeSLSQP: norm must be 'L1'|'L2'"
+        if norm == 'L1':
+            self.options = None  # {'ftol': 1.e-11}
+        else:
+            self.options = {'ftol': 1.e-10}
         self.norm = norm
         self.path: NDArray = array([], dtype=float).reshape(0, 2)
+        self.success: bool = False
 
     def callback(
             self,
             xk: NDArray
     ) -> None:
-        self.path = append(self.path, [xk.copy()], axis=0)  # fill path until next instantiation
+        if self.norm == 'L1':
+            self.path = append(self.path, [xk.copy()], axis=0)
+        else:
+            self.path = append(self.path, [xk.copy()], axis=0)
 
     @staticmethod
     def bounds(x0: NDArray) -> Sequence[tuple[float, float]]:
@@ -37,7 +45,7 @@ class MinimizeSLSQP(object):
         f0 = x0[0]
         b = max(0., x0[1])
 
-        return (.995 * f0, 1.005 * f0), (.05 * b, min(5. * b, parameters.INHARM))
+        return (.995 * f0, 1.005 * f0), (.05 * b, min(10. * b, parameters.INHARM))
 
     def minimizer(
             self,
@@ -57,7 +65,7 @@ class MinimizeSLSQP(object):
             method='SLSQP',
             jac=True,
             callback=self.callback,
-            options=None
+            options=self.options
         )
 
     def msg(
@@ -75,7 +83,8 @@ class MinimizeSLSQP(object):
     @mytimer("Lx-Minimization")
     def __call__(
             self,
-            ind: list[tuple[float, int]],
+            *,
+            ind: list,
             f0: float,
             b: float
     ) -> tuple[float, float]:
@@ -110,13 +119,13 @@ class MinimizeSLSQP(object):
             if self.norm == 'L1':
                 l1_min = L1(ind)
                 l1_min.l1_minimum(x0=x0)
-                res = self.minimizer(fun=l1_min.l1_minimum_der, x0=x0)
                 l_first = l1_min.l1_first
+                res = self.minimizer(fun=l1_min.l1_minimum_der, x0=x0)
             else:  # L2
                 l2_min = L2(ind)
                 l2_min.l2_minimum(x0=x0)
-                res = self.minimizer(fun=l2_min.l2_minimum_der, x0=x0)
                 l_first = l2_min.l2_first
+                res = self.minimizer(fun=l2_min.l2_minimum_der, x0=x0)
         except Exception as e:
             logging.warning(str(e))
             return f0, b
@@ -124,9 +133,16 @@ class MinimizeSLSQP(object):
         # toggle for optimize.minimize Lx analysis -> Lx contours
         # print(self.path)
 
-        if l_first > res.fun and res.success:
+        if l_first >= res.fun and res.success:
             self.msg(success=True, l_first=l_first, res=res)
-            return res.x
+            self.res = res
+            self.success = True
+
+            if self.norm == 'L1':
+                return res.x
+            else:
+                return res.x
+
         else:
             self.msg(success=False, l_first=l_first, res=res)
             return f0, b

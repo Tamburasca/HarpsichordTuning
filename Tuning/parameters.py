@@ -73,7 +73,8 @@ FREQUENCY_MAX: int = 2000
 FREQUENCY_WIDTH_MIN: int = 500
 FREQUENCY_STEP: int = 500
 
-"""cost function to be used in the minimization: ['L1'|'L2']"""
+"""cost function to be used in the minimization: ['L1'|'L2']
+Note: L2 is deprecated for the time being. Needs some more investigation."""
 COST_FUNCTION = 'L1'
 
 """debug flag"""

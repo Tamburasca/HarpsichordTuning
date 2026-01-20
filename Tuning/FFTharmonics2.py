@@ -1,98 +1,18 @@
 import logging
 import math
+from math import isnan
 from operator import itemgetter
 
-from numpy import sqrt, mean, append, array
+from numpy import sqrt, mean, append, array, nan_to_num, gcd
 from numpy.typing import NDArray
 
 # internal
 import parameters
 from FFTaux import mytimer
+from LxCostfunction2 import L1, L2
 from minimize_SLSQP_class import MinimizeSLSQP
 
 I_MAX = int(16_000 / parameters.FREQUENCY_LOWER)
-
-
-def l2min_new(
-        ind: list,
-        f0: float,
-        b: float,
-) -> float:
-    """
-    Note: L2 for testing and reference, not currently used in minimization.
-    returns the cost function for a regression on the L2 norm
-    l2 = sum( ( ( f_i(measured) - f_i(calculated) ) / f_i(measured) )**2 )
-    where f_i(measured) is considered to its nearest neighbor either
-    f_i(calculated) or f_i+1(calculated)
-    :param ind: list - measured resonance frequencies as from peaks (FFT)
-    after being cleansed, duplicates removed, etc.
-    :param f0: float - base frequency
-    :param b: float - inharmonicity, such that f = i * f0 * sqrt(1. + b * i**2)
-    :return: float - l2 cost function
-    """
-    l2 = 0.  # l2 cost function
-    j = 1
-    # loop over peaks found
-    for found in ind:
-        fl = j * f0 * sqrt(1. + b * j ** 2)
-        for i in range(j, I_MAX):
-            fh = (i + 1) * f0 * sqrt(1. + b * (i + 1) ** 2)
-            j = i
-            if found < fl and i == 1:
-                diff = fl - found
-                l2 += diff * diff / found / found
-                break
-            elif fl <= found < fh:
-                if (found - fl) < (fh - found):
-                    diff = found - fl
-                else:
-                    diff = fh - found
-                l2 += diff * diff / found / found
-                break
-            else:
-                fl = fh
-
-    return l2
-
-
-def l1min_new(
-        ind: list,
-        f0: float,
-        b: float,
-) -> float:
-    """
-    returns the cost function for a regression on the L1 norm
-    l1 = sum( abs( f_i(measured) - f_i(calculated) ) / f_i(measured) )
-    where f_i(measured) is considered to its nearest neighbor either
-    f_i(calculated) or f_i+1(calculated)
-    :param ind: list - measured resonance frequencies as from peaks (FFT)
-    after being cleansed, duplicates removed, etc.
-    :param f0: float - base frequency
-    :param b: float - inharmonicity, such that f = i * f0 * sqrt(1. + b * i**2)
-    :return: float - l1 cost function
-    """
-    l1 = 0.  # l1 cost function
-    j = 1
-    # loop over peaks found
-    for found in ind:
-        fl = j * f0 * sqrt(1. + b * j ** 2)
-        for i in range(j, I_MAX):
-            fh = (i + 1) * f0 * sqrt(1. + b * (i + 1) ** 2)
-            j = i
-            if found < fl and i == 1:
-                l1 += (fl - found) / found
-                break
-            elif fl <= found < fh:
-                if (found - fl) < (fh - found):
-                    diff = found - fl
-                else:
-                    diff = fh - found
-                l1 += diff / found
-                break
-            else:
-                fl = fh
-
-    return l1
 
 
 def select_list(selected: NDArray) -> list[tuple[float, int]]:
@@ -132,84 +52,91 @@ def harmonics(peaks: list[tuple]) -> list:
     logging.debug("ind: " + str(ind))
     logging.debug("height: " + str(height))
 
-    nex = 1
+    if parameters.COST_FUNCTION == 'L1':
+        lx_min = L1(ind)
+    else:
+        lx_min = L2(ind)
+
+    next_low_partial = 1
     # loop through all peaks found (ascending, nested loops)
-    for i in range(0, len(ind)):
-        for j in range(i + 1, len(ind)):
-            # loop through all combinations of partials up to NPARTIAL
-            for m in range(nex, parameters.NPARTIAL):
-                for k in range(m + 1, parameters.NPARTIAL):
-                    # calculate inharmonicity factor b from two peaks ind[i], ind[j]
-                    tmp = ((ind[j] * m) / (ind[i] * k)) ** 2
-                    try:
-                        b = (tmp - 1.) / (k ** 2 - tmp * m ** 2)
-                    except ZeroDivisionError:
-                        logging.info(
-                            "divideByZero: discarded value in harmonics finding"
-                        )
-                        continue
-                    if -0.0001 < b < parameters.INHARM:
-                        # allow also negative b value > -0.0001 for
-                        # uncertainties in the line fitting
-                        # calculate fundamental frequency from lower partial
-                        f_fundamental = ind[i] / (m * sqrt(1. + b * m ** 2))
-                        if not (parameters.FREQUENCY_LOWER
-                                < f_fundamental
-                                < parameters.FREQUENCY_UPPER):
+    for i in range(0, len(ind) - 1):  # lower freq.
+        j = i + 1  # next upper freq. of neighboring peaks
+
+        # loop through neighboring partials up to NPARTIAL
+        for m in range(next_low_partial, parameters.NPARTIAL):  # lower partial
+            for k in range(m + 1, parameters.NPARTIAL):  # upper partial
+                # calculate inharmonicity factor b from two peaks ind[i], ind[j]
+                tmp = ((ind[j] * m) / (ind[i] * k)) ** 2
+                try:
+                    b = (tmp - 1.) / (k ** 2 - tmp * m ** 2)
+                except ZeroDivisionError:
+                    logging.info(
+                        "divideByZero: discarded value in harmonics finding"
+                    )
+                    continue
+                if -0.0001 < b < parameters.INHARM:
+                    # allow also negative b value > -0.0001 for
+                    # uncertainties in the line fitting
+                    # calculate fundamental frequency from lower partial
+                    f_fundamental = ind[i] / (m * sqrt(1. + b * m ** 2))
+                    if not (parameters.FREQUENCY_LOWER
+                            < f_fundamental
+                            < parameters.FREQUENCY_UPPER):
+                        break
+                    element = [
+                        m, k, ind[i], ind[j], max(b, 0.), f_fundamental
+                    ]  # always b >= 0
+                    if initial:
+                        # remove if greatest common divisor >1 on each lower and
+                        # upper when compared to last entry
+                        if (gcd(element[0], initial[-1][0]) != 1
+                                and gcd(element[1], initial[-1][1]) != 1):
                             break
-                        element = [
-                            m, k, ind[i], ind[j], max(b, 0.), f_fundamental
-                        ]  # always b >= 0
-                        if initial:
-                            if (element[3] == initial[-1][3]
-                                    and element[0] == initial[-1][0]):
-                                # remove previous doublette on upper frequency and lower partial
-                                # print("removed doublette", initial[-1], element)
-                                initial.pop()
-                        initial.append(element)
-        nex += 1  # increase lower partial for next higher peak found
+                        # remove previous doublette on upper frequency and lower partial
+                        if (element[3] == initial[-1][3]
+                                and element[0] == initial[-1][0]):
+                            # print("removed doublette", initial[-1], element)
+                            initial.pop()
+                    initial.append(element)
+
+        next_low_partial += 1  # increase lower partial for next higher peak found
 
     if initial:
         l1_min = float('inf')
 
         for item in initial:  # if found any partial combinations
-            t = (item[0], item[2])
             initial_log = [
+                # b: map zero to nan
                 math.log(item[4]) if item[4] > 0.0 else float('nan'),
                 item[5]
             ]
+            # ToDo: key t may be obsolete!
+            t = (item[0], item[2])  # combined key (lower part and lower freq.)
             if t not in l1:
-                l1[t] = list()
-            l1[t].append(initial_log)  # type: ignore
-            print(l1)
+                l1[t] = initial_log
             logging.debug(
                 "partials: {0:2d} {1:2d} lower: {2:10.4f} upper: {3:10.4f} "
                 "B: {4: .1e} fundamental: {5:10.4f}".format(*item))
 
-        for key, val in l1.items():
-            arrays = [array(x) for x in val]
-            initial_av = [mean(k) for k in zip(*arrays)]
-            t_new = l1min_new(
-                ind=ind,
-                f0=float(initial_av[1]),
-                b=math.exp(initial_av[0]) if not math.isnan(initial_av[0]) else 0.)
-            if t_new < l1_min:
+        for _, val in l1.items():
+            b_remapped = math.exp(val[0]) if not isnan(val[0]) else 0.
+            t_new = lx_min.l1_minimum(x0=array([val[1], b_remapped]))
+            if t_new < l1_min:  # choose if L1 is lower than previous
                 l1_min = t_new
-                logging.debug("Last L1 minimum: {}".format(l1_min))
-                selected = array(
-                    list(
-                        filter(lambda x: (x[0], x[2]) == key, initial))
-                )
-                base_frequency = float(initial_av[1])
-                inharmonicity = math.exp(initial_av[0]) if not math.isnan(initial_av[0]) else 0.
+                logging.debug(
+                    f"Last L1 minimum: {l1_min}, "
+                    f"f0={float(val[1])}, "
+                    f"b={b_remapped}")
+                # initial guess of f0 and b for the Lx-minimizer
+                base_frequency = val[1]
+                inharmonicity = b_remapped
 
         if (parameters.FREQUENCY_LOWER
                 < base_frequency
                 < parameters.FREQUENCY_UPPER):
-            identified = select_list(selected=selected)
             base_frequency_final, inharmonicity_final = (
                 MinimizeSLSQP(norm=parameters.COST_FUNCTION)(
-                    ind=identified,
+                    ind=ind,
                     f0=base_frequency,
                     b=inharmonicity
                 ))

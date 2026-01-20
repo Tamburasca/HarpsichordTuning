@@ -14,7 +14,7 @@ duration: float = 5.
 f1: float = 415.0
 # inharmonicity
 inharmonicity: float = 1.e-4
-# number of partitials
+# number of partials
 partials: int = 20
 
 p = pyaudio.PyAudio()
