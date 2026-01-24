@@ -7,6 +7,15 @@
 ### Removed
 ### Security
 
+## 3.8.0 (2026-01-22)
+### Added
+### Changed
+- Max number of peaks to be considered for harmonics, change through hotkeys +|-
+### Fixed
+### Deprecated
+### Removed
+### Security
+
 ## 3.7.0 (2026-01-10)
 ### Added
 ### Changed

@@ -9,7 +9,7 @@ from scipy.optimize import minimize, OptimizeResult
 # internal
 import parameters
 from FFTaux import mytimer
-from LxCostfunction2 import L1, L2
+from LxCostfunction3 import L1, L2
 
 
 class MinimizeSLSQP(object):

@@ -4,9 +4,9 @@ Some values must not be modified, others with great care.
 """
 
 """logging format"""
-#MYFORMAT = "%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s"
-MYFORMAT = ("%(asctime)s.%(msecs)03d :: %(levelname)s: %(filename)s - "
-            "line %(lineno)s - function: %(funcName)s() :: %(message)s")
+MYFORMAT = "%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s"
+#MYFORMAT = ("%(asctime)s.%(msecs)03d :: %(levelname)s: %(filename)s - "
+#            "line %(lineno)s - function: %(funcName)s() :: %(message)s")
 
 """audio sampling rate in kHz derived from driver -> hardware & sound
 do not modify!!!"""
@@ -48,20 +48,16 @@ DISTANCE: int = 16 * FACTOR
 for the sample size."""
 WIDTH: tuple = (1 * FACTOR, 8 * FACTOR)
 
-"""Sigma of the Gauss apodization window, where the length of slice
-L = APODIZATION_GAUSS_SIGMA * sigma - do not modify!!!"""
-APODIZATION_GAUSS_SIGMA: float = 7.
-
 """max. inharmonicity of strings considered (harpsichord, piano, ...)"""
 INHARM: float = 5.e-4
 
 """Max number of highest peaks found.
 Seems that the number needs to be reduced to higher frequencies.
 First guesses: 12 for bass, 6 for discant"""
-NPEAKS: int = 12
+NPEAKS: int = 8
 
 """number of partials considered in harmonic finding (experimental)"""
-NPARTIAL: int = 20
+NPARTIAL: int = 25
 
 """lower/upper frequency limit, i.e. A0. and C8 may not need to be adjusted."""
 FREQUENCY_LOWER: float = 26.5
@@ -69,7 +65,7 @@ FREQUENCY_UPPER: float = 4435.
 
 """initial max frequency [Hz] displayed, can be adjusted via hotkeys 
 ctrl-n/m or alt-n/m and is reset via ctrl-r to default"""
-FREQUENCY_MAX: int = 2000
+FREQUENCY_MAX: int = 2500
 FREQUENCY_WIDTH_MIN: int = 500
 FREQUENCY_STEP: int = 500
 

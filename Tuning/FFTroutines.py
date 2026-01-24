@@ -7,10 +7,11 @@ from scipy.signal import butter, freqs, windows
 import parameters
 from FFTaux import mytimer
 
-# Gaussian apodization window
+# Gaussian apodization window, where the length of slice:
+# L = sigma = 7
 apodization_gaussian = windows.gaussian(
     M=parameters.SLICE_LENGTH,
-    std=parameters.SLICE_LENGTH / parameters.APODIZATION_GAUSS_SIGMA)
+    std=parameters.SLICE_LENGTH / 7.)
 
 # Frequency bins for FFT
 t1 = rfftfreq(

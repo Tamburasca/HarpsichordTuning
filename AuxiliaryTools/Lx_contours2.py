@@ -1,4 +1,5 @@
 """
+define first
 export PYTHONPATH=${PYTHONPATH}:/home/ralf/pycharm-projects/Tuning:/home/ralf/pycharm-projects/Tuning/Tuning
 """
 
@@ -14,7 +15,7 @@ import matplotlib.pyplot as plt
 from numpy import log10, arange, meshgrid, array, amin, amax, append
 import numpy as np
 # internal
-from Tuning.LxCostfunction2 import L1, L2
+from Tuning.LxCostfunction3 import L1, L2
 from Tuning.minimize_SLSQP_class import MinimizeSLSQP
 from Tuning.parameters import INHARM, FREQUENCY_LOWER, FREQUENCY_UPPER
 
@@ -25,12 +26,12 @@ plt.get_cmap('hsv')
 FOUNDS = [415.0, 830.124478217012, 1245.4978506647046, 1661.2444090805334,
           2077.488259113232, 2494.353258899385, 2911.9629581560675,
           3330.4405379142177, 3749.908751014604, 4170.489863484847]
-FOUNDS = [np.float64(737.1819395179249), np.float64(1228.5340398827839), np.float64(1720.2572377166975), np.float64(1966.808555841134), np.float64(2212.847976320296), np.float64(2458.073750707814), np.float64(3199.2725041017734), np.float64(3444.890139155775), np.float64(3692.729369149168), np.float64(3938.4656652256), np.float64(5177.271947842006), np.float64(6889.5049765515205)]
+
+#FOUNDS = [np.float64(737.1819395179249), np.float64(1228.5340398827839), np.float64(1720.2572377166975), np.float64(1966.808555841134), np.float64(2212.847976320296), np.float64(2458.073750707814), np.float64(3199.2725041017734), np.float64(3444.890139155775), np.float64(3692.729369149168), np.float64(3938.4656652256), np.float64(5177.271947842006), np.float64(6889.5049765515205)]
 #FOUNDS = [(615.0377859618212, 3), (820.3618099250172, 4), (1026.4150561079955, 5), (1641.7718206380123, 8),
 #         (1847.5854276270459, 9), (2053.334925271951, 10), (2258.9719468724015, 11), (2464.297240840511, 12),
 #         (2875.4735685955284, 14), (3082.9471642076783, 15), (3289.285650695724, 16), (3493.6590575883847, 17),
 #         (3701.5213559994536, 18)]
-
 # INITIAL = [205.971, 4.504e-05]
 # final = [205.138, 1.511e-05]
 
@@ -52,11 +53,15 @@ class Range(object):
     def __repr__(self) -> str: return self.__str__()
 
 
-def init_worker():
+def init_worker() -> None:
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 
-def main(minimizer, f0, b):
+def main(
+        minimizer,
+        f0,
+        b
+) -> None:
     """
 
     :param minimizer:

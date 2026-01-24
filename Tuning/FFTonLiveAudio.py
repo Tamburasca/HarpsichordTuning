@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
 """
-FFTonLiveAudio Copyright (c) 2020-25, Dr. Ralf Antonius Timmermann
+FFTonLiveAudio, {1}
+version: {0}
+license: {2}
 
 A graphical tuning tool for string instruments, such as harpsichords and pianos.
 
@@ -55,12 +57,12 @@ __author__ = "Dr. Ralf Antonius Timmermann"
 __copyright__ = "Copyright (c) 2020-26, Ralf A. Timmermann"
 __credits__ = "[]"
 __license__ = "BSD 3-Clause"
-__version__ = "3.7.0"
+__version__ = "3.8.0"
 __maintainer__ = "Ralf A. Timmermann"
 __email__ = "ralf.timmermann@gmx.de"
 __status__ = "Production"
 
-print(__doc__)
+print(__doc__.format(__version__, __copyright__, __license__))
 
 logging.basicConfig(format=parameters.MYFORMAT,
                     level=logging.INFO,
@@ -87,18 +89,19 @@ class Tuner:
         :param tuning: string
             tuning temperament
         """
-        self.step: int = parameters.SLICE_SHIFT
-        self.fmax: int = parameters.FREQUENCY_MAX
-        self.fmin: int = 0
-        self.noise_level: float = 1.
         self.a1: float = a1
         self.tuning: float = tuning  # see tuningTable.py
-        self.x: bool = True
         self.rc: str = None
-        self.noise_toggle: bool = False
-        self.baseline: NDArray = None
-        self.std: NDArray = None
+        self.__step: int = parameters.SLICE_SHIFT
+        self.__npeaks: int = parameters.NPEAKS
+        self.__x: bool = True
+        self.__fmax: int = parameters.FREQUENCY_MAX
+        self.__fmin: int = 0
         self.__n: int = 0
+        self.__noise_level: float = 1.
+        self.__noise_toggle: bool = False
+        self.__baseline: NDArray = None
+        self.__std: NDArray = None
         self.__callback_output: list = list()
         self.__queue: Queue = None
 
@@ -137,9 +140,9 @@ class Tuner:
     def on_activate_x(self) -> None:
         # toggle between suspending the audio stram and freezing the plat and
         # resuming: ON: True, OFF: False
-        if self.x:
+        if self.__x:
             print("Resume with 'ctrl-x' or 'ctrl-y' to quit.")
-        self.x = not self.x
+        self.__x = not self.__x
 
     def on_activate_y(self) -> None:
         # exits the program
@@ -149,77 +152,90 @@ class Tuner:
     def on_activate_r(self) -> None:
         # reset parameters to initial values
         print("reseting parameters...")
-        self.fmin = 0
-        self.fmax = parameters.FREQUENCY_MAX
-        self.step = parameters.SLICE_SHIFT
-        self.noise_level = 1.
-        self.noise_toggle = False
+        self.__fmin = 0
+        self.__fmax = parameters.FREQUENCY_MAX
+        self.__step = parameters.SLICE_SHIFT
+        self.__noise_level = 1.
+        self.__noise_toggle = False
         self.__n = 0
-        self.baseline = None
-        self.std = None
+        self.__baseline = None
+        self.__std = None
+        self.__npeaks = parameters.NPEAKS
 
     def on_activate_k(self) -> None:
         # increases the shift by which the slices progress
-        self.step += CHUNKSIZE
+        self.__step += CHUNKSIZE
         # overlap must not exceed slice length
-        if self.step > parameters.SLICE_LENGTH:
-            self.step = parameters.SLICE_LENGTH
-        print("Slice shift: {0:d} samples".format(self.step))
+        if self.__step > parameters.SLICE_LENGTH:
+            self.__step = parameters.SLICE_LENGTH
+        print("Slice shift: {0:d} samples".format(self.__step))
 
     def on_activate_j(self) -> None:
         # decreases the shift by which the slices progress
-        self.step -= CHUNKSIZE
-        if self.step < 4 * CHUNKSIZE:
-            self.step = 4 * CHUNKSIZE
-        print("Slice shift: {0:d} samples".format(self.step))
+        self.__step -= CHUNKSIZE
+        if self.__step < 4 * CHUNKSIZE:
+            self.__step = 4 * CHUNKSIZE
+        print("Slice shift: {0:d} samples".format(self.__step))
 
     def on_activate_na(self) -> None:
         # decreases the min. frequency plotted
-        self.fmin -= parameters.FREQUENCY_STEP if self.fmin > 1500 else 100
-        if self.fmin < 0:
-            self.fmin = 0
-        print("Min frequency displayed: {0:1.0f} Hz".format(self.fmin))
+        self.__fmin -= parameters.FREQUENCY_STEP if self.__fmin > 1500 else 100
+        if self.__fmin < 0:
+            self.__fmin = 0
+        print("Min frequency displayed: {0:1.0f} Hz".format(self.__fmin))
 
     def on_activate_ma(self) -> None:
         # increases the min. frequency plotted
-        self.fmin += parameters.FREQUENCY_STEP if self.fmin >= 1500 else 100
-        if self.fmin > 14500:
-            self.fmin = 14500
-        print("Min frequency displayed: {0:1.0f} Hz".format(self.fmin))
-        if self.fmax - self.fmin < parameters.FREQUENCY_WIDTH_MIN:
+        self.__fmin += parameters.FREQUENCY_STEP if self.__fmin >= 1500 else 100
+        if self.__fmin > 14500:
+            self.__fmin = 14500
+        print("Min frequency displayed: {0:1.0f} Hz".format(self.__fmin))
+        if self.__fmax - self.__fmin < parameters.FREQUENCY_WIDTH_MIN:
             self.on_activate_m()
 
     def on_activate_n(self) -> None:
         # decreases the max. frequency plotted
-        self.fmax -= parameters.FREQUENCY_STEP if self.fmax > 2000 else 100
-        if self.fmax < 500:
-            self.fmax = 500
-        print("Max frequency displayed: {0:1.0f} Hz".format(self.fmax))
-        if self.fmax - self.fmin < parameters.FREQUENCY_WIDTH_MIN:
+        self.__fmax -= parameters.FREQUENCY_STEP if self.__fmax > 2000 else 100
+        if self.__fmax < 500:
+            self.__fmax = 500
+        print("Max frequency displayed: {0:1.0f} Hz".format(self.__fmax))
+        if self.__fmax - self.__fmin < parameters.FREQUENCY_WIDTH_MIN:
             self.on_activate_na()
 
     def on_activate_m(self) -> None:
         # increases the max. frequency plotted
-        self.fmax += parameters.FREQUENCY_STEP if self.fmax >= 2000 else 100
-        if self.fmax > 15000:
-            self.fmax = 15000
-        print("Max frequency displayed: {0:1.0f} Hz".format(self.fmax))
+        self.__fmax += parameters.FREQUENCY_STEP if self.__fmax >= 2000 else 100
+        if self.__fmax > 15000:
+            self.__fmax = 15000
+        print("Max frequency displayed: {0:1.0f} Hz".format(self.__fmax))
 
     def on_activate_noise_up(self) -> None:
         # increase noise level by 10%
-        self.noise_level *= 1.1
-        print("Noise level increased to {0:1.2f}".format(self.noise_level))
+        self.__noise_level *= 1.1
+        print("Noise level increased to {0:1.2f}".format(self.__noise_level))
 
     def on_activate_noise_down(self) -> None:
         # decrease noise level by 10%
-        self.noise_level /= 1.1
-        print("Noise level decreased to {0:1.2f}".format(self.noise_level))
+        self.__noise_level /= 1.1
+        print("Noise level decreased to {0:1.2f}".format(self.__noise_level))
+
+    def on_decrease_npeaks(self) -> None:
+        # decrease no of peaks
+        if self.__npeaks > 4:
+            self.__npeaks -= 1
+        print("No of peaks: {0:1.2f}".format(self.__npeaks))
+
+    def on_increase_npeaks(self) -> None:
+        # increase no of peaks
+        if self.__npeaks < 16:
+            self.__npeaks += 1
+        print("No of peaks: {0:1.2f}".format(self.__npeaks))
 
     def on_activate_measure_noise(self) -> None:
-        if not self.noise_toggle:
+        if not self.__noise_toggle:
             print("Measuring Noise Level. Please keep quiet!")
             sleep(1.)  # let the system settle for a while
-        self.noise_toggle = not self.noise_toggle
+        self.__noise_toggle = not self.__noise_toggle
 
     def clear_queue(self):
         try:
@@ -305,9 +321,9 @@ class Tuner:
             non-contiguous, a copy is made.
         """
         # interrupt/resume on hotkey 'x' and clear buffer after resuming.
-        if not self.x:
+        if not self.__x:
             self.stream.stop_stream()
-            while not self.x:
+            while not self.__x:
                 # clear queue, frames keep being displayed until queue is emtpy
                 self.clear_queue()
                 # loop and wait until 'ctrl-x' or 'ctrl-y' is pressed
@@ -328,7 +344,7 @@ class Tuner:
         slices = util.view_as_windows(
             arr_in=amp,
             window_shape=(parameters.SLICE_LENGTH),
-            step=self.step)
+            step=self.__step)
         logging.debug("Audio shape: {0}, Sliced audio shape: {1}"
                       .format(amp.shape,
                               slices.shape))
@@ -375,21 +391,22 @@ class Tuner:
             for sl in slices:
                 logging.debug("no of slices: " + str(len(slices)))
                 # remove current slice from beginning of buffer
-                del self.__callback_output[0:self.step // 1024]
+                del self.__callback_output[0:self.__step // 1024]
                 # calculate FFT & apply highpass filter on time series
                 t1, yfft = fft(amp=sl)
                 # measure background noise if toggled on
-                if self.noise_toggle:
-                    self.baseline, self.std = self.noise_threshold(yfft)
+                if self.__noise_toggle:
+                    self.__baseline, self.__std = self.noise_threshold(yfft)
                 # other option as disregarded owing to its time consumption
                 # baseline = baseline_als_optimized(yfft, lam=3.e4, p=.01, niter=1)
                 # call peakfinding
                 peaks = peak(
                     frequency=t1,
                     spectrum=yfft,
-                    baseline=self.baseline,
-                    std=self.std,
-                    noise_level=self.noise_level)
+                    baseline=self.__baseline,
+                    std=self.__std,
+                    npeaks=self.__npeaks,
+                    noise_level=self.__noise_level)
                 peaklist = list(map(itemgetter(0), peaks))
                 # call harmonics
                 if peaks is not None:
@@ -409,18 +426,19 @@ class Tuner:
                 # send params into self.__queue for plotting
                 self.__queue.put(
                     {'yfft': yfft,
-                     'noise_toggle': self.noise_toggle,
-                     'baseline': self.baseline
+                     'noise_toggle': self.__noise_toggle,
+                     'baseline': self.__baseline
                                  + parameters.FACTOR_STANDARD_DEV_NOISE
-                                 * self.std
-                                 * self.noise_level
-                     if self.baseline is not None else None,
+                                 * self.__std
+                                 * self.__noise_level
+                     if self.__baseline is not None else None,
                      'key': key,
                      'off': off,
                      'slices': slices,
-                     'step': self.step,
-                     'fmin': self.fmin,
-                     'fmax': self.fmax,
+                     'step': self.__step,
+                     'fmin': self.__fmin,
+                     'fmax': self.__fmax,
+                     'npeaks': self.__npeaks,
                      'peaklist': peaklist,
                      'f_measured': f_measured}
                 )
@@ -467,7 +485,9 @@ def main() -> int:
         '<alt>+n': a.on_activate_na,  # decrease min freq
         '1': a.on_activate_noise_down,  # decrease noise level
         '2': a.on_activate_noise_up,  # increase noise level
-        '3': a.on_activate_measure_noise  # toggle noise measurement on/off
+        '3': a.on_activate_measure_noise,  # toggle noise measurement on/off
+        '-': a.on_decrease_npeaks,  # decrease max. number of peaks to be considered
+        '+': a.on_increase_npeaks  # increase max. number of peaks to be considered
     })
     h.start()
 

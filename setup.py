@@ -8,7 +8,7 @@ with open("requirements.txt", "r") as f:
 
 setuptools.setup(
     name="Tuning",
-    version="3.7.0",
+    version="3.8.0",
     author="Ralf Antonius Timmermann",
     author_email="rtimmermann@astro.uni-bonn.de",
     description="Harpsichord/Piano Tuning",

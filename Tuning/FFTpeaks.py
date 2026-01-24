@@ -125,7 +125,7 @@ def gaussian_convolution(
                 return None
 
         return list([ctr, height, fwhm])
-        # end embedded function
+    # end embedded function
 
     for i in range(num_threads):  # loop over all peaks found
         result = _fitting(ids=i)
@@ -141,6 +141,7 @@ def peak(
         spectrum: NDArray,
         baseline: NDArray,
         std: NDArray,
+        npeaks: int,
         noise_level: float
 ) -> list[list[float]]:
     """
@@ -155,6 +156,8 @@ def peak(
     :param std NDArray
         standard deviation of the baseline of the audio signal in frequency
         domain after being averaged in silence
+    :param npeaks: int
+        max number of peaks to be considered
     :param noise_level: float
         noise level as threshold for peak detection
     :return:
@@ -206,7 +209,7 @@ def peak(
                            * noise_level
                            * std[item[0]])]
     listtup.sort(key=lambda x: x[1], reverse=True)
-    del listtup[parameters.NPEAKS:]
+    del listtup[npeaks:]
 
     if len(listtup) != 0:
         # run Gaussfits to the lines found

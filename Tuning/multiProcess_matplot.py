@@ -5,7 +5,7 @@ from timeit import default_timer
 
 import matplotlib
 import matplotlib.pyplot as plt
-# from PyQt6.QtCore import Qt  # Wayland issues to be solved
+# from PyQt6.QtCore import Qt  # Wayland issues need to be solved
 from matplotlib.axes import Axes
 from matplotlib.collections import EventCollection
 from numpy.fft import rfftfreq
@@ -206,14 +206,13 @@ class MPmatplot(Process):
                 measure_status = "No"
             else:
                 measure_status = "Yes"
-            info_text = " Resolution: {2:3.1f} Hz (-6 dB Main Lobe Width)\n" \
-                        " Audio shape: {0} [slices, samples]\n" \
-                        " Slice shift: {1:d} samples\n" \
-                        " Noise background: {3}".format(
-                dic.get('slices').shape,
-                dic.get('step'),
-                self.__resolution,
-                measure_status)
+            # obsolete
+            # " Resolution: {2:3.1f} Hz (-6 dB Main Lobe Width)\n"
+            info_text = \
+                f" Audio shape: {dic.get('slices').shape} [slices, samples]\n" \
+                f" Slice shift: {dic.get('step'):d} samples\n" \
+                f" Peaks (no): {dic.get('npeaks')}\n" \
+                f" Noise background: {measure_status}"
             info_color = 'red' if dic.get('slices').shape[0] > 3 else 'black'
             if self.__firstplot:
                 # Setup line, define plot, text, and copy background once

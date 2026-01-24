@@ -3,31 +3,15 @@ import math
 from math import isnan
 from operator import itemgetter
 
-from numpy import sqrt, mean, append, array, nan_to_num, gcd
-from numpy.typing import NDArray
+from numpy import sqrt, append, array, nan
 
 # internal
 import parameters
 from FFTaux import mytimer
-from LxCostfunction2 import L1, L2
+from LxCostfunction3 import L1, L2
 from minimize_SLSQP_class import MinimizeSLSQP
 
 I_MAX = int(16_000 / parameters.FREQUENCY_LOWER)
-
-
-def select_list(selected: NDArray) -> list[tuple[float, int]]:
-    """
-    list of resonance peaks according to harmonics - remove doublettes with same
-    upper frequency tagged with upper partial
-    :param selected: list of selected peaks
-    :return: list of tuples (resonance peaks, upper partial)
-    """
-    identified = dict({(selected[0][2],): selected[0][0]})
-    for item in selected:
-        identified[(item[3],)] = item[1]
-    # toggle for minimizer analysis -> L1_contours
-    # print([(key, int(value)) for (key,), value in identified.items()])
-    return [(key, int(value)) for (key,), value in identified.items()]
 
 
 @mytimer(f"harmonics (minus time for {parameters.COST_FUNCTION} minimization)")
@@ -44,6 +28,8 @@ def harmonics(peaks: list[tuple]) -> list:
     initial = list()
     l1: dict[tuple[int, float], list[float]] = dict()
     f_n = list()
+    base_frequency: float = nan
+    inharmonicity: float = 0.
 
     # sort by frequency asc. and make list of indices (positions) and heights
     peaks.sort(key=lambda x: x[0])
@@ -58,9 +44,9 @@ def harmonics(peaks: list[tuple]) -> list:
         lx_min = L2(ind)
 
     next_low_partial = 1
-    # loop through all peaks found (ascending, nested loops)
+    # loop through all peaks found (ascending)
     for i in range(0, len(ind) - 1):  # lower freq.
-        j = i + 1  # next upper freq. of neighboring peaks
+        j = i + 1  # next adjacent upper peak
 
         # loop through neighboring partials up to NPARTIAL
         for m in range(next_low_partial, parameters.NPARTIAL):  # lower partial
@@ -87,16 +73,9 @@ def harmonics(peaks: list[tuple]) -> list:
                         m, k, ind[i], ind[j], max(b, 0.), f_fundamental
                     ]  # always b >= 0
                     if initial:
-                        # remove if greatest common divisor >1 on each lower and
-                        # upper when compared to last entry
-                        if (gcd(element[0], initial[-1][0]) != 1
-                                and gcd(element[1], initial[-1][1]) != 1):
+                        if (element[2] == initial[-1][2]
+                                and element[3] == initial[-1][3]):
                             break
-                        # remove previous doublette on upper frequency and lower partial
-                        if (element[3] == initial[-1][3]
-                                and element[0] == initial[-1][0]):
-                            # print("removed doublette", initial[-1], element)
-                            initial.pop()
                     initial.append(element)
 
         next_low_partial += 1  # increase lower partial for next higher peak found
@@ -150,8 +129,8 @@ def harmonics(peaks: list[tuple]) -> list:
             for n in range(1, parameters.NPARTIAL):
                 f_synth = base_frequency * n * sqrt(
                     1. + inharmonicity * n ** 2)
-                if f_synth < 12_000:
-                    f_n = append(f_n, f_synth)  # show < 12.000 Hz
+                if f_synth < 16_000:
+                    f_n = append(f_n, f_synth)  # show < 12.000 Hz if applicable
                 else:
                     break
             logging.info(

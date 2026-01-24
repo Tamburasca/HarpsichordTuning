@@ -17,14 +17,19 @@ from numdifftools import Jacobian, Hessian
 from numpy import sqrt, array, sign, nan, zeros
 from numpy.typing import NDArray
 
+from parameters import FREQUENCY_LOWER
+
+I_MAX = int(16_000 / FREQUENCY_LOWER)
+
 
 class L1(object):
     """
     cost function of the L1 norm, to be minimized.
     """
+
     def __init__(
             self,
-            ind: list[tuple]
+            ind: list
     ) -> None:
         """
         :param ind: list of tuples -
@@ -58,19 +63,37 @@ class L1(object):
         l1 = 0.  # l1 cost function
         if jac: self.jacobi = array([0., 0.])
 
+        j = 1
         # loop over peaks found
         for found in self.__fo:
-            f_calc = found[1] * f0 * sqrt(1. + b * found[1] ** 2)
-            diff = f_calc - found[0]
-            # L1 norm normalized to frequency, as L1 varies with frequency
-            l1 += abs(diff) / found[0]
-            if jac:
-                # n-th partial is index + 1
-                self.jacobi += self.__derivative(
+            fl = j * f0 * sqrt(1. + b * j ** 2)
+
+            for i in range(j, I_MAX):  # loop over partials until found match
+                fh = (i + 1) * f0 * sqrt(1. + b * (i + 1) ** 2)
+                j = i
+
+                if found < fl and i == 1:
+                    diff = fl - found
+                    partial = 1
+                elif fl <= found < fh:
+                    if (found - fl) < (fh - found):
+                        diff = fl - found
+                        partial = i
+                    else:
+                        diff = fh - found
+                        partial = i + 1
+                else:
+                    fl = fh
+                    continue
+
+                l1 += abs(diff) / found
+                if jac: self.jacobi += self.__derivative(
                     x0=array([f0, b]),
-                    i=found[1],
-                    trova=found[0]
+                    i=partial,
+                    trova=found
                 ) * sign(diff)
+                break
+
         if self.l1_first is nan: self.l1_first = l1
         self.l1_last = l1
 
@@ -79,16 +102,15 @@ class L1(object):
     def l1_minimum_log_b(
             self,
             x0: NDArray,
-            jac: bool = False
-    ) -> float:
+            jac: bool = True
+    ) -> tuple[float, NDArray]:
         """
         b is coming in as log10(b), used with bruteforce. Not used with SLSQP
         :param x0:
         :param jac:
         :return:
         """
-        x0[1] = 10 ** x0[1]
-        return self.l1_minimum(x0, jac)
+        return self.l1_minimum(array([x0[0], 10 ** x0[1]]), jac), self.jacobi
 
     def l1_minimum_jac_direct(self, x0: NDArray) -> NDArray:
         """
@@ -142,6 +164,7 @@ class L1(object):
         :return:
         """
         tmp = sqrt(1. + x0[1] * i ** 2)
+
         # derivative with respect to base frequency
         deriv_f0 = i * tmp / trova
         # derivative with respect to inharmonicity
@@ -154,9 +177,10 @@ class L2(object):
     """
     cost function of the L2 norm, to be minimized.
     """
+
     def __init__(
             self,
-            ind: list[tuple]
+            ind: list
     ) -> None:
         """
         :param ind: list of tuples -
@@ -190,17 +214,37 @@ class L2(object):
         l2 = 0.  # l2 cost function
         if jac: self.jacobi = array([0., 0.])
 
+        j = 1
         # loop over peaks found
         for found in self.__fo:
-            f_calc = found[1] * f0 * sqrt(1. + b * found[1] ** 2)
-            diff = f_calc - found[0]
-            l2 += diff * diff / found[0] / found[0]
-            if jac:
-                # n-th partial is index + 1
-                self.jacobi += self.__derivative(
+            fl = j * f0 * sqrt(1. + b * j ** 2)
+
+            for i in range(j, I_MAX):  # loop over partials until found match
+                fh = (i + 1) * f0 * sqrt(1. + b * (i + 1) ** 2)
+                j = i
+
+                if found < fl and i == 1:
+                    diff = fl - found
+                    partial = 1
+                elif fl <= found < fh:
+                    if (found - fl) < (fh - found):
+                        diff = fl - found
+                        partial = i
+                    else:
+                        diff = fh - found
+                        partial = i + 1
+                else:
+                    fl = fh
+                    continue
+
+                l2 += diff * diff / found / found
+                if jac: self.jacobi += self.__derivative(
                     x0=array([f0, b]),
-                    i=found[1],
-                    trova=found[0])
+                    i=partial,
+                    trova=found
+                )
+                break
+
         if self.l2_first is nan: self.l2_first = l2
         self.l2_last = l2
 
@@ -209,16 +253,15 @@ class L2(object):
     def l2_minimum_log_b(
             self,
             x0: NDArray,
-            jac: bool = False
-    ) -> float:
+            jac: bool = True
+    ) -> tuple[float, NDArray]:
         """
         b is coming in as log10(b), used with bruteforce. Not used with SLSQP
         :param x0:
         :param jac:
         :return:
         """
-        x0[1] = 10 ** x0[1]
-        return self.l2_minimum(x0, jac)
+        return self.l2_minimum(array([x0[0], 10 ** x0[1]]), jac), self.jacobi
 
     def l2_minimum_jac_direct(self, x0: NDArray) -> NDArray:
         """
@@ -273,6 +316,7 @@ class L2(object):
         """
         tmp = sqrt(1. + x0[1] * i ** 2)
         tmp1 = (i * x0[0] * tmp - trova) / trova / trova
+
         # derivative with respect to base frequency
         deriv_f0 = 2. * i * tmp * tmp1
         # derivative with respect to inharmonicity
