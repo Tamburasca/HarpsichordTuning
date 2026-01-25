@@ -70,9 +70,9 @@ logging.basicConfig(format=parameters.MYFORMAT,
 if parameters.DEBUG:
     logging.getLogger().setLevel(logging.DEBUG)
 
-if parameters.COST_FUNCTION != 'L1':
-    print("The 'L2-Minimzer' is deprecated for the time being!")
-    sys.exit(1)
+#if parameters.COST_FUNCTION != 'L1':
+#    print("The 'L2-Minimzer' is deprecated for the time being!")
+#    sys.exit(1)
 
 CHUNKSIZE: int = 1024  # fixed chunk size
 

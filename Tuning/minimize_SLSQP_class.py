@@ -117,15 +117,12 @@ class MinimizeSLSQP(object):
         x0 = array([f0, b])
         try:
             if self.norm == 'L1':
-                l1_min = L1(ind)
-                l1_min.l1_minimum(x0=x0)
-                l_first = l1_min.l1_first
-                res = self.minimizer(fun=l1_min.l1_minimum_der, x0=x0)
+                lx_norm = L1(ind)
             else:  # L2
-                l2_min = L2(ind)
-                l2_min.l2_minimum(x0=x0)
-                l_first = l2_min.l2_first
-                res = self.minimizer(fun=l2_min.l2_minimum_der, x0=x0)
+                lx_norm = L2(ind)
+            lx_norm.lx_minimum(x0=x0)
+            l_first = lx_norm.lx_first
+            res = self.minimizer(fun=lx_norm.lx_minimum_der, x0=x0)
         except Exception as e:
             logging.warning(str(e))
             return f0, b

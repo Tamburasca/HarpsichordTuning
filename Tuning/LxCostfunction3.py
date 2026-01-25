@@ -37,12 +37,12 @@ class L1(object):
         2nd element of tuple: its partial as determined by peak selection
         """
         self.__fo = ind
-        self.l1_first: float = nan
-        self.l1_last: float = nan
+        self.lx_first: float = nan
+        self.lx_last: float = nan
         self.jacobi: NDArray = zeros(2, dtype=float)
         self.jacobi.fill(nan)
 
-    def l1_minimum(
+    def lx_minimum(
             self,
             x0: NDArray,
             jac: bool = False
@@ -95,12 +95,12 @@ class L1(object):
                     ) * sign(diff)
                 break
 
-        if self.l1_first is nan: self.l1_first = l1
-        self.l1_last = l1
+        if self.lx_first is nan: self.lx_first = l1
+        self.lx_last = l1
 
         return l1
 
-    def l1_minimum_log_b(
+    def lx_minimum_log_b(
             self,
             x0: NDArray,
             jac: bool = True
@@ -111,44 +111,44 @@ class L1(object):
         :param jac:
         :return:
         """
-        return self.l1_minimum(array([x0[0], 10 ** x0[1]]), jac), self.jacobi
+        return self.lx_minimum(array([x0[0], 10 ** x0[1]]), jac), self.jacobi
 
-    def l1_minimum_jac_direct(self, x0: NDArray) -> NDArray:
+    def lx_minimum_jac_direct(self, x0: NDArray) -> NDArray:
         """
         not used, but kept for reference
         :param x0:
         :return:
         """
-        self.l1_minimum(x0, jac=True)
+        self.lx_minimum(x0, jac=True)
         return self.jacobi
 
-    def l1_minimum_jac(self, x0: NDArray) -> NDArray:
+    def lx_minimum_jac(self, x0: NDArray) -> NDArray:
         """
         Calculate Jacobian with finite difference approximation
         :param x0:
         :return:
         """
-        return Jacobian(self.l1_minimum(x0))(x0).ravel()
+        return Jacobian(self.lx_minimum(x0))(x0).ravel()
 
-    def l1_minimum_hess(self, x0: NDArray) -> NDArray:
+    def lx_minimum_hess(self, x0: NDArray) -> NDArray:
         """
         Calculate Hessian with finite difference approximation
         :param x0:
         :return:
         """
-        return Hessian(self.l1_minimum(x0))(x0)
+        return Hessian(self.lx_minimum(x0))(x0)
 
-    def l1_minimum_der(self, x0: NDArray) -> tuple[float, NDArray]:
+    def lx_minimum_der(self, x0: NDArray) -> tuple[float, NDArray]:
         """
         returns both the L1 cost function and its derivatives, computed analytically
         :param x0:
         :return:
         """
-        return self.l1_minimum(x0, jac=True), self.jacobi
+        return self.lx_minimum(x0, jac=True), self.jacobi
 
-    def compare_l1(self) -> bool:
+    def compare_lx(self) -> bool:
         """compare first and last L1 cost function calculation."""
-        return self.l1_last < self.l1_first
+        return self.lx_last < self.lx_first
 
     @staticmethod
     def __derivative(
@@ -189,12 +189,12 @@ class L2(object):
         2nd element of tuple: its partial as determined by peak selection
         """
         self.__fo = ind
-        self.l2_first: float = nan
-        self.l2_last: float = nan
+        self.lx_first: float = nan
+        self.lx_last: float = nan
         self.jacobi: NDArray = zeros(2, dtype=float)
         self.jacobi.fill(nan)
 
-    def l2_minimum(
+    def lx_minimum(
             self,
             x0: NDArray,
             jac: bool = False
@@ -247,12 +247,12 @@ class L2(object):
                     )
                 break
 
-        if self.l2_first is nan: self.l2_first = l2
-        self.l2_last = l2
+        if self.lx_first is nan: self.lx_first = l2
+        self.lx_last = l2
 
         return l2
 
-    def l2_minimum_log_b(
+    def lx_minimum_log_b(
             self,
             x0: NDArray,
             jac: bool = True
@@ -263,44 +263,44 @@ class L2(object):
         :param jac:
         :return:
         """
-        return self.l2_minimum(array([x0[0], 10 ** x0[1]]), jac), self.jacobi
+        return self.lx_minimum(array([x0[0], 10 ** x0[1]]), jac), self.jacobi
 
-    def l2_minimum_jac_direct(self, x0: NDArray) -> NDArray:
+    def lx_minimum_jac_direct(self, x0: NDArray) -> NDArray:
         """
         not used, but kept for reference
         :param x0:
         :return:
         """
-        self.l2_minimum(x0, jac=True)
+        self.lx_minimum(x0, jac=True)
         return self.jacobi
 
-    def l2_minimum_jac(self, x0: NDArray) -> NDArray:
+    def lx_minimum_jac(self, x0: NDArray) -> NDArray:
         """
         Calculate Jacobian with finite difference approximation
         :param x0:
         :return:
         """
-        return Jacobian(self.l2_minimum(x0))(x0).ravel()
+        return Jacobian(self.lx_minimum(x0))(x0).ravel()
 
-    def l2_minimum_hess(self, x0: NDArray) -> NDArray:
+    def lx_minimum_hess(self, x0: NDArray) -> NDArray:
         """
         Calculate Hessian with finite difference approximation
         :param x0:
         :return:
         """
-        return Hessian(self.l2_minimum(x0))(x0)
+        return Hessian(self.lx_minimum(x0))(x0)
 
-    def l2_minimum_der(self, x0: NDArray) -> tuple[float, NDArray]:
+    def lx_minimum_der(self, x0: NDArray) -> tuple[float, NDArray]:
         """
-        returns both the l2 cost function and its derivatives, computed analytically
+        returns both the L2 cost function and its derivatives, computed analytically
         :param x0:
         :return:
         """
-        return self.l2_minimum(x0, jac=True), self.jacobi
+        return self.lx_minimum(x0, jac=True), self.jacobi
 
-    def compare_l2(self) -> bool:
-        """compare first and last l2 cost function calculation."""
-        return self.l2_last < self.l2_first
+    def compare_lx(self) -> bool:
+        """compare first and last L2 cost function calculation."""
+        return self.lx_last < self.lx_first
 
     @staticmethod
     def __derivative(

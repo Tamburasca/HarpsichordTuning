@@ -74,9 +74,9 @@ def main(
 #    ind = [found[0] for found in FOUNDS]
 
     if minimizer == 'L1':
-        lx_min = L1(ind)
+        lx_norm = L1(ind)
     elif minimizer == 'L2':
-        lx_min = L2(ind)
+        lx_norm = L2(ind)
     else:
         raise ValueError("Minimizer must be 'L1'|'L2'")
 
@@ -124,10 +124,7 @@ def main(
 
         pool = mp.Pool(initializer=init_worker)
         try:
-            if minimizer == 'L1':
-                result = pool.map(lx_min.l1_minimum_der, inp)
-            else:  # L2
-                result = pool.map(lx_min.l2_minimum_der, inp)
+            result = pool.map(lx_norm.lx_minimum_der, inp)
         except KeyboardInterrupt:
             print("KeyboardInterrupt, terminating workers")
             pool.terminate()  # stop workers immediately

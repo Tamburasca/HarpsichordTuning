@@ -26,7 +26,7 @@ def harmonics(peaks: list[tuple]) -> list:
         positions of first NPARTIAL partials
     """
     initial = list()
-    l1: dict[tuple[int, float], list[float]] = dict()
+    lx: dict[tuple[int, float], list[float]] = dict()
     f_n = list()
     base_frequency: float = nan
     inharmonicity: float = 0.
@@ -39,9 +39,9 @@ def harmonics(peaks: list[tuple]) -> list:
     logging.debug("height: " + str(height))
 
     if parameters.COST_FUNCTION == 'L1':
-        lx_min = L1(ind)
+        lx_norm = L1(ind)
     else:
-        lx_min = L2(ind)
+        lx_norm = L2(ind)
 
     next_low_partial = 1
     # loop through all peaks found (ascending)
@@ -81,7 +81,7 @@ def harmonics(peaks: list[tuple]) -> list:
         next_low_partial += 1  # increase lower partial for next higher peak found
 
     if initial:
-        l1_min = float('inf')
+        lx_norm.lx_first = float('inf')
 
         for item in initial:  # if found any partial combinations
             initial_log = [
@@ -91,19 +91,19 @@ def harmonics(peaks: list[tuple]) -> list:
             ]
             # ToDo: key t may be obsolete!
             t = (item[0], item[2])  # combined key (lower part and lower freq.)
-            if t not in l1:
-                l1[t] = initial_log
+            if t not in lx:
+                lx[t] = initial_log
             logging.debug(
                 "partials: {0:2d} {1:2d} lower: {2:10.4f} upper: {3:10.4f} "
                 "B: {4: .1e} fundamental: {5:10.4f}".format(*item))
 
-        for _, val in l1.items():
+        for _, val in lx.items():
             b_remapped = math.exp(val[0]) if not isnan(val[0]) else 0.
-            t_new = lx_min.l1_minimum(x0=array([val[1], b_remapped]))
-            if t_new < l1_min:  # choose if L1 is lower than previous
-                l1_min = t_new
+            lx_norm.lx_minimum(x0=array([val[1], b_remapped]))
+            if lx_norm.compare_lx():  # choose if Lx is lower than previous
+                lx_norm.lx_first = lx_norm.lx_last
                 logging.debug(
-                    f"Last L1 minimum: {l1_min}, "
+                    f"Last {parameters.COST_FUNCTION} minimum: {lx_norm.lx_last}, "
                     f"f0={float(val[1])}, "
                     f"b={b_remapped}")
                 # initial guess of f0 and b for the Lx-minimizer
@@ -130,7 +130,7 @@ def harmonics(peaks: list[tuple]) -> list:
                 f_synth = base_frequency * n * sqrt(
                     1. + inharmonicity * n ** 2)
                 if f_synth < 16_000:
-                    f_n = append(f_n, f_synth)  # show < 12.000 Hz if applicable
+                    f_n = append(f_n, f_synth)  # show < 16 kHz if applicable
                 else:
                     break
             logging.info(
