@@ -25,7 +25,7 @@ Corrected for the sample size."""
 SLICE_SHIFT: int = 16384
 
 """F_FREQ: high pass cutoff frequency [Hz]"""
-F_FREQ: float = 60.
+F_FREQ: float = 100.
 
 """F_ORDER: order of high pass Butterworth filter"""
 F_ORDER: int = 2

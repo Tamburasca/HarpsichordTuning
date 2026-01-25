@@ -87,11 +87,12 @@ class L1(object):
                     continue
 
                 l1 += abs(diff) / found
-                if jac: self.jacobi += self.__derivative(
-                    x0=array([f0, b]),
-                    i=partial,
-                    trova=found
-                ) * sign(diff)
+                if jac:
+                    self.jacobi += self.__derivative(
+                        x0=array([f0, b]),
+                        i=partial,
+                        trova=found
+                    ) * sign(diff)
                 break
 
         if self.l1_first is nan: self.l1_first = l1
@@ -238,11 +239,12 @@ class L2(object):
                     continue
 
                 l2 += diff * diff / found / found
-                if jac: self.jacobi += self.__derivative(
-                    x0=array([f0, b]),
-                    i=partial,
-                    trova=found
-                )
+                if jac:
+                    self.jacobi += self.__derivative(
+                        x0=array([f0, b]),
+                        i=partial,
+                        trova=found
+                    )
                 break
 
         if self.l2_first is nan: self.l2_first = l2
