@@ -1,12 +1,7 @@
 """
 Parameter file:
-Some values must not be modified, others with great care.
+Some values must not be modified at all, others with care.
 """
-
-"""logging format"""
-MYFORMAT = "%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s"
-#MYFORMAT = ("%(asctime)s.%(msecs)03d :: %(levelname)s: %(filename)s - "
-#            "line %(lineno)s - function: %(funcName)s() :: %(message)s")
 
 """audio sampling rate in kHz derived from driver -> hardware & sound
 do not modify!!!"""
@@ -16,15 +11,17 @@ RATE: int = 44100
 FACTOR: int = 1
 
 """size of FFT slice: 32768 samples/slice: => 0.743 sec sampling time/slice.
-Corrected for the sample size."""
+Corrected for the sample size. 
+do not modify!!!"""
 SLICE_LENGTH: int = 32768 * FACTOR
 
 """no of samples (initial value) by which each slice is shifted with regard 
-to its previous, can be adjusted by +/-1024 samples through hotkeys crtl-j/k.
+to its previous, can be adjusted by +/-1024 samples through hotkeys ctrl-j/k.
 Corrected for the sample size."""
 SLICE_SHIFT: int = 16384
 
-"""F_FREQ: high pass cutoff frequency [Hz]"""
+"""F_FREQ: high pass cutoff 3 db frequency [Hz]
+All depends on 1/f noise of the microphone"""
 F_FREQ: float = 100.
 
 """F_ORDER: order of high pass Butterworth filter"""
@@ -53,7 +50,8 @@ INHARM: float = 5.e-4
 
 """Max number of highest peaks found.
 Seems that the number needs to be reduced to higher frequencies.
-First guesses: 12 for bass, 6 for discant"""
+First guesses: 12 for bass, 6 for discant
+Can be modified by keys +/-"""
 NPEAKS: int = 8
 
 """number of partials considered in harmonic finding (experimental)"""

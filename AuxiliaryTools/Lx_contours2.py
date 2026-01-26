@@ -3,17 +3,17 @@ define first
 export PYTHONPATH=${PYTHONPATH}:/home/ralf/pycharm-projects/Tuning:/home/ralf/pycharm-projects/Tuning/Tuning
 """
 
-import logging
 import argparse
+import logging
 import multiprocessing as mp
-import sys
 import signal
+import sys
 from re import findall, compile
 from typing import Generator
 
 import matplotlib.pyplot as plt
 from numpy import log10, arange, meshgrid, array, amin, amax, append
-import numpy as np
+
 # internal
 from Tuning.LxCostfunction3 import L1, L2
 from Tuning.minimize_SLSQP_class import MinimizeSLSQP
@@ -23,12 +23,12 @@ logging.getLogger().setLevel(logging.DEBUG)
 plt.get_cmap('hsv')
 
 # exact to b=1.e-4
-FOUNDS = [415.0, 830.124478217012, 1245.4978506647046, 1661.2444090805334,
+FOUNDS = [415.0, 333., 830.124478217012, 1245.4978506647046, 1661.2444090805334,
           2077.488259113232, 2494.353258899385, 2911.9629581560675,
           3330.4405379142177, 3749.908751014604, 4170.489863484847]
 
-#FOUNDS = [np.float64(737.1819395179249), np.float64(1228.5340398827839), np.float64(1720.2572377166975), np.float64(1966.808555841134), np.float64(2212.847976320296), np.float64(2458.073750707814), np.float64(3199.2725041017734), np.float64(3444.890139155775), np.float64(3692.729369149168), np.float64(3938.4656652256), np.float64(5177.271947842006), np.float64(6889.5049765515205)]
-#FOUNDS = [(615.0377859618212, 3), (820.3618099250172, 4), (1026.4150561079955, 5), (1641.7718206380123, 8),
+
+# FOUNDS = [(615.0377859618212, 3), (820.3618099250172, 4), (1026.4150561079955, 5), (1641.7718206380123, 8),
 #         (1847.5854276270459, 9), (2053.334925271951, 10), (2258.9719468724015, 11), (2464.297240840511, 12),
 #         (2875.4735685955284, 14), (3082.9471642076783, 15), (3289.285650695724, 16), (3493.6590575883847, 17),
 #         (3701.5213559994536, 18)]
@@ -40,17 +40,29 @@ class Range(object):
     def __init__(self, scope: str):
         b, f = r"([\[\]])", r"([-+]?(?:\d*\.\d+|\d+\.?)(?:[Ee][+-]?\d+)?)"
         r = compile(f'^{b} ?{f} ?, ?{f} ?{b}$')
-        try: i = list(findall(r, scope)[0])
-        except IndexError: raise SyntaxError("Range error!")
+        try:
+            i = list(findall(r, scope)[0])
+        except IndexError:
+            raise SyntaxError("Range error!")
         if float(i[1]) >= float(i[2]): raise ArithmeticError("Range error!")
         self.__st = '{}{}, {}{}'.format(*i)
         i[0], i[-1] = {'[': '<=', ']': '<'}[i[0]], {']': '<=', '[': '<'}[i[-1]]
         self.__lambda = "lambda item: {1} {0} item {3} {2}".format(*i)
-    def __eq__(self, item: float) -> bool: return eval(self.__lambda)(item)
-    def __contains__(self, item: float) -> bool: return self.__eq__(item)
-    def __iter__(self) -> Generator[object, None, None]: yield self
-    def __str__(self) -> str: return self.__st
-    def __repr__(self) -> str: return self.__str__()
+
+    def __eq__(self, item: float) -> bool:
+        return eval(self.__lambda)(item)
+
+    def __contains__(self, item: float) -> bool:
+        return self.__eq__(item)
+
+    def __iter__(self) -> Generator[object, None, None]:
+        yield self
+
+    def __str__(self) -> str:
+        return self.__st
+
+    def __repr__(self) -> str:
+        return self.__str__()
 
 
 def init_worker() -> None:
@@ -71,7 +83,7 @@ def main(
     """
     initial = [f0, b]
     ind = FOUNDS
-#    ind = [found[0] for found in FOUNDS]
+    #    ind = [found[0] for found in FOUNDS]
 
     if minimizer == 'L1':
         lx_norm = L1(ind)
@@ -195,6 +207,7 @@ def main(
         plt.show()
     except KeyboardInterrupt:
         print("Keyboard interrupt")
+
 
 if __name__ == "__main__":
     print(f"PYTHONPATH: {sys.path}")

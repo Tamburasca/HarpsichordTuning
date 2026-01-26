@@ -7,6 +7,15 @@
 ### Removed
 ### Security
 
+## 3.8.1 (2026-xx-xx)
+### Added
+### Changed
+- Code beautified
+### Fixed
+### Deprecated
+### Removed
+### Security
+
 ## 3.8.0 (2026-01-22)
 ### Added
 ### Changed

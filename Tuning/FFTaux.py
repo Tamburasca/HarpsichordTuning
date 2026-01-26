@@ -8,7 +8,7 @@ from timeit import default_timer
 from typing import Callable
 
 from numpy import ones, array
-from numpy.typing import NDArray, ArrayLike
+from numpy.typing import NDArray
 from scipy.sparse import diags, spdiags
 from scipy.sparse.linalg import spsolve
 
@@ -64,7 +64,7 @@ def log10_b(func: Callable) -> Callable:
 
 @mytimer("baseline calculation")
 def baseline_als_optimized(
-        y: ArrayLike,
+        y: NDArray,
         lam: float,
         p: float,
         niter: int = 10

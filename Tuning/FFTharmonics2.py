@@ -73,6 +73,8 @@ def harmonics(peaks: list[tuple]) -> list:
                         m, k, ind[i], ind[j], max(b, 0.), f_fundamental
                     ]  # always b >= 0
                     if initial:
+                        # remove combinations with same lower & upper peak
+                        # positions for all higher partials
                         if (element[2] == initial[-1][2]
                                 and element[3] == initial[-1][3]):
                             break
@@ -103,7 +105,7 @@ def harmonics(peaks: list[tuple]) -> list:
             if lx_norm.compare_lx():  # choose if Lx is lower than previous
                 lx_norm.lx_first = lx_norm.lx_last
                 logging.debug(
-                    f"Last {parameters.COST_FUNCTION} minimum: {lx_norm.lx_last}, "
+                    f"Last {parameters.COST_FUNCTION}-minimum: {lx_norm.lx_last}, "
                     f"f0={float(val[1])}, "
                     f"b={b_remapped}")
                 # initial guess of f0 and b for the Lx-minimizer

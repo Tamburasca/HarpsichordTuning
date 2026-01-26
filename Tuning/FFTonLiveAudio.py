@@ -57,22 +57,25 @@ __author__ = "Dr. Ralf Antonius Timmermann"
 __copyright__ = "Copyright (c) 2020-26, Ralf A. Timmermann"
 __credits__ = "[]"
 __license__ = "BSD 3-Clause"
-__version__ = "3.8.0"
+__version__ = "3.8.1"
 __maintainer__ = "Ralf A. Timmermann"
 __email__ = "ralf.timmermann@gmx.de"
 __status__ = "Production"
 
 print(__doc__.format(__version__, __copyright__, __license__))
 
-logging.basicConfig(format=parameters.MYFORMAT,
+MYFORMAT = "%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s"
+#MYFORMAT = ("%(asctime)s.%(msecs)03d :: %(levelname)s: %(filename)s - "
+#            "line %(lineno)s - function: %(funcName)s() :: %(message)s")
+logging.basicConfig(format=MYFORMAT,
                     level=logging.INFO,
                     datefmt="%H:%M:%S")
 if parameters.DEBUG:
     logging.getLogger().setLevel(logging.DEBUG)
 
-#if parameters.COST_FUNCTION != 'L1':
-#    print("The 'L2-Minimzer' is deprecated for the time being!")
-#    sys.exit(1)
+if parameters.COST_FUNCTION != 'L1':
+    print("The 'L2-Minimzer' is deprecated for the time being!")
+    sys.exit(1)
 
 CHUNKSIZE: int = 1024  # fixed chunk size
 

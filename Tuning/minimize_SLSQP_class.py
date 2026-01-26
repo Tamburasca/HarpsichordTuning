@@ -121,7 +121,6 @@ class MinimizeSLSQP(object):
             else:  # L2
                 lx_norm = L2(ind)
             lx_norm.lx_minimum(x0=x0)
-            l_first = lx_norm.lx_first
             res = self.minimizer(fun=lx_norm.lx_minimum_der, x0=x0)
         except Exception as e:
             logging.warning(str(e))
@@ -130,8 +129,8 @@ class MinimizeSLSQP(object):
         # toggle for optimize.minimize Lx analysis -> Lx contours
         # print(self.path)
 
-        if l_first >= res.fun and res.success:
-            self.msg(success=True, l_first=l_first, res=res)
+        if lx_norm.lx_first >= res.fun and res.success:
+            self.msg(success=True, l_first=lx_norm.lx_first, res=res)
             self.res = res
             self.success = True
 
@@ -141,5 +140,5 @@ class MinimizeSLSQP(object):
                 return res.x
 
         else:
-            self.msg(success=False, l_first=l_first, res=res)
+            self.msg(success=False, l_first=lx_norm.lx_first, res=res)
             return f0, b
