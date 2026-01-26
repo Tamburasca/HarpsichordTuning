@@ -46,7 +46,7 @@ from skimage import util
 
 # internal
 import parameters
-from FFTaux import mytimer  # , baseline_als_optimized
+from FFTaux import mytimer
 from FFTharmonics2 import harmonics
 from FFTpeaks import peak
 from FFTroutines import fft
