@@ -127,6 +127,11 @@ class MPmatplot(Process):
     def on_press(event):
         print('press', event.key)
 
+    @staticmethod
+    def do_nothing():
+        print("Use ctrl-y to exit program!")
+        pass
+
     def run(self) -> None:
         """
         Matplotlib commands swapped to a proprietary process. Run in an
@@ -136,23 +141,18 @@ class MPmatplot(Process):
         """
         ln1, ln2, text, text1, ax1background = None, None, None, None, None
         plt.ion()  # Stop matplotlib windows from blocking
+        print(f"Matplotlib backend used: {matplotlib.get_backend()}")
         plt.rcParams['backend'] = 'TkAgg'
         plt.rcParams['keymap.quit'].remove('q')  # disable key q from closing the window
         plt.rcParams['keymap.quit'].remove('ctrl+w')
         plt.rcParams['keymap.quit'].remove('cmd+w')
-        print(f"Matplotlib backend used: {matplotlib.get_backend()}")
         fig = plt.gcf()
         # self.__cid = fig.canvas.mpl_connect('key_press_event', self.on_press)
-        # ToDo: investigate why this does not work with Qt backend
         # disable closing figure button in the upper toolbar
         win = fig.canvas.manager.window  # type: ignore
         # TkAgg
-        # win.overrideredirect(True)
-        # win.protocol('WM_DELETE_WINDOW', donothing)
-        # win.geometry("{0}x{1}+0+0".format(win.winfo_screenwidth(), win.winfo_screenheight()))
-        # win.resizable(width=FALSE, height=FALSE)
+        win.protocol('WM_DELETE_WINDOW', self.do_nothing)
         # QtAgg
-        # print(win.windowFlags())
         # win.setWindowFlags(win.windowFlags() | QtCore.Qt.CustomizeWindowHint)
         # win.setWindowFlags(win.windowFlags() & ~QtCore.Qt.WindowCloseButtonHint)
         fig.set_size_inches(12, 6)
