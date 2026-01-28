@@ -12,6 +12,7 @@ from re import findall, compile
 from typing import Generator
 
 import matplotlib.pyplot as plt
+import numpy as np
 from numpy import log10, arange, meshgrid, array, amin, amax, append
 
 # internal
@@ -23,46 +24,28 @@ logging.getLogger().setLevel(logging.DEBUG)
 plt.get_cmap('hsv')
 
 # exact to b=1.e-4
-FOUNDS = [415.0, 333., 830.124478217012, 1245.4978506647046, 1661.2444090805334,
+FOUNDS = [415.0, 830.124478217012, 1245.4978506647046, 1661.2444090805334,
           2077.488259113232, 2494.353258899385, 2911.9629581560675,
           3330.4405379142177, 3749.908751014604, 4170.489863484847]
-
-
-# FOUNDS = [(615.0377859618212, 3), (820.3618099250172, 4), (1026.4150561079955, 5), (1641.7718206380123, 8),
-#         (1847.5854276270459, 9), (2053.334925271951, 10), (2258.9719468724015, 11), (2464.297240840511, 12),
-#         (2875.4735685955284, 14), (3082.9471642076783, 15), (3289.285650695724, 16), (3493.6590575883847, 17),
-#         (3701.5213559994536, 18)]
-# INITIAL = [205.971, 4.504e-05]
-# final = [205.138, 1.511e-05]
+FOUNDS = [np.float64(625.0617492407505), np.float64(729.2145061075591), np.float64(1042.1720746787014),
+          np.float64(1251.144900088567), np.float64(1984.5818972467348), np.float64(2089.5753454501623),
+          np.float64(3041.213985921234), np.float64(3253.6318155002346)]
 
 
 class Range(object):
     def __init__(self, scope: str):
         b, f = r"([\[\]])", r"([-+]?(?:\d*\.\d+|\d+\.?)(?:[Ee][+-]?\d+)?)"
         r = compile(f'^{b} ?{f} ?, ?{f} ?{b}$')
-        try:
-            i = list(findall(r, scope)[0])
-        except IndexError:
-            raise SyntaxError("Range error!")
+        try: i = self.i = list(findall(r, scope)[0])
+        except IndexError: raise SyntaxError("Range error!")
         if float(i[1]) >= float(i[2]): raise ArithmeticError("Range error!")
-        self.__st = '{}{}, {}{}'.format(*i)
-        i[0], i[-1] = {'[': '<=', ']': '<'}[i[0]], {']': '<=', '[': '<'}[i[-1]]
-        self.__lambda = "lambda item: {1} {0} item {3} {2}".format(*i)
-
-    def __eq__(self, item: float) -> bool:
-        return eval(self.__lambda)(item)
-
-    def __contains__(self, item: float) -> bool:
-        return self.__eq__(item)
-
-    def __iter__(self) -> Generator[object, None, None]:
-        yield self
-
-    def __str__(self) -> str:
-        return self.__st
-
-    def __repr__(self) -> str:
-        return self.__str__()
+        self.__lambda = "lambda item: {} {} item {} {}".format(
+            *[i[1], {'[': '<=', ']': '<'}[i[0]], {']': '<=', '[': '<'}[i[3]], i[2]])
+    def __eq__(self, item: float) -> bool: return eval(self.__lambda)(item)
+    def __contains__(self, item: float) -> bool: return self.__eq__(item)
+    def __iter__(self) -> Generator[object, None, None]: yield self
+    def __str__(self) -> str: return '{}{}, {}{}'.format(*self.i)
+    def __repr__(self) -> str: return self.__str__()
 
 
 def init_worker() -> None:
@@ -83,7 +66,6 @@ def main(
     """
     initial = [f0, b]
     ind = FOUNDS
-    #    ind = [found[0] for found in FOUNDS]
 
     if minimizer == 'L1':
         lx_norm = L1(ind)

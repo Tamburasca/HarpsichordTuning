@@ -226,13 +226,13 @@ class Tuner:
         # decrease no of peaks
         if self.__npeaks > 4:
             self.__npeaks -= 1
-        print("No of peaks: {0:1.2f}".format(self.__npeaks))
+        print("No of peaks: {0:d}".format(self.__npeaks))
 
     def on_increase_npeaks(self) -> None:
         # increase no of peaks
         if self.__npeaks < 16:
             self.__npeaks += 1
-        print("No of peaks: {0:1.2f}".format(self.__npeaks))
+        print("No of peaks: {0:d}".format(self.__npeaks))
 
     def on_activate_measure_noise(self) -> None:
         if not self.__noise_toggle:
