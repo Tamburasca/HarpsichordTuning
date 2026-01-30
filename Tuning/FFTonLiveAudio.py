@@ -65,7 +65,7 @@ __status__ = "Production"
 print(__doc__.format(__version__, __copyright__, __license__))
 
 MYFORMAT = "%(asctime)s.%(msecs)03d %(levelname)s:\t%(message)s"
-#MYFORMAT = ("%(asctime)s.%(msecs)03d :: %(levelname)s: %(filename)s - "
+# MYFORMAT = ("%(asctime)s.%(msecs)03d :: %(levelname)s: %(filename)s - "
 #            "line %(lineno)s - function: %(funcName)s() :: %(message)s")
 logging.basicConfig(format=MYFORMAT,
                     level=logging.INFO,
@@ -119,7 +119,7 @@ class Tuner:
             frames_per_buffer=CHUNKSIZE
         )
         logging.info("Audio Device info: {}".
-                      format(audio.get_default_input_device_info()))
+                     format(audio.get_default_input_device_info()))
 
     def callback(
             self,
@@ -462,6 +462,7 @@ def main() -> int:
             tune,
             list(tuningtable).index(tune))
         )
+
     a = None
     while a is None:
         try:

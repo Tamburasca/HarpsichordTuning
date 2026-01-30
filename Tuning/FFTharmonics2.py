@@ -11,7 +11,7 @@ from FFTaux import mytimer
 from LxCostfunction3 import L1, L2
 from minimize_SLSQP_class import MinimizeSLSQP
 
-I_MAX = int(16_000 / parameters.FREQUENCY_LOWER)
+I_MAX = int(parameters.THRESHOLD / parameters.FREQUENCY_LOWER)
 
 
 @mytimer(f"harmonics (minus time for {parameters.COST_FUNCTION} minimization)")
@@ -131,7 +131,7 @@ def harmonics(peaks: list[tuple]) -> list:
             for n in range(1, parameters.NPARTIAL):
                 f_synth = base_frequency * n * sqrt(
                     1. + inharmonicity * n ** 2)
-                if f_synth < 16_000:
+                if f_synth < parameters.THRESHOLD:
                     f_n = append(f_n, f_synth)  # show < 16 kHz if applicable
                 else:
                     break

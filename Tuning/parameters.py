@@ -57,6 +57,9 @@ NPEAKS: int = 8
 """number of partials considered in harmonic finding (experimental)"""
 NPARTIAL: int = 25
 
+"""Ear's frequency threshold"""
+THRESHOLD = 16_000
+
 """lower/upper frequency limit, i.e. A0. and C8 may not need to be adjusted."""
 FREQUENCY_LOWER: float = 26.5
 FREQUENCY_UPPER: float = 4435.
