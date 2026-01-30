@@ -311,7 +311,7 @@ class Tuner:
 
                     return key_pressed, displaced
 
-        return '', 0.
+        return "", 0.
 
     @mytimer("audio")
     def slice(self) -> NDArray:
@@ -378,17 +378,19 @@ class Tuner:
         f_measured = list()
         # main loop while audio stream active
         while self.stream.is_active():
+
             # check for matplotlib process being alive, if not exit gracefully
             if not mp.is_alive():
                 self.clear_queue()
                 logging.info("Plotting process ended abnormally. Exiting ...")
                 break
+
             slices = self.slice()
             if self.rc == 'y':  # exit
                 # clear queue, the MATPLOTLIB process hangs, if queue is not
                 # empty when exiting
                 self.clear_queue()
-                return self.rc
+                break
 
             # work off all slices, before pulling from audio stream
             for sl in slices:
@@ -420,7 +422,7 @@ class Tuner:
                     key, off = self.find(f_measured=f_measured[0])
                 else:
                     off = 0.
-                    key = ''
+                    key = ""
                 # check if there are already some messages left in the queue
                 qsize = self.__queue.qsize()
                 if qsize > 0:
