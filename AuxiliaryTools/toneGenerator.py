@@ -13,7 +13,7 @@ duration: float = 5.
 # sine frequency, Hz
 f1: float = 415.0
 # inharmonicity
-inharmonicity: float = 1.e-4
+inharmonicity: float = 3.e-4
 # number of partials
 partials: int = 20
 

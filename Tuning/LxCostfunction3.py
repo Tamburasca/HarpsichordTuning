@@ -17,9 +17,9 @@ from numdifftools import Jacobian, Hessian
 from numpy import sqrt, array, sign, nan, zeros
 from numpy.typing import NDArray
 
-from parameters import FREQUENCY_LOWER, THRESHOLD
+from parameters import FREQUENCY_LOWER
 
-I_MAX = int(THRESHOLD / FREQUENCY_LOWER)
+I_MAX = int(16_000 / FREQUENCY_LOWER)
 
 
 class L1(object):

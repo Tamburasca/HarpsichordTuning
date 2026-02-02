@@ -45,7 +45,8 @@ class MinimizeSLSQP(object):
         f0 = x0[0]
         b = max(0., x0[1])
 
-        return (.995 * f0, 1.005 * f0), (.05 * b, min(10. * b, parameters.INHARM))
+        return ((.995 * f0, 1.005 * f0),
+                (.05 * b, min(20. * b, parameters.INHARM)))
 
     def minimizer(
             self,
