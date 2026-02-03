@@ -73,8 +73,6 @@ and
 
 $$C = ({{f_{j} i} \over f_{i} j})^{2} \quad (6)$$
 
-
-
 The measured frequencies of the partials are denoted
 **<em>f<sub>i</sub> < f<sub>j</sub></em>** and **1 &#8804;
 <em>i < j &#8804; NPARTIAL</em>**. 
@@ -103,10 +101,10 @@ to brute-force or 'L-BFGS-B'.
 The frequency of the first partial f<sub>1</sub> is 
 compared to a value derived from the pitch level and a tuning table 
 [tuningTable.py](https://github.com/Tamburasca/HarpsichordTuning/blob/master/Tuning/tuningTable.py), 
-currently comprising Werkmeister III, 1/4 Comma Meantone, 
-and Equal Temperament - feel free to edit/enhance it for yourself. We have not yet considered 
-enharmonic equivalency in meantone, hence, one would have to enable/disable 
-certain keys, 
+currently comprising Werkmeister III, 1/4 Comma Meantone, Rameau, Kirnberger III,
+and Equal Temperament. Feel free to edit/enhance it for yourself. We have not 
+yet considered enharmonic equivalency in meantone, hence, one would have 
+to enable/disable certain keys, 
 such as A♭ vs. G#. The key in the center of the pie shows what key was 
 pressed and its deviation, in units of cent, for the specified tuning and 
 pitch level: too low (in red) and too high (in green).
@@ -130,7 +128,9 @@ over multiple slices by toggling hot-key '3'. This is an optional feature
 (dev branch). Caveat: the background noise must be kept 
 at a minimum during that time. The hot-keys '1' and '2' 
 increase or decrease sensitivity levels, respectively, if noise threshold equals
-'No'.
+'No'. The number of peaks to be considered can be changed
+through the hotkeys + or -. For the bass a high and for the discant a low number
+is preferred.
  
 Run the program by <em>python3 Tuning</em> in the commandline.
 
