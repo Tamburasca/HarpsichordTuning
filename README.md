@@ -10,7 +10,7 @@ strings. It competes with commercial products, such as
 Korg AW-3,
 Piano Tuner (Android), and others, but is open-source and free of charge. 
 
-The current application (exclusively realized in Python) 
+The current application (realized in Python) 
 collects a mono signal from the computer's input audio stream (USB connector),
 splits it into smaller, overlapping slices, and applies the Fourier transform to
 each. This practice is known as short time Fourier transform STFT. 
@@ -28,7 +28,8 @@ Gaussian L = 7&sigma; apodization is similar to that of a
 Blackman-Harris-Nuttall window.
 
 Subsequently, in the
-frequency domain, Butterworth high-pass filtering is applied to suppress noise
+frequency domain, Butterworth high-pass filtering is applied to suppress 
+the 1/f-noise
 at the bottom side, before fundamental and overtone frequencies are sought.
 The cutoff frequency and order of the filter can be adjusted in
 [parameters](https://github.com/Tamburasca/HarpsichordTuning/blob/master/Tuning/parameters.py).
@@ -41,7 +42,7 @@ the frequency f<sub>0</sub> and the inharmonicity factor B.
 For an ideal string the frequencies of higher partials are just multiples
 of the fundamental frequency
 
-$$f_{n} = n f_{1}\tag{1}$$
+$$f_{n} = n f_{1}\tag{1} \label{eq1}$$
 
 where n is the n<em>th</em> partial. 
 The ear hears the fundamental frequency most prominently, 
@@ -62,13 +63,17 @@ can be identifed as higher partials to one common base frequency f<sub>0</sub>.
 By rewriting (3), we get for two frequencies that can be 
 applied to all permutations of peaks
 
+$$f_{0} = {f_{i} \over i \sqrt{1 + B i^{2}}}\tag{5}$$
+
+where
+
 $$B = {{C - 1} \over j^{2} - C i^{2}}\tag{4}$$
 
-where 
+and  
 
 $$C = ({{f_{j} i} \over f_{i} j})^{2}$$
 
-$$f_{0} = {f_{i} \over i \sqrt{1 + B i^{2}}}\tag{5}$$
+
 
 The measured frequencies of the partials are denoted
 **<em>f<sub>i</sub> < f<sub>j</sub></em>** and **1 &#8804;
