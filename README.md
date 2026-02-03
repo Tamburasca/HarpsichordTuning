@@ -42,7 +42,7 @@ the frequency f<sub>0</sub> and the inharmonicity factor B.
 For an ideal string the frequencies of higher partials are just multiples
 of the fundamental frequency
 
-$$\begin{aligned}f_{n} = n f_{1} && (1)\end{aligned}$$
+$$f_{n} = n f_{1} \quad (1)$$
 
 where n is the n<em>th</em> partial. 
 The ear hears the fundamental frequency most prominently, 
@@ -52,26 +52,26 @@ partial at a diverse intensity.
 However, a real string behaves closer to a stiff bar according to a forth-order 
 differential equation 
 
-$$\ddot{y} \propto {-y}''''\tag{2}$$
+$$\ddot{y} \propto {-y}'''' \quad (2)$$
 
 with a quadratic dispersion. Hence, its partials can be approximated by
 
-$$f_{n} = n f_{0} \sqrt{1 + B n^{2}}\tag{3}$$
+$$f_{n} = n f_{0} \sqrt{1 + B n^{2}} \quad (3)$$
 
 All peak positions are correlated to each other, such that they 
 can be identified as higher partials to one common base frequency f<sub>0</sub>. 
 By rewriting (3), we get for two frequencies that can be 
 applied to all permutations of peaks
 
-$$f_{0} = {f_{i} \over i \sqrt{1 + B i^{2}}}\tag{5}$$
+$$f_{0} = {f_{i} \over i \sqrt{1 + B i^{2}}} \quad (4)$$
 
 where
 
-$$B = {{C - 1} \over j^{2} - C i^{2}}\tag{4}$$
+$$B = {{C - 1} \over j^{2} - C i^{2}} \quad (5)$$
 
 and  
 
-$$C = ({{f_{j} i} \over f_{i} j})^{2}$$
+$$C = ({{f_{j} i} \over f_{i} j})^{2} \quad (6)$$
 
 
 
