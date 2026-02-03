@@ -129,9 +129,9 @@ over multiple slices by toggling hot-key '3'. This is an optional feature
 at a minimum during that time. The hot-keys '1' and '2' 
 increase or decrease sensitivity levels, respectively, if noise threshold equals
 'No'. The number of peaks to be considered can be changed
-through the hotkeys + or -. For the bass a high and for the discant a low number
-is preferred.
- 
+through hotkeys '+' or '-'. For the bass and discant a high and low 
+number is preferred, respectively.
+
 Run the program by <em>python3 Tuning</em> in the commandline.
 
 ### Caveats
@@ -157,9 +157,9 @@ resulting in an error of 0.29 Hz @ 415 Hz (1.2 cent). Given the fact, though,
 that in the current application the frequency of the first partial is 
 derived from a combination of all partials measured, 
 its frequency is anticipated to be more precise.
-This is achieved through comparparing the measuremed spectrum which that 
+This is achieved through comparing the measured spectrum which that 
 calculated from f<sub>0</sub> and B by minimizing the L1-norm, such as in 
-Compressed Sensing. The vector coeficients are normalized to the frequency, 
+Compressed Sensing. The vector coefficients are normalized to the frequency, 
 because higher partials impose a greater weight on the L1-norm 
 than lower partials. In a preliminary test the max. relative error
 turned out to be around 1.4 * 10<sup>-4</sup> for frequencies and 
