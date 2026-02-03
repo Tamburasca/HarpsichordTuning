@@ -42,7 +42,7 @@ the frequency f<sub>0</sub> and the inharmonicity factor B.
 For an ideal string the frequencies of higher partials are just multiples
 of the fundamental frequency
 
-$$f_{n} = n f_{1}\tag{1}$$
+$$\begin{aligned}f_{n} = n f_{1} && (1)\end{aligned}$$
 
 where n is the n<em>th</em> partial. 
 The ear hears the fundamental frequency most prominently, 
@@ -59,7 +59,7 @@ with a quadratic dispersion. Hence, its partials can be approximated by
 $$f_{n} = n f_{0} \sqrt{1 + B n^{2}}\tag{3}$$
 
 All peak positions are correlated to each other, such that they 
-can be identifed as higher partials to one common base frequency f<sub>0</sub>. 
+can be identified as higher partials to one common base frequency f<sub>0</sub>. 
 By rewriting (3), we get for two frequencies that can be 
 applied to all permutations of peaks
 
