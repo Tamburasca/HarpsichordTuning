@@ -44,6 +44,7 @@ of the fundamental frequency
 
 $$\begin{equation}
 f_{n} = n f_{1}\tag{1}
+\label{eq: test}
 \end{equation}$$
 
 where n is the n<em>th</em> partial. 
